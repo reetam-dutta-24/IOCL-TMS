@@ -1,0 +1,287 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    Int                    @id @default(autoincrement())
+  employeeId            String                 @unique
+  firstName             String
+  lastName              String
+  email                 String                 @unique
+  password              String
+  phone                 String?
+  roleId                Int
+  departmentId          Int?
+  isActive              Boolean                @default(true)
+  lastLogin             DateTime?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  
+  role                  Role                   @relation(fields: [roleId], references: [id])
+  department            Department?            @relation(fields: [departmentId], references: [id])
+  
+  submittedRequests     InternshipRequest[]    @relation("RequestSubmitter")
+  mentorAssignments     MentorAssignment[]     @relation("MentorUser")
+  assignedMentorships   MentorAssignment[]     @relation("AssignedBy")
+  approvals             Approval[]
+  projectReports        ProjectReport[]        @relation("ReportSubmitter")
+  auditTrails           AuditTrail[]
+  notifications         Notification[]
+  uploadedAttachments   DocumentAttachment[]   @relation("AttachmentUploader")
+  
+  @@map("users")
+}
+
+model Role {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  permissions Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  users       User[]
+  
+  @@map("roles")
+}
+
+model Department {
+  id                Int                 @id @default(autoincrement())
+  name              String
+  code              String              @unique
+  description       String?
+  hodId             Int?
+  isActive          Boolean             @default(true)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  users             User[]
+  internshipRequests InternshipRequest[]
+  
+  @@map("departments")
+}
+
+model InternshipRequest {
+  id                  Int                 @id @default(autoincrement())
+  requestNumber       String              @unique
+  traineeName         String
+  traineeEmail        String?
+  traineePhone        String?
+  institutionName     String
+  courseDetails       String?
+  internshipDuration  Int
+  preferredDepartment Int?
+  requestDescription  String?
+  priority            Priority            @default(MEDIUM)
+  status              RequestStatus       @default(SUBMITTED)
+  requestedBy         Int
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  
+  submitter           User                @relation("RequestSubmitter", fields: [requestedBy], references: [id])
+  department          Department?         @relation(fields: [preferredDepartment], references: [id])
+  
+  mentorAssignments   MentorAssignment[]
+  approvals           Approval[]
+  projectReports      ProjectReport[]
+  letters             Letter[]
+  documentAttachments DocumentAttachment[]
+  
+  @@map("internship_requests")
+}
+
+model MentorAssignment {
+  id                  Int               @id @default(autoincrement())
+  internshipRequestId Int
+  mentorId            Int
+  assignedBy          Int?
+  assignmentDate      DateTime          @default(now())
+  assignmentStatus    AssignmentStatus  @default(ACTIVE)
+  startDate           DateTime?
+  endDate             DateTime?
+  notes               String?
+  
+  request             InternshipRequest @relation(fields: [internshipRequestId], references: [id])
+  mentor              User              @relation("MentorUser", fields: [mentorId], references: [id])
+  assigner            User?             @relation("AssignedBy", fields: [assignedBy], references: [id])
+  
+  projectReports      ProjectReport[]
+  
+  @@unique([internshipRequestId, mentorId])
+  @@map("mentor_assignments")
+}
+
+model Approval {
+  id                  Int               @id @default(autoincrement())
+  internshipRequestId Int
+  approverId          Int
+  level               Int
+  status              ApprovalStatus    @default(PENDING)
+  comments            String?
+  approvedAt          DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  
+  internshipRequest   InternshipRequest @relation(fields: [internshipRequestId], references: [id])
+  approver            User              @relation(fields: [approverId], references: [id])
+  
+  @@map("approvals")
+}
+
+model ProjectReport {
+  id                  Int               @id @default(autoincrement())
+  assignmentId        Int
+  submittedBy         Int
+  reportType          ReportType
+  reportTitle         String?
+  reportContent       String?
+  submissionDate      DateTime          @default(now())
+  performanceRating   Float?
+  behavioralComments  String?
+  technicalSkills     String?
+  areasOfImprovement  String?
+  status              ReportStatus      @default(SUBMITTED)
+  
+  assignment          MentorAssignment  @relation(fields: [assignmentId], references: [id])
+  submitter           User              @relation("ReportSubmitter", fields: [submittedBy], references: [id])
+  attachments         DocumentAttachment[]
+  
+  @@map("project_reports")
+}
+
+model Letter {
+  id                  Int               @id @default(autoincrement())
+  internshipRequestId Int
+  letterType          LetterType
+  content             String
+  generatedAt         DateTime          @default(now())
+  issuedBy            String?
+  letterNumber        String            @unique
+  
+  internshipRequest   InternshipRequest @relation(fields: [internshipRequestId], references: [id])
+  
+  @@map("letters")
+}
+
+model DocumentAttachment {
+  id                  Int               @id @default(autoincrement())
+  requestId           Int?
+  reportId            Int?
+  fileName            String
+  filePath            String
+  fileSize            Int
+  fileType            String
+  uploadDate          DateTime          @default(now())
+  uploadedBy          Int
+  
+  request             InternshipRequest? @relation(fields: [requestId], references: [id])
+  report              ProjectReport?     @relation(fields: [reportId], references: [id])
+  uploader            User               @relation("AttachmentUploader", fields: [uploadedBy], references: [id])
+  
+  @@map("document_attachments")
+}
+
+model AuditTrail {
+  id          Int      @id @default(autoincrement())
+  tableName   String
+  recordId    Int
+  action      String
+  oldValues   Json?
+  newValues   Json?
+  changedBy   Int
+  changedAt   DateTime @default(now())
+  ipAddress   String?
+  userAgent   String?
+  
+  user        User     @relation(fields: [changedBy], references: [id])
+  
+  @@map("audit_trail")
+}
+
+model SystemConfig {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+  
+  @@map("system_config")
+}
+
+model Notification {
+  id          Int              @id @default(autoincrement())
+  userId      Int
+  type        NotificationType
+  title       String
+  message     String
+  isRead      Boolean          @default(false)
+  priority    Priority         @default(MEDIUM)
+  createdAt   DateTime         @default(now())
+  readAt      DateTime?
+  
+  user        User             @relation(fields: [userId], references: [id])
+  
+  @@map("notifications")
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum RequestStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  MENTOR_ASSIGNED
+  APPROVED
+  REJECTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum AssignmentStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ReportType {
+  WEEKLY
+  MONTHLY
+  FINAL
+  BEHAVIORAL
+}
+
+enum ReportStatus {
+  SUBMITTED
+  REVIEWED
+  APPROVED
+  NEEDS_REVISION
+}
+
+enum LetterType {
+  OFFER
+  COMPLETION
+  RECOMMENDATION
+  NOC
+}
+
+enum NotificationType {
+  EMAIL
+  SMS
+  IN_APP
+  PUSH
+}

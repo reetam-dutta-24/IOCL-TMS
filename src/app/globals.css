@@ -1,0 +1,436 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+
+    /* IOCL Coral Theme Colors */
+    --coral-50: 254 242 242;
+    --coral-100: 254 226 226;
+    --coral-200: 252 165 165;
+    --coral-300: 248 113 113;
+    --coral-400: 239 68 68;
+    --coral-500: 220 38 38;
+    --coral-600: 185 28 28;
+    --coral-700: 153 27 27;
+    --coral-800: 127 29 29;
+    --coral-900: 69 10 10;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  /* Coral color utilities */
+  .bg-coral-50 {
+    background-color: hsl(var(--coral-50));
+  }
+  .bg-coral-100 {
+    background-color: hsl(var(--coral-100));
+  }
+  .bg-coral-200 {
+    background-color: hsl(var(--coral-200));
+  }
+  .bg-coral-300 {
+    background-color: hsl(var(--coral-300));
+  }
+  .bg-coral-400 {
+    background-color: hsl(var(--coral-400));
+  }
+  .bg-coral-500 {
+    background-color: hsl(var(--coral-500));
+  }
+  .bg-coral-600 {
+    background-color: hsl(var(--coral-600));
+  }
+  .bg-coral-700 {
+    background-color: hsl(var(--coral-700));
+  }
+  .bg-coral-800 {
+    background-color: hsl(var(--coral-800));
+  }
+  .bg-coral-900 {
+    background-color: hsl(var(--coral-900));
+  }
+
+  .text-coral-50 {
+    color: hsl(var(--coral-50));
+  }
+  .text-coral-100 {
+    color: hsl(var(--coral-100));
+  }
+  .text-coral-200 {
+    color: hsl(var(--coral-200));
+  }
+  .text-coral-300 {
+    color: hsl(var(--coral-300));
+  }
+  .text-coral-400 {
+    color: hsl(var(--coral-400));
+  }
+  .text-coral-500 {
+    color: hsl(var(--coral-500));
+  }
+  .text-coral-600 {
+    color: hsl(var(--coral-600));
+  }
+  .text-coral-700 {
+    color: hsl(var(--coral-700));
+  }
+  .text-coral-800 {
+    color: hsl(var(--coral-800));
+  }
+  .text-coral-900 {
+    color: hsl(var(--coral-900));
+  }
+
+  .border-coral-50 {
+    border-color: hsl(var(--coral-50));
+  }
+  .border-coral-100 {
+    border-color: hsl(var(--coral-100));
+  }
+  .border-coral-200 {
+    border-color: hsl(var(--coral-200));
+  }
+  .border-coral-300 {
+    border-color: hsl(var(--coral-300));
+  }
+  .border-coral-400 {
+    border-color: hsl(var(--coral-400));
+  }
+  .border-coral-500 {
+    border-color: hsl(var(--coral-500));
+  }
+  .border-coral-600 {
+    border-color: hsl(var(--coral-600));
+  }
+  .border-coral-700 {
+    border-color: hsl(var(--coral-700));
+  }
+  .border-coral-800 {
+    border-color: hsl(var(--coral-800));
+  }
+  .border-coral-900 {
+    border-color: hsl(var(--coral-900));
+  }
+
+  .hover\:bg-coral-50:hover {
+    background-color: hsl(var(--coral-50));
+  }
+  .hover\:bg-coral-100:hover {
+    background-color: hsl(var(--coral-100));
+  }
+  .hover\:bg-coral-200:hover {
+    background-color: hsl(var(--coral-200));
+  }
+  .hover\:bg-coral-300:hover {
+    background-color: hsl(var(--coral-300));
+  }
+  .hover\:bg-coral-400:hover {
+    background-color: hsl(var(--coral-400));
+  }
+  .hover\:bg-coral-500:hover {
+    background-color: hsl(var(--coral-500));
+  }
+  .hover\:bg-coral-600:hover {
+    background-color: hsl(var(--coral-600));
+  }
+  .hover\:bg-coral-700:hover {
+    background-color: hsl(var(--coral-700));
+  }
+  .hover\:bg-coral-800:hover {
+    background-color: hsl(var(--coral-800));
+  }
+  .hover\:bg-coral-900:hover {
+    background-color: hsl(var(--coral-900));
+  }
+
+  .hover\:text-coral-50:hover {
+    color: hsl(var(--coral-50));
+  }
+  .hover\:text-coral-100:hover {
+    color: hsl(var(--coral-100));
+  }
+  .hover\:text-coral-200:hover {
+    color: hsl(var(--coral-200));
+  }
+  .hover\:text-coral-300:hover {
+    color: hsl(var(--coral-300));
+  }
+  .hover\:text-coral-400:hover {
+    color: hsl(var(--coral-400));
+  }
+  .hover\:text-coral-500:hover {
+    color: hsl(var(--coral-500));
+  }
+  .hover\:text-coral-600:hover {
+    color: hsl(var(--coral-600));
+  }
+  .hover\:text-coral-700:hover {
+    color: hsl(var(--coral-700));
+  }
+  .hover\:text-coral-800:hover {
+    color: hsl(var(--coral-800));
+  }
+  .hover\:text-coral-900:hover {
+    color: hsl(var(--coral-900));
+  }
+
+  .focus\:border-coral-500:focus {
+    border-color: hsl(var(--coral-500));
+  }
+  .focus\:ring-coral-500:focus {
+    --tw-ring-color: hsl(var(--coral-500));
+  }
+}
+
+/* Custom IOCL styling */
+.iocl-gradient {
+  background: linear-gradient(135deg, hsl(var(--coral-500)) 0%, hsl(var(--coral-600)) 100%);
+}
+
+.iocl-text-gradient {
+  background: linear-gradient(135deg, hsl(var(--coral-500)) 0%, hsl(var(--coral-600)) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Status badges with coral theme */
+.status-submitted {
+  @apply bg-coral-100 text-coral-800 border-coral-200;
+}
+
+.status-under-review {
+  @apply bg-yellow-100 text-yellow-800 border-yellow-200;
+}
+
+.status-approved {
+  @apply bg-green-100 text-green-800 border-green-200;
+}
+
+.status-rejected {
+  @apply bg-red-100 text-red-800 border-red-200;
+}
+
+.status-completed {
+  @apply bg-blue-100 text-blue-800 border-blue-200;
+}
+
+/* Custom scrollbar with coral theme */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--coral-500));
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--coral-600));
+}
+
+/* Loading animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Smooth transitions */
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+/* Focus styles for accessibility */
+.focus-visible:focus-visible {
+  outline: 2px solid hsl(var(--coral-500));
+  outline-offset: 2px;
+}
+
+/* Custom button animations */
+.btn-hover-scale {
+  transition: transform 0.2s ease-in-out;
+}
+
+.btn-hover-scale:hover {
+  transform: scale(1.05);
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(220, 38, 38, 0.1);
+}
+
+/* Form validation styles */
+.form-error {
+  @apply border-red-500 focus:border-red-500 focus:ring-red-500;
+}
+
+.form-success {
+  @apply border-green-500 focus:border-green-500 focus:ring-green-500;
+}
+
+/* Loading spinner with coral theme */
+.spinner {
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid hsl(var(--coral-500));
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Responsive utilities */
+@media (max-width: 640px) {
+  .mobile-hidden {
+    display: none;
+  }
+}
+
+/* Animation utilities */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Notification styles */
+.notification-enter {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.notification-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.notification-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.notification-exit-active {
+  opacity: 0;
+  transform: translateX(100%);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* Hero section background */
+.hero-bg {
+  background: linear-gradient(135deg, hsl(var(--coral-500)) 0%, hsl(var(--coral-600)) 100%);
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
