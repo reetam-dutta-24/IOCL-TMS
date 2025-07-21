@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       email,
       password,
       roleId: userRole.id,
-      
+      departmentId,
     })
 
     if (!newUser) {
