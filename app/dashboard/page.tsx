@@ -1,189 +1,477 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, FileText, Clock, CheckCircle, TrendingUp, Plus, Search, Filter, Download } from "lucide-react"
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { StatsCard } from "@/components/stats-card"
-import { RecentActivity } from "@/components/recent-activity"
-import { RequestsTable } from "@/components/requests-table"
+import { useState, useEffect } from "react";
+import { useAuth } from "@/src/context/auth-context";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Users,
+  FileText,
+  TrendingUp,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  Calendar,
+  Building,
+  Award,
+  ArrowRight,
+  Plus,
+  Eye,
+} from "lucide-react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart,
+  Cell,
+} from "recharts";
+import Link from "next/link";
+
+interface DashboardStats {
+  totalRequests: number;
+  pendingRequests: number;
+  approvedRequests: number;
+  rejectedRequests: number;
+  totalMentors: number;
+  activeMentors: number;
+  totalUsers: number;
+  activeUsers: number;
+}
+
+interface RecentActivity {
+  id: number;
+  type: string;
+  title: string;
+  description: string;
+  user: string;
+  timestamp: string;
+  status: string;
+  department: string;
+}
+
+interface DashboardData {
+  stats: DashboardStats;
+  recentActivities: RecentActivity[];
+  departmentBreakdown: { department: string; count: number }[];
+  monthlyTrends: { month: string; count: number }[];
+}
 
 export default function DashboardPage() {
-  const router = useRouter()
-  const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const { user } = useAuth();
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    null
+  );
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const userData = localStorage.getItem("user")
-    if (!userData) {
-      router.push("/login")
-      return
+    fetchDashboardData();
+  }, [user]);
+
+  const fetchDashboardData = async () => {
+    try {
+      const response = await fetch(
+        `/api/dashboard/stats?role=${encodeURIComponent(user?.role || "")}`
+      );
+      const data = await response.json();
+
+      if (data.success) {
+        setDashboardData(data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    } finally {
+      setLoading(false);
     }
-    setUser(JSON.parse(userData))
-    setLoading(false)
-  }, [router])
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  };
+
+  const getQuickActions = () => {
+    const baseActions = [
+      {
+        title: "View All Requests",
+        description: "Manage internship requests",
+        href: "/requests",
+        icon: FileText,
+        color: "bg-blue-500",
+      },
+      {
+        title: "Browse Mentors",
+        description: "View mentor profiles",
+        href: "/mentors",
+        icon: Users,
+        color: "bg-green-500",
+      },
+      {
+        title: "Generate Reports",
+        description: "Create analytics reports",
+        href: "/reports",
+        icon: TrendingUp,
+        color: "bg-purple-500",
+      },
+    ];
+
+    if (user?.role === "L&D Coordinator" || user?.role === "L&D HoD") {
+      baseActions.unshift({
+        title: "Create Request",
+        description: "Submit new internship request",
+        href: "/requests",
+        icon: Plus,
+        color: "bg-red-500",
+      });
+    }
+
+    return baseActions;
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      SUBMITTED: { color: "bg-blue-100 text-blue-800", icon: Clock },
+      UNDER_REVIEW: {
+        color: "bg-yellow-100 text-yellow-800",
+        icon: AlertCircle,
+      },
+      APPROVED: { color: "bg-green-100 text-green-800", icon: CheckCircle },
+      REJECTED: { color: "bg-red-100 text-red-800", icon: AlertCircle },
+    };
+
+    const config =
+      statusConfig[status as keyof typeof statusConfig] ||
+      statusConfig.SUBMITTED;
+    const Icon = config.icon;
+
+    return (
+      <Badge className={`${config.color} flex items-center gap-1`}>
+        <Icon className="h-3 w-3" />
+        {status.replace("_", " ")}
+      </Badge>
+    );
+  };
+
+  const formatTimeAgo = (timestamp: string) => {
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diffInHours = Math.floor(
+      (now.getTime() - time.getTime()) / (1000 * 60 * 60)
+    );
+
+    if (diffInHours < 1) return "Just now";
+    if (diffInHours < 24) return `${diffInHours} hours ago`;
+    return `${Math.floor(diffInHours / 24)} days ago`;
+  };
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>
+    return (
+      <div className="p-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-32 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="h-96 bg-gray-200 rounded"></div>
+            <div className="h-96 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
   }
-
-  if (!user) {
-    return null
-  }
-
-  const stats = [
-    {
-      title: "Total Requests",
-      value: "24",
-      change: "+12%",
-      trend: "up" as const,
-      icon: FileText,
-      description: "This month",
-    },
-    {
-      title: "Active Internships",
-      value: "18",
-      change: "+8%",
-      trend: "up" as const,
-      icon: Users,
-      description: "Currently ongoing",
-    },
-    {
-      title: "Pending Approvals",
-      value: "6",
-      change: "-15%",
-      trend: "down" as const,
-      icon: Clock,
-      description: "Awaiting action",
-    },
-    {
-      title: "Completed",
-      value: "42",
-      change: "+23%",
-      trend: "up" as const,
-      icon: CheckCircle,
-      description: "This quarter",
-    },
-  ]
 
   return (
-    <DashboardLayout user={user}>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-600">Welcome back, {user.name}</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-            <Button size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              New Request
-            </Button>
-          </div>
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {getGreeting()}, {user?.firstName}!
+          </h1>
+          <p className="text-gray-600">
+            Welcome to your TAMS dashboard. Here's what's happening today.
+          </p>
+        </div>
+        <div className="mt-4 sm:mt-0">
+          <Badge className="bg-red-100 text-red-800">
+            {user?.role} • {user?.department}
+          </Badge>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      {dashboardData && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">
+                    Total Requests
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {dashboardData.stats.totalRequests}
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <FileText className="h-6 w-6 text-blue-600" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center text-sm">
+                <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                <span className="text-green-600">+12% from last month</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">
+                    Pending Review
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {dashboardData.stats.pendingRequests}
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                  <Clock className="h-6 w-6 text-yellow-600" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center text-sm">
+                <AlertCircle className="h-4 w-4 text-yellow-500 mr-1" />
+                <span className="text-yellow-600">Requires attention</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">
+                    Active Mentors
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {dashboardData.stats.activeMentors}
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <Users className="h-6 w-6 text-green-600" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center text-sm">
+                <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
+                <span className="text-green-600">All mentors available</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">
+                    Approved This Month
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {dashboardData.stats.approvedRequests}
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <Award className="h-6 w-6 text-purple-600" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center text-sm">
+                <TrendingUp className="h-4 w-4 text-purple-500 mr-1" />
+                <span className="text-purple-600">Great progress!</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Recent Activities */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activities</CardTitle>
+              <CardDescription>
+                Latest updates and actions in the system
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {dashboardData?.recentActivities.map((activity) => (
+                  <div
+                    key={activity.id}
+                    className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg"
+                  >
+                    <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                      <FileText className="h-5 w-5 text-red-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">
+                        {activity.title}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {activity.description}
+                      </p>
+                      <div className="mt-2 flex items-center space-x-4">
+                        <span className="text-xs text-gray-400">
+                          {activity.user}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {formatTimeAgo(activity.timestamp)}
+                        </span>
+                        {getStatusBadge(activity.status)}
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="sm">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 text-center">
+                <Link href="/requests">
+                  <Button variant="outline">
+                    View All Activities
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat, index) => (
-            <StatsCard key={index} {...stat} />
-          ))}
-        </div>
+        {/* Quick Actions */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+              <CardDescription>Common tasks and shortcuts</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {getQuickActions().map((action, index) => (
+                <Link key={index} href={action.href}>
+                  <div className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+                    <div
+                      className={`w-10 h-10 ${action.color} rounded-lg flex items-center justify-center mr-3`}
+                    >
+                      <action.icon className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">
+                        {action.title}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {action.description}
+                      </p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-gray-400" />
+                  </div>
+                </Link>
+              ))}
+            </CardContent>
+          </Card>
 
-        {/* Main Content */}
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Recent Activity */}
-          <div className="lg:col-span-1">
-            <RecentActivity />
-          </div>
-
-          {/* Requests Overview */}
-          <div className="lg:col-span-2">
+          {/* Department Overview */}
+          {dashboardData && (
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Recent Requests</CardTitle>
-                    <CardDescription>Latest internship requests and their status</CardDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                      <Search className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <Filter className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
+                <CardTitle>Department Overview</CardTitle>
+                <CardDescription>Requests by department</CardDescription>
               </CardHeader>
               <CardContent>
-                <RequestsTable />
+                <div className="space-y-3">
+                  {dashboardData.departmentBreakdown.map((dept, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between"
+                    >
+                      <div className="flex items-center">
+                        <Building className="h-4 w-4 text-gray-400 mr-2" />
+                        <span className="text-sm text-gray-900">
+                          {dept.department}
+                        </span>
+                      </div>
+                      <Badge variant="secondary">{dept.count}</Badge>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
-          </div>
+          )}
         </div>
-
-        {/* Detailed Tabs */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Detailed Overview</CardTitle>
-            <CardDescription>Comprehensive view of all system activities</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="requests" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="requests">Requests</TabsTrigger>
-                <TabsTrigger value="mentors">Mentors</TabsTrigger>
-                <TabsTrigger value="reports">Reports</TabsTrigger>
-                <TabsTrigger value="analytics">Analytics</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="requests" className="space-y-4">
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Request Management</h3>
-                  <p className="text-gray-600 mb-4">View and manage all internship requests</p>
-                  <Button>View All Requests</Button>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="mentors" className="space-y-4">
-                <div className="text-center py-8">
-                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Mentor Management</h3>
-                  <p className="text-gray-600 mb-4">Assign and manage mentors for trainees</p>
-                  <Button>Manage Mentors</Button>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="reports" className="space-y-4">
-                <div className="text-center py-8">
-                  <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Progress Reports</h3>
-                  <p className="text-gray-600 mb-4">Track trainee progress and performance</p>
-                  <Button>View Reports</Button>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="analytics" className="space-y-4">
-                <div className="text-center py-8">
-                  <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Analytics & Insights</h3>
-                  <p className="text-gray-600 mb-4">Comprehensive analytics and reporting</p>
-                  <Button>View Analytics</Button>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
       </div>
-    </DashboardLayout>
-  )
+
+      {/* Charts Section */}
+      {dashboardData && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Monthly Trends</CardTitle>
+              <CardDescription>Request submissions over time</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={dashboardData.monthlyTrends}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="count"
+                    stroke="#dc2626"
+                    strokeWidth={2}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Department Distribution</CardTitle>
+              <CardDescription>Requests by department</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={dashboardData.departmentBreakdown}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="department" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#dc2626" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
 }

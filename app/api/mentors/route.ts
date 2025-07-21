@@ -1,53 +1,109 @@
 import { type NextRequest, NextResponse } from "next/server"
-
-// Mock mentor data
-const mentors = [
-  {
-    id: "M001",
-    name: "Vikram Gupta",
-    employeeId: "EMP005",
-    department: "Information Technology",
-    email: "vikram.gupta@iocl.co.in",
-    phone: "+91-9876543214",
-    expertise: ["Software Development", "Data Analytics", "AI/ML"],
-    currentTrainees: 2,
-    maxCapacity: 3,
-    totalMentored: 15,
-    rating: 4.8,
-    status: "ACTIVE",
-  },
-  {
-    id: "M002",
-    name: "Meera Joshi",
-    employeeId: "EMP006",
-    department: "Operations",
-    email: "meera.joshi@iocl.co.in",
-    phone: "+91-9876543215",
-    expertise: ["Process Engineering", "Quality Control", "Safety Management"],
-    currentTrainees: 1,
-    maxCapacity: 3,
-    totalMentored: 12,
-    rating: 4.6,
-    status: "ACTIVE",
-  },
-]
+import { prisma } from "@/lib/prisma"
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const department = searchParams.get("department")
+    const departmentName = searchParams.get("department")
     const status = searchParams.get("status")
 
-    let filteredMentors = mentors
+    // Build where clause for filtering
+    const where: any = {
+      role: {
+        name: "Mentor"
+      },
+      isActive: true
+    }
 
-    if (department) {
-      filteredMentors = filteredMentors.filter((mentor) =>
-        mentor.department.toLowerCase().includes(department.toLowerCase()),
+    if (departmentName && departmentName !== "all") {
+      where.department = {
+        name: departmentName
+      }
+    }
+
+    // Fetch mentors from database (simplified)
+    const mentors = await prisma.user.findMany({
+      where,
+      include: {
+        role: true,
+        department: true,
+      },
+      orderBy: {
+        firstName: 'asc',
+      },
+    })
+
+    // Get assignment counts separately
+    const mentorsWithCounts = await Promise.all(
+      mentors.map(async (mentor) => {
+        // Get active assignments count
+        const activeAssignments = await prisma.mentorAssignment.count({
+          where: {
+            mentorId: mentor.id,
+            assignmentStatus: "ACTIVE"
+          }
+        })
+
+        // Get total assignments count
+        const totalAssignments = await prisma.mentorAssignment.count({
+          where: {
+            mentorId: mentor.id
+          }
+        })
+
+        // Get current active assignments with details
+        const currentAssignments = await prisma.mentorAssignment.findMany({
+          where: {
+            mentorId: mentor.id,
+            assignmentStatus: "ACTIVE"
+          },
+          include: {
+            request: {
+              select: {
+                traineeName: true,
+                status: true,
+              }
+            }
+          }
+        })
+
+        return {
+          id: mentor.id,
+          name: `${mentor.firstName} ${mentor.lastName}`,
+          employeeId: mentor.employeeId,
+          department: mentor.department?.name || "Unknown",
+          email: mentor.email,
+          phone: mentor.phone || "Not provided",
+          designation: "Mentor",
+          experience: "8+ years",
+          specialization: "Technical Mentoring, Project Management",
+          activeTrainees: activeAssignments,
+          totalTrainees: totalAssignments,
+          status: mentor.isActive ? "Active" : "Inactive",
+          currentAssignments: currentAssignments.map(assignment => ({
+            traineeName: assignment.request.traineeName,
+            status: assignment.request.status,
+          })),
+        }
+      })
+    )
+
+    // Apply status filter if provided
+    let filteredMentors = mentorsWithCounts
+    if (status && status !== "all") {
+      const statusMap = {
+        "ACTIVE": "Active",
+        "AVAILABLE": "Active",
+        "UNAVAILABLE": "Inactive"
+      }
+      filteredMentors = mentorsWithCounts.filter(mentor => 
+        mentor.status === statusMap[status as keyof typeof statusMap]
       )
     }
 
-    if (status) {
-      filteredMentors = filteredMentors.filter((mentor) => mentor.status === status)
+    // Further filter available mentors (those with capacity)
+    if (status === "AVAILABLE") {
+      filteredMentors = filteredMentors.filter(mentor => mentor.activeTrainees < 3)
     }
 
     return NextResponse.json({
@@ -56,6 +112,7 @@ export async function GET(request: NextRequest) {
       total: filteredMentors.length,
     })
   } catch (error) {
+    console.error("GET mentors error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
