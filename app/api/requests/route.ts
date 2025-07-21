@@ -1,9 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
+// Force dynamic behavior
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
+    const searchParams = request.nextUrl.searchParams
     const status = searchParams.get("status")
     const departmentName = searchParams.get("department")
 
@@ -183,4 +186,4 @@ export async function POST(request: NextRequest) {
     console.error("POST requests error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
-};
+}
