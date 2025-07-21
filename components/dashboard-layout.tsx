@@ -1,4 +1,3 @@
-
 import type React from "react"
 
 import { useState } from "react"
@@ -15,8 +14,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
+import { IndianOilLogo } from "@/components/ui/logo"
 import {
-  Building2,
   LayoutDashboard,
   FileText,
   Users,
@@ -60,7 +59,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
         <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white shadow-xl">
           <div className="flex h-16 items-center justify-between px-4 border-b border-red-100 tams-gradient">
             <div className="flex items-center">
-              <Building2 className="h-8 w-8 text-white" />
+              <IndianOilLogo width={32} height={32} />
               <span className="ml-2 text-xl font-bold text-white">IOCL TAMS</span>
             </div>
             <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(false)} className="text-white hover:bg-red-500">
@@ -109,7 +108,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
         <div className="flex flex-col flex-grow bg-white border-r border-red-100 shadow-sm">
           <div className="flex h-16 items-center px-4 border-b border-red-100 tams-gradient">
-            <Building2 className="h-8 w-8 text-white" />
+            <IndianOilLogo width={32} height={32} />
             <span className="ml-2 text-xl font-bold text-white">IOCL TAMS</span>
           </div>
           <nav className="flex-1 space-y-1 px-3 py-4">

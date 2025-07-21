@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 
 export async function POST(request: NextRequest) {
   try {
-    const { employeeId, firstName, lastName, email, password, department, role } = await request.json()
+    const { employeeId, firstName, lastName, email, password, department, role, phone } = await request.json()
 
     // Validate required fields
     if (!employeeId || !firstName || !lastName || !email || !password) {
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get department ID
-    let departmentId = null
+    let departmentId: number | null = null
     if (department) {
       const userDepartment = await prisma.department.findFirst({
         where: { name: department },
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       departmentId = userDepartment?.id || null
     }
 
-    // Create user
+    // Create user with proper typing
     const newUser = await createUser({
       employeeId,
       firstName,
@@ -60,7 +60,8 @@ export async function POST(request: NextRequest) {
       email,
       password,
       roleId: userRole.id,
-      
+      departmentId,
+      phone: phone || undefined,
     })
 
     if (!newUser) {

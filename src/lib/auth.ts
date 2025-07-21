@@ -91,7 +91,7 @@ export async function createUser(userData: {
   email: string
   password: string
   roleId: number
-  departmentId?: number
+  departmentId?: number | null
   phone?: string
 }): Promise<AuthUser | null> {
   try {
@@ -99,8 +99,14 @@ export async function createUser(userData: {
 
     const user = await prisma.user.create({
       data: {
-        ...userData,
+        employeeId: userData.employeeId,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
         password: hashedPassword,
+        roleId: userData.roleId,
+        departmentId: userData.departmentId,
+        phone: userData.phone,
       },
       include: {
         role: true,

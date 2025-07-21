@@ -6,8 +6,8 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { IndianOilLogo } from "@/components/ui/logo"
 import { 
-  Building2, 
   Users, 
   FileText, 
   Award, 
@@ -70,7 +70,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Building2 className="h-8 w-8 text-red-600 mr-3" />
+              <IndianOilLogo width={40} height={40} className="mr-3" />
               <div>
                 <div className="font-bold text-xl text-gray-900">IOCL TAMS</div>
                 <div className="text-xs text-gray-600">Trainee Approval & Management System</div>
@@ -374,7 +374,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="col-span-2">
               <div className="flex items-center mb-4">
-                <Building2 className="h-8 w-8 text-red-500 mr-3" />
+                <IndianOilLogo width={32} height={32} className="mr-3" />
                 <div>
                   <div className="font-bold text-xl">IOCL TAMS</div>
                   <div className="text-sm text-gray-400">Trainee Approval & Management System</div>

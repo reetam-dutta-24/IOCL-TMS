@@ -4,12 +4,13 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "@/src/context/auth-context";
-import { ArrowLeft, Building2, Eye, EyeOff } from "lucide-react"
+import { ArrowLeft, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { IndianOilLogo } from "@/components/ui/logo"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -76,7 +77,7 @@ export default function LoginPage() {
 
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <Building2 className="h-12 w-12 text-red-600 mr-2" />
+            <IndianOilLogo width={48} height={48} className="mr-2" />
             <div>
               <h1 className="text-2xl font-bold text-gray-900">IOCL TAMS</h1>
               <p className="text-sm text-gray-600">Trainee Approval & Management System</p>
