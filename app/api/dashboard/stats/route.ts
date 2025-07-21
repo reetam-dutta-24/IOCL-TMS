@@ -1,9 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
+// Force dynamic behavior
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
+    const searchParams = request.nextUrl.searchParams
     const role = searchParams.get("role")
 
     // Get overall stats
@@ -163,4 +166,4 @@ export async function GET(request: NextRequest) {
     console.error("Dashboard stats error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
-};
+}
