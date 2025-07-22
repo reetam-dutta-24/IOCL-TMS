@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { IndianOilLogo } from "@/components/ui/logo"
+import { PageLoading } from "@/components/ui/page-loading"
 import {
   LayoutDashboard,
   FileText,
@@ -34,6 +35,7 @@ import {
   Calendar,
   MapPin,
   Building,
+  Loader2,
 } from "lucide-react"
 
 interface DashboardLayoutProps {
@@ -43,12 +45,26 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, user }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [navigatingTo, setNavigatingTo] = useState<string | null>(null)
+  const [loggingOut, setLoggingOut] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
 
   const handleLogout = () => {
+    setLoggingOut(true)
     localStorage.removeItem("user")
-    router.push("/")
+    setTimeout(() => {
+      router.push("/")
+    }, 1500)
+  }
+
+  const handleNavigation = (href: string, name: string) => {
+    if (pathname !== href) {
+      setNavigatingTo(name)
+      setTimeout(() => {
+        router.push(href)
+      }, 800)
+    }
   }
 
   const navigation = [
@@ -62,6 +78,14 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
   // Function to check if current page matches navigation item
   const isCurrentPage = (href: string) => {
     return pathname === href
+  }
+
+  if (loggingOut) {
+    return <PageLoading message="Logging out..." />
+  }
+
+  if (navigatingTo) {
+    return <PageLoading message={`Loading ${navigatingTo}...`} />
   }
 
   return (
@@ -83,18 +107,23 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
             {navigation.map((item) => {
               const current = isCurrentPage(item.href)
               return (
-                <Link
+                <button
                   key={item.name}
-                  href={item.href}
-                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  onClick={() => handleNavigation(item.href, item.name)}
+                  className={`group flex items-center w-full px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                     current 
                       ? "bg-red-100 text-red-900 border border-red-200" 
                       : "text-gray-600 hover:bg-red-50 hover:text-red-700"
                   }`}
+                  disabled={navigatingTo === item.name}
                 >
-                  <item.icon className={`mr-3 h-5 w-5 ${current ? 'text-red-600' : 'text-gray-400 group-hover:text-red-500'}`} />
+                  {navigatingTo === item.name ? (
+                    <Loader2 className="mr-3 h-5 w-5 animate-spin text-red-600" />
+                  ) : (
+                    <item.icon className={`mr-3 h-5 w-5 ${current ? 'text-red-600' : 'text-gray-400 group-hover:text-red-500'}`} />
+                  )}
                   {item.name}
-                </Link>
+                </button>
               )
             })}
           </nav>
@@ -128,18 +157,23 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
             {navigation.map((item) => {
               const current = isCurrentPage(item.href)
               return (
-                <Link
+                <button
                   key={item.name}
-                  href={item.href}
-                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  onClick={() => handleNavigation(item.href, item.name)}
+                  className={`group flex items-center w-full px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                     current 
                       ? "bg-red-100 text-red-900 border border-red-200" 
                       : "text-gray-600 hover:bg-red-50 hover:text-red-700"
                   }`}
+                  disabled={navigatingTo === item.name}
                 >
-                  <item.icon className={`mr-3 h-5 w-5 ${current ? 'text-red-600' : 'text-gray-400 group-hover:text-red-500'}`} />
+                  {navigatingTo === item.name ? (
+                    <Loader2 className="mr-3 h-5 w-5 animate-spin text-red-600" />
+                  ) : (
+                    <item.icon className={`mr-3 h-5 w-5 ${current ? 'text-red-600' : 'text-gray-400 group-hover:text-red-500'}`} />
+                  )}
                   {item.name}
-                </Link>
+                </button>
               )
             })}
           </nav>
@@ -178,11 +212,22 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
             </div>
             <div className="flex items-center gap-x-4 lg:gap-x-6">
               {/* Home Button */}
-              <Link href="/">
-                <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-red-600 hover:bg-red-50"
+                onClick={() => {
+                  setNavigatingTo("Home")
+                  setTimeout(() => router.push("/"), 800)
+                }}
+                disabled={!!navigatingTo}
+              >
+                {navigatingTo === "Home" ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
                   <Home className="h-5 w-5" />
-                </Button>
-              </Link>
+                )}
+              </Button>
 
               {/* Notifications */}
               <Button variant="ghost" size="sm" className="relative text-red-600 hover:bg-red-50">
@@ -193,7 +238,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
               {/* Enhanced User menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-2 hover:bg-red-50">
+                  <Button variant="ghost" className="flex items-center gap-2 hover:bg-red-50" disabled={!!navigatingTo}>
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={`/placeholder.svg?height=32&width=32&query=${user.firstName}`} />
                       <AvatarFallback className="bg-red-100 text-red-600">
@@ -261,12 +306,16 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
                   
                   <DropdownMenuSeparator />
                   
-                  <Link href="/">
-                    <DropdownMenuItem className="text-gray-600 cursor-pointer">
-                      <Home className="mr-2 h-4 w-4" />
-                      Go to Home
-                    </DropdownMenuItem>
-                  </Link>
+                  <DropdownMenuItem 
+                    className="text-gray-600 cursor-pointer"
+                    onClick={() => {
+                      setNavigatingTo("Home")
+                      setTimeout(() => router.push("/"), 800)
+                    }}
+                  >
+                    <Home className="mr-2 h-4 w-4" />
+                    Go to Home
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign out

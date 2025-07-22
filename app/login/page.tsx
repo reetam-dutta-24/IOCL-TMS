@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "@/src/context/auth-context";
-import { ArrowLeft, Eye, EyeOff } from "lucide-react"
+import { ArrowLeft, Eye, EyeOff, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,6 +16,8 @@ export default function LoginPage() {
   const router = useRouter()
   const { login } = useAuth()
   const [loading, setLoading] = useState(false)
+  const [pageLoading, setPageLoading] = useState(true)
+  const [redirecting, setRedirecting] = useState(false)
   const [error, setError] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
@@ -23,15 +25,38 @@ export default function LoginPage() {
     password: ""
   })
 
+  useEffect(() => {
+    // Simulate page loading
+    const timer = setTimeout(() => {
+      setPageLoading(false)
+    }, 800)
+    return () => clearTimeout(timer)
+  }, [])
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }))
+    // Clear error when user starts typing
+    if (error) setError("")
+  }
+
+  const validateForm = () => {
+    if (!formData.employeeId || !formData.password) {
+      setError("Please enter both Employee ID and password")
+      return false
+    }
+    return true
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!validateForm()) {
+      return
+    }
+
     setLoading(true)
     setError("")
 
@@ -53,13 +78,41 @@ export default function LoginPage() {
       // Store user data and token
       login(data.user, data.token)
       
-      // Redirect to dashboard
-      router.push("/dashboard")
+      // Show redirecting state
+      setRedirecting(true)
+      
+      // Redirect to dashboard after a brief delay
+      setTimeout(() => {
+        router.push("/dashboard")
+      }, 1500)
     } catch (err: any) {
-      setError(err.message || "Login failed. Please try again.")
+      setError(err.message || "Login failed. Please check your credentials and try again.")
     } finally {
       setLoading(false)
     }
+  }
+
+  if (pageLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-red-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading login page...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (redirecting) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-red-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Login Successful!</h2>
+          <p className="text-gray-600">Redirecting to your dashboard...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -112,6 +165,8 @@ export default function LoginPage() {
                   onChange={(e) => handleInputChange("employeeId", e.target.value)}
                   className="border-red-200 focus:border-red-500 focus:ring-red-500"
                   required
+                  disabled={loading}
+                  autoComplete="username"
                 />
               </div>
 
@@ -126,11 +181,14 @@ export default function LoginPage() {
                     onChange={(e) => handleInputChange("password", e.target.value)}
                     className="border-red-200 focus:border-red-500 focus:ring-red-500 pr-10"
                     required
+                    disabled={loading}
+                    autoComplete="current-password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                    disabled={loading}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -148,9 +206,16 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-red-600 hover:bg-red-700 text-white"
+                className="w-full bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
               >
-                {loading ? "Signing in..." : "Sign In"}
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  "Sign In"
+                )}
               </Button>
             </form>
 
@@ -167,7 +232,8 @@ export default function LoginPage() {
               <h3 className="font-medium text-blue-900 mb-2">Demo Credentials:</h3>
               <div className="text-sm text-blue-700 space-y-1">
                 <div><strong>L&D HoD:</strong> EMP001 / demo123</div>
-                <div><strong>Coordinator:</strong> EMP002 / demo123</div>
+                <div><strong>L&D Coordinator:</strong> EMP002 / demo123</div>
+                <div><strong>Department HoD:</strong> EMP003 / demo123</div>
                 <div><strong>Mentor:</strong> EMP004 / demo123</div>
               </div>
             </div>

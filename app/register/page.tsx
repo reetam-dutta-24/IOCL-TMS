@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, CheckCircle } from "lucide-react"
+import { ArrowLeft, CheckCircle, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,6 +16,7 @@ import { IndianOilLogo } from "@/components/ui/logo"
 export default function RegisterPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [pageLoading, setPageLoading] = useState(true)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
   const [formData, setFormData] = useState({
@@ -31,6 +32,14 @@ export default function RegisterPage() {
     reason: ""
   })
 
+  useEffect(() => {
+    // Simulate page loading
+    const timer = setTimeout(() => {
+      setPageLoading(false)
+    }, 1000)
+    return () => clearTimeout(timer)
+  }, [])
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -38,10 +47,41 @@ export default function RegisterPage() {
     }))
   }
 
+  const validateForm = () => {
+    if (!formData.employeeId || !formData.firstName || !formData.lastName || 
+        !formData.email || !formData.password || !formData.department || !formData.role) {
+      setError("Please fill in all required fields")
+      return false
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match")
+      return false
+    }
+
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long")
+      return false
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      setError("Please enter a valid email address")
+      return false
+    }
+
+    return true
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
     setError("")
+
+    if (!validateForm()) {
+      return
+    }
+
+    setLoading(true)
 
     try {
       const response = await fetch("/api/auth/register", {
@@ -62,6 +102,7 @@ export default function RegisterPage() {
       
       // Redirect to login after 3 seconds
       setTimeout(() => {
+        setPageLoading(true)
         router.push("/login")
       }, 3000)
     } catch (err: any) {
@@ -69,6 +110,17 @@ export default function RegisterPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (pageLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-red-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading registration form...</p>
+        </div>
+      </div>
+    )
   }
 
   if (success) {
@@ -83,14 +135,15 @@ export default function RegisterPage() {
               <h1 className="text-2xl font-bold text-gray-900 mb-4">Request Submitted Successfully!</h1>
               <p className="text-gray-600 mb-6">
                 Your access request has been submitted to the IOCL TAMS administrators. 
-                You will receive an email notification once your request is reviewed and approved.
+                You can now login with your credentials immediately.
               </p>
-              <p className="text-sm text-gray-500 mb-4">
-                Redirecting to login page in a few seconds...
-              </p>
+              <div className="flex items-center justify-center mb-4">
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <p className="text-sm text-gray-500">Redirecting to login page...</p>
+              </div>
               <Link href="/login">
                 <Button className="bg-red-600 hover:bg-red-700 text-white">
-                  Go to Login
+                  Go to Login Now
                 </Button>
               </Link>
             </CardContent>
@@ -151,6 +204,7 @@ export default function RegisterPage() {
                     onChange={(e) => handleInputChange("employeeId", e.target.value)}
                     className="border-red-200 focus:border-red-500 focus:ring-red-500"
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -163,6 +217,7 @@ export default function RegisterPage() {
                     onChange={(e) => handleInputChange("email", e.target.value)}
                     className="border-red-200 focus:border-red-500 focus:ring-red-500"
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -178,6 +233,7 @@ export default function RegisterPage() {
                     onChange={(e) => handleInputChange("firstName", e.target.value)}
                     className="border-red-200 focus:border-red-500 focus:ring-red-500"
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -190,6 +246,7 @@ export default function RegisterPage() {
                     onChange={(e) => handleInputChange("lastName", e.target.value)}
                     className="border-red-200 focus:border-red-500 focus:ring-red-500"
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -200,11 +257,12 @@ export default function RegisterPage() {
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Enter password"
+                    placeholder="Enter password (min 6 characters)"
                     value={formData.password}
                     onChange={(e) => handleInputChange("password", e.target.value)}
                     className="border-red-200 focus:border-red-500 focus:ring-red-500"
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -217,6 +275,7 @@ export default function RegisterPage() {
                     onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
                     className="border-red-200 focus:border-red-500 focus:ring-red-500"
                     required
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -231,11 +290,12 @@ export default function RegisterPage() {
                     value={formData.phone}
                     onChange={(e) => handleInputChange("phone", e.target.value)}
                     className="border-red-200 focus:border-red-500 focus:ring-red-500"
+                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="department">Department *</Label>
-                  <Select value={formData.department} onValueChange={(value) => handleInputChange("department", value)}>
+                  <Select value={formData.department} onValueChange={(value) => handleInputChange("department", value)} disabled={loading}>
                     <SelectTrigger className="border-red-200 focus:border-red-500 focus:ring-red-500">
                       <SelectValue placeholder="Select your department" />
                     </SelectTrigger>
@@ -253,12 +313,13 @@ export default function RegisterPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="role">Requested Role *</Label>
-                <Select value={formData.role} onValueChange={(value) => handleInputChange("role", value)}>
+                <Select value={formData.role} onValueChange={(value) => handleInputChange("role", value)} disabled={loading}>
                   <SelectTrigger className="border-red-200 focus:border-red-500 focus:ring-red-500">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="L&D Coordinator">L&D Coordinator</SelectItem>
+                    <SelectItem value="L&D HoD">L&D HoD</SelectItem>
                     <SelectItem value="Department HoD">Department HoD</SelectItem>
                     <SelectItem value="Mentor">Mentor</SelectItem>
                   </SelectContent>
@@ -274,14 +335,15 @@ export default function RegisterPage() {
                   onChange={(e) => handleInputChange("reason", e.target.value)}
                   className="border-red-200 focus:border-red-500 focus:ring-red-500"
                   rows={3}
+                  disabled={loading}
                 />
               </div>
 
               <div className="bg-red-50 p-4 rounded-lg">
                 <h3 className="font-medium text-red-900 mb-2">Important Notes:</h3>
                 <ul className="text-sm text-red-700 space-y-1">
-                  <li>• All requests require administrator approval</li>
-                  <li>• You will receive an email notification once your request is processed</li>
+                  <li>• Registration creates account immediately - no approval required</li>
+                  <li>• You can login right after successful registration</li>
                   <li>• Please ensure all information is accurate</li>
                   <li>• Contact IT support if you encounter any issues</li>
                 </ul>
@@ -290,9 +352,16 @@ export default function RegisterPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-red-600 hover:bg-red-700 text-white"
+                className="w-full bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
               >
-                {loading ? "Submitting Request..." : "Submit Access Request"}
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating Account...
+                  </>
+                ) : (
+                  "Create Account"
+                )}
               </Button>
             </form>
 
