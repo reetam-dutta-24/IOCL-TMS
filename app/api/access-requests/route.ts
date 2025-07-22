@@ -6,7 +6,7 @@ import nodemailer from "nodemailer"
 const prisma = new PrismaClient()
 
 // Configure email transporter
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || "smtp.gmail.com",
   port: 587,
   secure: false,
@@ -92,70 +92,14 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Send notification email to admins
-    const admins = await prisma.user.findMany({
-      where: {
-        role: {
-          name: {
-            in: ['L&D HoD', 'System Administrator']
-          }
-        },
-        isActive: true
-      }
-    })
-
-    for (const admin of admins) {
-      const mailOptions = {
-        from: process.env.SMTP_FROM || 'noreply@iocl.co.in',
-        to: admin.email,
-        subject: 'IOCL TAMS - New Access Request',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 20px; text-align: center;">
-              <h1 style="color: white; margin: 0;">IOCL TAMS</h1>
-              <p style="color: #fee2e2; margin: 5px 0 0 0;">New Access Request</p>
-            </div>
-            
-            <div style="padding: 30px; background: #f9fafb;">
-              <h2 style="color: #374151; margin-bottom: 20px;">New Access Request Received</h2>
-              
-              <p style="color: #6b7280; line-height: 1.6;">
-                A new access request has been submitted for IOCL TAMS:
-              </p>
-              
-              <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <p><strong>Name:</strong> ${firstName} ${lastName}</p>
-                <p><strong>Email:</strong> ${email}</p>
-                <p><strong>Employee ID:</strong> ${employeeId}</p>
-                <p><strong>Requested Role:</strong> ${accessRequest.requestedRole.name}</p>
-                <p><strong>Department:</strong> ${accessRequest.department?.name || 'Not specified'}</p>
-                <p><strong>Institution:</strong> ${institutionName || 'Not specified'}</p>
-                <p><strong>Purpose:</strong> ${purpose || 'Not specified'}</p>
-              </div>
-              
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${process.env.NEXTAUTH_URL}/dashboard/admin/access-requests" 
-                   style="background: #ef4444; color: white; padding: 12px 30px; 
-                          text-decoration: none; border-radius: 6px; display: inline-block;
-                          font-weight: bold;">
-                  Review Request
-                </a>
-              </div>
-            </div>
-          </div>
-        `
-      }
-
-      await transporter.sendMail(mailOptions)
-    }
-
     return NextResponse.json({
-      message: "Access request submitted successfully. You will receive an email once your request is reviewed.",
+      success: true,
+      message: "Access request submitted successfully",
       requestId: accessRequest.id
     })
 
   } catch (error) {
-    console.error("Access request error:", error)
+    console.error("Access request submission error:", error)
     return NextResponse.json(
       { error: "Failed to submit access request" },
       { status: 500 }
@@ -165,17 +109,17 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const status = searchParams.get('status')
-
-    const where = status ? { status: status as any } : {}
-
     const accessRequests = await prisma.accessRequest.findMany({
-      where,
       include: {
         requestedRole: true,
         department: true,
-        reviewer: true
+        reviewer: {
+          select: {
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        }
       },
       orderBy: {
         requestedAt: 'desc'
@@ -183,9 +127,8 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json(accessRequests)
-
   } catch (error) {
-    console.error("Get access requests error:", error)
+    console.error("Failed to fetch access requests:", error)
     return NextResponse.json(
       { error: "Failed to fetch access requests" },
       { status: 500 }

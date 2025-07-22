@@ -16,6 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { IndianOilLogo } from "@/components/ui/logo"
 import { PageLoading } from "@/components/ui/page-loading"
+import { NotificationSystem } from "@/components/ui/notification-system"
 import {
   LayoutDashboard,
   FileText,
@@ -75,6 +76,12 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
     { name: "Settings", href: "/settings", icon: Settings },
   ]
 
+  // Add admin panel for admin users
+  const isAdmin = user && ['L&D HoD', 'System Administrator'].includes(user.role)
+  if (isAdmin) {
+    navigation.push({ name: "Admin Panel", href: "/admin", icon: Shield })
+  }
+
   // Function to check if current page matches navigation item
   const isCurrentPage = (href: string) => {
     return pathname === href
@@ -131,10 +138,9 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
           {/* Mobile User info at bottom */}
           <div className="flex-shrink-0 border-t border-gray-200 p-4">
             <div className="flex items-center">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={`/placeholder.svg?height=32&width=32&query=${user.firstName}`} />
-                <AvatarFallback className="bg-red-100 text-red-600">
-                  {user.firstName?.[0]}{user.lastName?.[0]}
+              <Avatar className="h-8 w-8" style={{ backgroundColor: user.profileColor || '#ef4444' }}>
+                <AvatarFallback className="text-white font-semibold" style={{ backgroundColor: user.profileColor || '#ef4444' }}>
+                  {user.firstName?.[0]?.toUpperCase()}{user.lastName?.[0]?.toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="ml-3">
@@ -181,10 +187,9 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
           {/* User info at bottom */}
           <div className="flex-shrink-0 border-t border-red-100 p-4">
             <div className="flex items-center">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={`/placeholder.svg?height=32&width=32&query=${user.firstName}`} />
-                <AvatarFallback className="bg-red-100 text-red-600">
-                  {user.firstName?.[0]}{user.lastName?.[0]}
+              <Avatar className="h-8 w-8" style={{ backgroundColor: user.profileColor || '#ef4444' }}>
+                <AvatarFallback className="text-white font-semibold" style={{ backgroundColor: user.profileColor || '#ef4444' }}>
+                  {user.firstName?.[0]?.toUpperCase()}{user.lastName?.[0]?.toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="ml-3">
@@ -230,19 +235,15 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
               </Button>
 
               {/* Notifications */}
-              <Button variant="ghost" size="sm" className="relative text-red-600 hover:bg-red-50">
-                <Bell className="h-5 w-5" />
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs bg-red-600 text-white">3</Badge>
-              </Button>
+              <NotificationSystem userId={user.id} />
 
               {/* Enhanced User menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2 hover:bg-red-50" disabled={!!navigatingTo}>
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={`/placeholder.svg?height=32&width=32&query=${user.firstName}`} />
-                      <AvatarFallback className="bg-red-100 text-red-600">
-                        {user.firstName?.[0]}{user.lastName?.[0]}
+                    <Avatar className="h-8 w-8" style={{ backgroundColor: user.profileColor || '#ef4444' }}>
+                      <AvatarFallback className="text-white font-semibold" style={{ backgroundColor: user.profileColor || '#ef4444' }}>
+                        {user.firstName?.[0]?.toUpperCase()}{user.lastName?.[0]?.toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="hidden lg:block text-left">
@@ -255,10 +256,9 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
                 <DropdownMenuContent align="end" className="w-80">
                   <DropdownMenuLabel>
                     <div className="flex items-center space-x-3">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage src={`/placeholder.svg?height=48&width=48&query=${user.firstName}`} />
-                        <AvatarFallback className="bg-red-100 text-red-600 text-lg">
-                          {user.firstName?.[0]}{user.lastName?.[0]}
+                      <Avatar className="h-12 w-12" style={{ backgroundColor: user.profileColor || '#ef4444' }}>
+                        <AvatarFallback className="text-white font-semibold text-lg" style={{ backgroundColor: user.profileColor || '#ef4444' }}>
+                          {user.firstName?.[0]?.toUpperCase()}{user.lastName?.[0]?.toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div>
@@ -291,15 +291,33 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
                   <DropdownMenuSeparator />
                   
                   {/* Menu Items */}
-                  <DropdownMenuItem className="cursor-pointer">
+                  <DropdownMenuItem 
+                    className="cursor-pointer"
+                    onClick={() => {
+                      setNavigatingTo("Profile")
+                      setTimeout(() => router.push("/settings?tab=profile"), 800)
+                    }}
+                  >
                     <User className="mr-2 h-4 w-4" />
                     View Profile
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer">
+                  <DropdownMenuItem 
+                    className="cursor-pointer"
+                    onClick={() => {
+                      setNavigatingTo("Settings")
+                      setTimeout(() => router.push("/settings"), 800)
+                    }}
+                  >
                     <Settings className="mr-2 h-4 w-4" />
                     Account Settings
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer">
+                  <DropdownMenuItem 
+                    className="cursor-pointer"
+                    onClick={() => {
+                      setNavigatingTo("Notifications")
+                      setTimeout(() => router.push("/settings?tab=notifications"), 800)
+                    }}
+                  >
                     <Bell className="mr-2 h-4 w-4" />
                     Notification Preferences
                   </DropdownMenuItem>

@@ -6,18 +6,18 @@ const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
-    const { token, password } = await request.json()
+    const { token, newPassword } = await request.json()
 
-    if (!token || !password) {
+    if (!token || !newPassword) {
       return NextResponse.json(
-        { error: "Token and password are required" },
+        { error: "Token and new password are required" },
         { status: 400 }
       )
     }
 
-    if (password.length < 6) {
+    if (newPassword.length < 8) {
       return NextResponse.json(
-        { error: "Password must be at least 6 characters long" },
+        { error: "Password must be at least 8 characters long" },
         { status: 400 }
       )
     }
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Hash new password
-    const hashedPassword = await hashPassword(password)
+    const hashedPassword = await hashPassword(newPassword)
 
     // Update user password and clear reset token
     await prisma.user.update({
@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({
+      success: true,
       message: "Password has been reset successfully"
     })
 

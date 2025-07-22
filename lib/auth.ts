@@ -1,8 +1,8 @@
-import bcryptjs from "bcryptjs"
-import jwt from "jsonwebtoken"
-import { prisma } from "./prisma"
+import jwt from 'jsonwebtoken'
+import bcrypt from 'bcryptjs'
+import { PrismaClient } from '@prisma/client'
 
-const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-key"
+const prisma = new PrismaClient()
 
 export interface AuthUser {
   id: number
@@ -14,102 +14,66 @@ export interface AuthUser {
   department: string
 }
 
-export async function hashPassword(password: string): Promise<string> {
-  return await bcryptjs.hash(password, 12)
+export const hashPassword = async (password: string): Promise<string> => {
+  const saltRounds = 12
+  return await bcrypt.hash(password, saltRounds)
 }
 
-export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
-  return await bcryptjs.compare(password, hashedPassword)
+export const verifyPassword = async (password: string, hashedPassword: string): Promise<boolean> => {
+  return await bcrypt.compare(password, hashedPassword)
 }
 
-export function generateToken(user: AuthUser): string {
+export const generateToken = (user: AuthUser): string => {
+  const secret = process.env.JWT_SECRET || 'fallback-secret-key'
   return jwt.sign(
     {
-      userId: user.id,
+      id: user.id,
       employeeId: user.employeeId,
+      firstName: user.firstName,
+      lastName: user.lastName,
       email: user.email,
       role: user.role,
+      department: user.department
     },
-    JWT_SECRET,
-    { expiresIn: "7d" }
+    secret,
+    { expiresIn: '7d' }
   )
 }
 
-export function verifyJWT(token: string): any {
+export const verifyToken = (token: string): AuthUser | null => {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any
+    const secret = process.env.JWT_SECRET || 'fallback-secret-key'
+    const decoded = jwt.verify(token, secret) as AuthUser
     return decoded
   } catch (error) {
     return null
   }
 }
 
-export function verifyToken(token: string): AuthUser | null {
-  return verifyJWT(token)
-}
-
-export async function authenticateUser(employeeId: string, password: string): Promise<AuthUser | null> {
+export const authenticateUser = async (employeeId: string, password: string) => {
   try {
-    console.log("🔍 Exact search parameters:")
-    console.log("  - employeeId:", JSON.stringify(employeeId))
-    console.log("  - employeeId length:", employeeId.length)
-    console.log("  - password:", JSON.stringify(password))
-    
-    // First, let's see all users in database
-    const allUsers = await prisma.user.findMany({
-      select: { employeeId: true, isActive: true, firstName: true }
-    })
-    console.log("🔍 All users in database:", allUsers)
-    
     const user = await prisma.user.findUnique({
-      where: { employeeId: employeeId.trim() },
+      where: { employeeId },
       include: {
         role: true,
-        department: true,
-      },
+        department: true
+      }
     })
 
-    console.log("🔍 Database query result:", {
-      found: !!user,
-      isActive: user?.isActive,
-      hasPassword: !!user?.password,
-      hasRole: !!user?.role,
-      roleName: user?.role?.name,
-      actualEmployeeId: user?.employeeId
-    })
+    if (!user || !user.password) {
+      return null
+    }
 
-    if (!user) {
-      console.log("❌ User not found in database")
+    const isPasswordValid = await verifyPassword(password, user.password)
+    if (!isPasswordValid) {
       return null
     }
 
     if (!user.isActive) {
-      console.log("❌ User account is inactive")
       return null
     }
 
-    console.log("🔍 About to verify password...")
-    console.log("🔍 Input password:", password)
-    console.log("🔍 Stored hash (first 20 chars):", user.password.substring(0, 20) + "...")
-    
-    const isValid = await verifyPassword(password, user.password)
-    console.log("🔍 Password verification result:", isValid)
-    
-    if (!isValid) {
-      console.log("❌ Password verification failed")
-      return null
-    }
-
-    console.log("✅ Authentication successful, updating last login...")
-
-    // Update last login
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { lastLogin: new Date() },
-    })
-
-    console.log("✅ Returning user data")
-
+    // Return user data with safe string handling
     return {
       id: user.id,
       employeeId: user.employeeId,
@@ -117,43 +81,33 @@ export async function authenticateUser(employeeId: string, password: string): Pr
       lastName: user.lastName,
       email: user.email,
       role: user.role.name,
-      department: user.department?.name || "Unknown",
+      department: user.department?.name || 'Unknown',
+      isActive: user.isActive
     }
   } catch (error) {
-    console.error("💥 Authentication error:", error)
+    console.error('Authentication error:', error)
     return null
   }
 }
 
-export async function createUser(userData: {
-  employeeId: string
-  firstName: string
-  lastName: string
-  email: string
-  password: string
-  roleId: number
-  departmentId?: number | null
-  phone?: string
-}): Promise<AuthUser | null> {
+export const getUserFromToken = async (token: string) => {
   try {
-    const hashedPassword = await hashPassword(userData.password)
+    const decoded = verifyToken(token)
+    if (!decoded) {
+      return null
+    }
 
-    const user = await prisma.user.create({
-      data: {
-        employeeId: userData.employeeId,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-        password: hashedPassword,
-        roleId: userData.roleId,
-        departmentId: userData.departmentId,
-        phone: userData.phone,
-      },
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
       include: {
         role: true,
-        department: true,
-      },
+        department: true
+      }
     })
+
+    if (!user || !user.isActive) {
+      return null
+    }
 
     return {
       id: user.id,
@@ -162,10 +116,12 @@ export async function createUser(userData: {
       lastName: user.lastName,
       email: user.email,
       role: user.role.name,
-      department: user.department?.name || "Unknown",
+      department: user.department?.name || 'Unknown',
+      isActive: user.isActive,
+      profileColor: user.profileColor || '#ef4444'
     }
   } catch (error) {
-    console.error("User creation error:", error)
+    console.error('Get user from token error:', error)
     return null
   }
 }

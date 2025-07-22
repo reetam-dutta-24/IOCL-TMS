@@ -348,20 +348,20 @@ export default function LandingPage() {
             <SectionLoading />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              <div className="text-center animate-scale-in animate-delay-100 hover-lift">
-                <div className="text-4xl font-bold text-red-600 mb-2">{stats.totalInterns}+</div>
+              <div className="text-center animate-scale-in animate-delay-200">
+                <div className="text-3xl font-bold text-red-600 mb-2">{stats.totalInterns}+</div>
                 <div className="text-gray-600">Total Interns</div>
               </div>
-              <div className="text-center animate-scale-in animate-delay-200 hover-lift">
-                <div className="text-4xl font-bold text-red-600 mb-2">{stats.activeMentors}+</div>
+              <div className="text-center animate-scale-in animate-delay-400">
+                <div className="text-3xl font-bold text-red-600 mb-2">{stats.activeMentors}+</div>
                 <div className="text-gray-600">Active Mentors</div>
               </div>
-              <div className="text-center animate-scale-in animate-delay-300 hover-lift">
-                <div className="text-4xl font-bold text-red-600 mb-2">{stats.completedPrograms}%</div>
-                <div className="text-gray-600">Success Rate</div>
+              <div className="text-center animate-scale-in animate-delay-600">
+                <div className="text-3xl font-bold text-red-600 mb-2">{stats.completedPrograms}%</div>
+                <div className="text-gray-600">Completion Rate</div>
               </div>
-              <div className="text-center animate-scale-in animate-delay-400 hover-lift">
-                <div className="text-4xl font-bold text-red-600 mb-2">{stats.departments}</div>
+              <div className="text-center animate-scale-in animate-delay-800">
+                <div className="text-3xl font-bold text-red-600 mb-2">{stats.departments}+</div>
                 <div className="text-gray-600">Departments</div>
               </div>
             </div>
@@ -369,7 +369,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Enhanced Features Section with All Features */}
+      {/* Features Section with Loading */}
       <section id="features" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {sectionsLoading.features ? (
@@ -378,74 +378,41 @@ export default function LandingPage() {
             <>
               <div className="text-center mb-16 animate-fade-in">
                 <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                  Comprehensive Feature Suite
+                  Powerful Features for Modern Training Management
                 </h2>
                 <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                  Everything you need to manage training programs efficiently with cutting-edge technology
+                  IOCL TAMS provides comprehensive tools and features to streamline your training 
+                  and mentorship programs with advanced automation and analytics.
                 </p>
               </div>
 
-              {/* Feature Categories */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {allFeatures.map((feature, index) => {
-                  const IconComponent = feature.icon
-                  return (
-                    <Card 
-                      key={feature.title} 
-                      className={`card-hover hover-lift border-red-100 animate-slide-in-up animate-delay-${(index % 6 + 1) * 100}`}
-                    >
-                      <CardHeader>
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center animate-float">
-                            <IconComponent className="h-6 w-6 text-red-600" />
-                          </div>
-                          <Badge variant="outline" className="text-xs">
-                            {feature.category}
-                          </Badge>
+                {allFeatures.map((feature, index) => (
+                  <Card key={index} className={`hover:shadow-lg transition-all duration-300 hover-lift animate-slide-in-up animate-delay-${(index % 3) * 200 + 200}`}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                          <feature.icon className="h-6 w-6 text-red-600" />
                         </div>
-                        <CardTitle className="text-lg font-semibold">{feature.title}</CardTitle>
-                        <CardDescription className="text-gray-600">
-                          {feature.description}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <ul className="space-y-2">
-                          {feature.features.map((item, idx) => (
-                            <li key={idx} className="flex items-center text-sm text-gray-600">
-                              <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
-                              {item}
-                            </li>
-                          ))}
-                        </ul>
-                      </CardContent>
-                    </Card>
-                  )
-                })}
-              </div>
-
-              {/* Feature Highlights */}
-              <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="text-center p-6 bg-white rounded-lg shadow-sm animate-slide-in-left animate-delay-700 hover-lift">
-                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-float">
-                    <Zap className="h-8 w-8 text-red-600" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">Lightning Fast</h3>
-                  <p className="text-gray-600">Optimized performance with sub-second response times</p>
-                </div>
-                <div className="text-center p-6 bg-white rounded-lg shadow-sm animate-slide-in-up animate-delay-800 hover-lift">
-                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-float">
-                    <Shield className="h-8 w-8 text-red-600" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">Enterprise Security</h3>
-                  <p className="text-gray-600">Bank-grade security with end-to-end encryption</p>
-                </div>
-                <div className="text-center p-6 bg-white rounded-lg shadow-sm animate-slide-in-right animate-delay-900 hover-lift">
-                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-float">
-                    <Clock className="h-8 w-8 text-red-600" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">24/7 Availability</h3>
-                  <p className="text-gray-600">Round-the-clock access with 99.9% uptime guarantee</p>
-                </div>
+                        <Badge variant="outline" className="text-xs">
+                          {feature.category}
+                        </Badge>
+                      </div>
+                      <CardTitle className="text-lg mb-2">{feature.title}</CardTitle>
+                      <CardDescription>{feature.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-2">
+                        {feature.features.map((item, itemIndex) => (
+                          <li key={itemIndex} className="flex items-center text-sm text-gray-600">
+                            <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </>
           )}
@@ -477,7 +444,7 @@ export default function LandingPage() {
                   </Button>
                 </Link>
                 <Link href="/login">
-                  <Button size="lg" variant="outline" className="border-white text-red-600 hover:bg-red-700 hover:border-red-100 btn-animate hover-lift">
+                  <Button size="lg" variant="outline" className="border-white text-red-600 bg-red-600 hover:bg-red-700 hover:border-red-100 hover:text-white btn-animate hover-lift">
                     Access Dashboard
                   </Button>
                 </Link>

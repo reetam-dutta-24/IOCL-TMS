@@ -1,7 +1,8 @@
 {
   "/page": "app/page.js",
-  "/login/page": "app/login/page.js",
-  "/mentors/page": "app/mentors/page.js",
   "/user-guide/page": "app/user-guide/page.js",
-  "/dashboard/page": "app/dashboard/page.js"
+  "/about/page": "app/about/page.js",
+  "/faq/page": "app/faq/page.js",
+  "/login/page": "app/login/page.js",
+  "/forgot-password/page": "app/forgot-password/page.js"
 }

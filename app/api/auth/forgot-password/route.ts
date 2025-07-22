@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { PrismaClient } from "@prisma/client"
-import crypto from "crypto"
 import nodemailer from "nodemailer"
+import crypto from "crypto"
 
 const prisma = new PrismaClient()
 
-// Configure email transporter
-const transporter = nodemailer.createTransporter({
+// Configure email transporter - FIXED: createTransport instead of createTransporter
+const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || "smtp.gmail.com",
   port: 587,
   secure: false,
@@ -29,14 +29,14 @@ export async function POST(request: NextRequest) {
 
     // Find user by email
     const user = await prisma.user.findUnique({
-      where: { email },
-      include: { role: true, department: true }
+      where: { email }
     })
 
     if (!user) {
       // Don't reveal if email exists or not for security
       return NextResponse.json({
-        message: "If an account with that email exists, we've sent a password reset link."
+        success: true,
+        message: "If an account with that email exists, a reset link has been sent."
       })
     }
 
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     const resetToken = crypto.randomBytes(32).toString('hex')
     const resetExpires = new Date(Date.now() + 3600000) // 1 hour from now
 
-    // Save reset token to database
+    // Update user with reset token
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -54,63 +54,29 @@ export async function POST(request: NextRequest) {
     })
 
     // Send reset email
-    const resetURL = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`
+    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`
     
-    const mailOptions = {
-      from: process.env.SMTP_FROM || 'noreply@iocl.co.in',
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || "noreply@iocl.co.in",
       to: email,
-      subject: 'IOCL TAMS - Password Reset Request',
+      subject: "Password Reset Request - IOCL TAMS",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 20px; text-align: center;">
-            <h1 style="color: white; margin: 0;">IOCL TAMS</h1>
-            <p style="color: #fee2e2; margin: 5px 0 0 0;">Trainee Approval & Management System</p>
-          </div>
-          
-          <div style="padding: 30px; background: #f9fafb;">
-            <h2 style="color: #374151; margin-bottom: 20px;">Password Reset Request</h2>
-            
-            <p style="color: #6b7280; line-height: 1.6;">
-              Hello ${user.firstName},
-            </p>
-            
-            <p style="color: #6b7280; line-height: 1.6;">
-              We received a request to reset your password for your IOCL TAMS account. 
-              Click the button below to create a new password:
-            </p>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${resetURL}" 
-                 style="background: #ef4444; color: white; padding: 12px 30px; 
-                        text-decoration: none; border-radius: 6px; display: inline-block;
-                        font-weight: bold;">
-                Reset Password
-              </a>
-            </div>
-            
-            <p style="color: #6b7280; line-height: 1.6; font-size: 14px;">
-              This link will expire in 1 hour for security reasons.
-            </p>
-            
-            <p style="color: #6b7280; line-height: 1.6; font-size: 14px;">
-              If you didn't request this password reset, please ignore this email or contact support 
-              if you have concerns.
-            </p>
-            
-            <div style="border-top: 1px solid #e5e7eb; margin-top: 30px; padding-top: 20px;">
-              <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-                © 2024 Indian Oil Corporation Limited. All rights reserved.
-              </p>
-            </div>
-          </div>
+          <h2>Password Reset Request</h2>
+          <p>You requested a password reset for your IOCL TAMS account.</p>
+          <p>Click the link below to reset your password:</p>
+          <a href="${resetUrl}" style="background-color: #ef4444; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
+            Reset Password
+          </a>
+          <p>This link will expire in 1 hour.</p>
+          <p>If you didn't request this reset, please ignore this email.</p>
         </div>
       `
-    }
-
-    await transporter.sendMail(mailOptions)
+    })
 
     return NextResponse.json({
-      message: "If an account with that email exists, we've sent a password reset link."
+      success: true,
+      message: "If an account with that email exists, a reset link has been sent."
     })
 
   } catch (error) {

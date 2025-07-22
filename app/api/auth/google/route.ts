@@ -90,12 +90,15 @@ export async function POST(request: NextRequest) {
       data: { lastLogin: new Date() }
     })
 
-    // Generate JWT token
+    // Generate JWT token with all required fields
     const token = generateToken({
       id: user.id,
       employeeId: user.employeeId,
+      firstName: user.firstName,
+      lastName: user.lastName,
       email: user.email,
-      role: user.role.name
+      role: user.role?.name || 'Unknown',
+      department: user.department?.name || 'Unknown'
     })
 
     return NextResponse.json({
@@ -106,7 +109,7 @@ export async function POST(request: NextRequest) {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        role: user.role.name,
+        role: user.role?.name || 'Unknown',
         department: user.department?.name || "Unknown",
         profileColor: user.profileColor,
         profileInitials: user.profileInitials

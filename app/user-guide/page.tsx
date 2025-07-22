@@ -98,144 +98,69 @@ export default function UserGuidePage() {
         step: 2,
         title: "Document Upload",
         description: "Attaching required documents to requests",
-        content: "Upload documents in PDF format (max 10MB each): institutional letter, academic transcripts, ID proof, and medical certificate. Ensure all documents are clear and complete."
+        content: "Upload supporting documents such as recommendation letters, academic transcripts, and identification. Ensure files are in PDF format and under 10MB each."
       },
       {
         step: 3,
-        title: "Status Tracking",
-        description: "Monitoring request progress through approval workflow",
-        content: "Track request status in real-time: Submitted → Under Review → Approved → Mentor Assigned → In Progress → Completed. Receive email notifications for status changes."
+        title: "Tracking Status",
+        description: "Monitoring request progress and updates",
+        content: "View request status in real-time through the dashboard. Receive notifications for status changes and respond to any additional requirements promptly."
       },
       {
         step: 4,
-        title: "Request Modifications",
-        description: "Editing or updating submitted requests",
-        content: "Requests can be modified only in 'Submitted' status. Contact your L&D Coordinator for changes after review begins. Major modifications may require a new request submission."
-      }
-    ],
-    "mentor-system": [
-      {
-        step: 1,
-        title: "Mentor Assignment",
-        description: "Understanding the automated mentor matching process",
-        content: "TAMS uses intelligent algorithms to match mentors based on expertise, workload, availability, and departmental requirements. Department HoDs can manually override assignments when needed."
-      },
-      {
-        step: 2,
-        title: "Mentor Profiles",
-        description: "Viewing mentor qualifications and expertise",
-        content: "Browse mentor profiles to understand their background, specializations, current trainees, and availability. This helps in making informed mentor preference requests."
-      },
-      {
-        step: 3,
         title: "Communication",
-        description: "Coordinating with assigned mentors",
-        content: "Use the in-system messaging or provided contact details to communicate with mentors. Coordinate start dates, objectives, schedules, and progress updates through proper channels."
-      },
-      {
-        step: 4,
-        title: "Evaluation Process",
-        description: "Providing feedback on mentorship experience",
-        content: "Complete mentor evaluation forms at internship completion. Rate guidance quality, availability, knowledge sharing, and overall experience to help improve the mentorship program."
+        description: "Interacting with reviewers and stakeholders",
+        content: "Use the built-in messaging system to communicate with L&D coordinators, mentors, and administrators. All communications are logged for reference."
       }
     ],
-    "reports-analytics": [
+    "reporting": [
       {
         step: 1,
-        title: "Dashboard Analytics",
-        description: "Understanding key metrics and statistics",
-        content: "The dashboard displays important metrics: total requests, approval rates, mentor assignments, completion statistics, and departmental breakdowns. Use these insights for decision-making."
+        title: "Accessing Reports",
+        description: "Navigating to the reports section",
+        content: "Access the Reports section from the main navigation. Choose from various report types based on your role and permissions."
       },
       {
         step: 2,
-        title: "Custom Reports",
-        description: "Generating specific reports for your needs",
-        content: "Create custom reports by selecting date ranges, departments, request types, and status filters. Export reports in PDF or Excel format for external use and record-keeping."
+        title: "Generating Reports",
+        description: "Creating custom reports with filters",
+        content: "Select report parameters including date range, department, status, and other filters. Generate reports in PDF or Excel format for download."
       },
       {
         step: 3,
-        title: "Performance Tracking",
-        description: "Monitoring training program effectiveness",
-        content: "Track key performance indicators: request processing time, mentor utilization, trainee satisfaction scores, completion rates, and department-wise statistics for program optimization."
+        title: "Scheduled Reports",
+        description: "Setting up automated report generation",
+        content: "Configure automated reports to be generated and emailed on a schedule. Useful for regular monitoring and compliance requirements."
       },
       {
         step: 4,
-        title: "Data Export",
-        description: "Downloading data for external analysis",
-        content: "Export data in various formats (Excel, CSV, PDF) for external analysis, presentations, or compliance reporting. Ensure data privacy and security when handling exported information."
+        title: "Data Analysis",
+        description: "Understanding report metrics and insights",
+        content: "Interpret report data to identify trends, bottlenecks, and opportunities for improvement in the training and mentorship programs."
       }
     ]
   }
 
-  const userRoles = [
-    {
-      role: "L&D Coordinator",
-      icon: User,
-      color: "bg-blue-100 text-blue-600",
-      description: "Initial processing and coordination of internship requests",
-      responsibilities: [
-        "Process incoming internship requests",
-        "Verify documentation and eligibility",
-        "Coordinate with departments for approvals",
-        "Maintain request records and communication"
-      ]
-    },
-    {
-      role: "L&D HoD",
-      icon: UserCheck,
-      color: "bg-green-100 text-green-600",
-      description: "Final approval and policy oversight for training programs",
-      responsibilities: [
-        "Review and approve internship requests",
-        "Set training policies and guidelines",
-        "Oversee program quality and outcomes",
-        "Make strategic decisions for L&D initiatives"
-      ]
-    },
-    {
-      role: "Department HoD",
-      icon: Building,
-      color: "bg-purple-100 text-purple-600",
-      description: "Mentor assignment and departmental coordination",
-      responsibilities: [
-        "Assign mentors to approved trainees",
-        "Manage departmental training resources",
-        "Coordinate with mentors and trainees",
-        "Ensure department-specific requirements are met"
-      ]
-    },
-    {
-      role: "Mentor",
-      icon: Users,
-      color: "bg-orange-100 text-orange-600",
-      description: "Direct supervision and guidance of trainees",
-      responsibilities: [
-        "Provide guidance and supervision to trainees",
-        "Conduct regular progress evaluations",
-        "Share technical knowledge and skills",
-        "Submit completion reports and feedback"
-      ]
-    }
-  ]
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-red-100">
+      <header className="bg-white shadow-sm border-b border-blue-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <Link href="/">
-                <Button variant="ghost" className="text-red-600 hover:text-red-700 mr-4">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Home
-                </Button>
+            <div className="flex items-center space-x-4">
+              <Link 
+                href="/" 
+                className="inline-flex items-center text-gray-600 hover:text-blue-600 transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Home
               </Link>
+              <div className="h-6 w-px bg-gray-300" />
               <div className="flex items-center">
                 <IndianOilLogo width={40} height={40} className="mr-3" />
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">TAMS User Guide</h1>
-                  <p className="text-sm text-gray-600">Complete system documentation</p>
+                  <p className="text-sm text-gray-600">Comprehensive guide to using IOCL TAMS</p>
                 </div>
               </div>
             </div>
@@ -244,7 +169,18 @@ export default function UserGuidePage() {
                 <BookOpen className="h-3 w-3 mr-1" />
                 Documentation
               </Badge>
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = '/user-guide.pdf';
+                  link.download = 'IOCL_TAMS_User_Guide.pdf';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}
+              >
                 <Download className="h-4 w-4 mr-2" />
                 Download PDF
               </Button>
@@ -258,212 +194,130 @@ export default function UserGuidePage() {
         {/* Introduction */}
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Welcome to IOCL TAMS
+            Welcome to IOCL TAMS User Guide
           </h2>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Your comprehensive guide to using the Trainee Approval & Management System. 
-            Learn how to efficiently manage internship processes, mentor assignments, and training programs.
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            This comprehensive guide will help you navigate and make the most of the 
+            Trainee Approval & Management System. Follow the step-by-step instructions 
+            to get started and master all features.
           </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <Card className="text-center">
-              <CardContent className="pt-6">
-                <Monitor className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-                <h3 className="font-semibold mb-2">Web-Based Platform</h3>
-                <p className="text-sm text-gray-600">Access from any modern browser</p>
-              </CardContent>
+        </div>
+
+        {/* Guide Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="getting-started" className="flex items-center space-x-2">
+              <Play className="h-4 w-4" />
+              <span>Getting Started</span>
+            </TabsTrigger>
+            <TabsTrigger value="account-management" className="flex items-center space-x-2">
+              <User className="h-4 w-4" />
+              <span>Account Management</span>
+            </TabsTrigger>
+            <TabsTrigger value="request-management" className="flex items-center space-x-2">
+              <FileText className="h-4 w-4" />
+              <span>Request Management</span>
+            </TabsTrigger>
+            <TabsTrigger value="reporting" className="flex items-center space-x-2">
+              <BarChart3 className="h-4 w-4" />
+              <span>Reporting</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Tab Content */}
+          {Object.entries(guideSteps).map(([tabKey, steps]) => (
+            <TabsContent key={tabKey} value={tabKey}>
+              <div className="grid gap-6">
+                {steps.map((step, index) => (
+                  <Card key={index} className="hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-center space-x-4">
+                        <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                          <span className="text-sm font-semibold text-blue-600">{step.step}</span>
+                        </div>
+                        <div className="flex-grow">
+                          <CardTitle className="text-lg">{step.title}</CardTitle>
+                          <CardDescription>{step.description}</CardDescription>
+                        </div>
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-gray-700 leading-relaxed">{step.content}</p>
+                      {index < steps.length - 1 && (
+                        <div className="mt-4 flex justify-end">
+                          <ArrowRight className="h-4 w-4 text-gray-400" />
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+
+        {/* Quick Access Section */}
+        <div className="mt-16">
+          <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center">Quick Access</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardHeader className="text-center">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <Users className="h-6 w-6 text-blue-600" />
+                </div>
+                <CardTitle>Role-Based Features</CardTitle>
+                <CardDescription>
+                  Learn about features specific to your role
+                </CardDescription>
+              </CardHeader>
             </Card>
-            <Card className="text-center">
-              <CardContent className="pt-6">
-                <Smartphone className="h-8 w-8 text-green-600 mx-auto mb-3" />
-                <h3 className="font-semibold mb-2">Mobile Responsive</h3>
-                <p className="text-sm text-gray-600">Works on all devices</p>
-              </CardContent>
+
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardHeader className="text-center">
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <Shield className="h-6 w-6 text-green-600" />
+                </div>
+                <CardTitle>Security Guidelines</CardTitle>
+                <CardDescription>
+                  Best practices for account security
+                </CardDescription>
+              </CardHeader>
             </Card>
-            <Card className="text-center">
-              <CardContent className="pt-6">
-                <Lock className="h-8 w-8 text-red-600 mx-auto mb-3" />
-                <h3 className="font-semibold mb-2">Secure & Reliable</h3>
-                <p className="text-sm text-gray-600">Enterprise-grade security</p>
-              </CardContent>
+
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardHeader className="text-center">
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <Settings className="h-6 w-6 text-purple-600" />
+                </div>
+                <CardTitle>System Settings</CardTitle>
+                <CardDescription>
+                  Configure your preferences and settings
+                </CardDescription>
+              </CardHeader>
             </Card>
           </div>
         </div>
 
-        {/* User Roles Section */}
-        <section className="mb-12">
-          <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">User Roles & Responsibilities</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {userRoles.map((roleInfo) => (
-              <Card key={roleInfo.role} className="border-red-100">
-                <CardHeader className="text-center">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-3 ${roleInfo.color}`}>
-                    <roleInfo.icon className="h-6 w-6" />
-                  </div>
-                  <CardTitle className="text-lg">{roleInfo.role}</CardTitle>
-                  <CardDescription className="text-sm">{roleInfo.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {roleInfo.responsibilities.map((resp, index) => (
-                      <li key={index} className="flex items-start text-sm">
-                        <CheckCircle className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                        {resp}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            ))}
+        {/* Help Section */}
+        <div className="mt-16 text-center">
+          <h3 className="text-2xl font-bold text-gray-900 mb-4">Need Additional Help?</h3>
+          <p className="text-gray-600 mb-6">
+            Can't find what you're looking for? Our support team is here to help.
+          </p>
+          <div className="flex justify-center space-x-4">
+            <Link href="/contact">
+              <Button variant="outline">
+                Contact Support
+              </Button>
+            </Link>
+            <Link href="/faq">
+              <Button>
+                View FAQ
+              </Button>
+            </Link>
           </div>
-        </section>
-
-        {/* Step-by-Step Guide */}
-        <section>
-          <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Step-by-Step Guide</h3>
-          
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-1 md:grid-cols-5 mb-8">
-              <TabsTrigger value="getting-started" className="flex items-center gap-2">
-                <Play className="h-4 w-4" />
-                Getting Started
-              </TabsTrigger>
-              <TabsTrigger value="account-management" className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Account
-              </TabsTrigger>
-              <TabsTrigger value="request-management" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Requests
-              </TabsTrigger>
-              <TabsTrigger value="mentor-system" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Mentors
-              </TabsTrigger>
-              <TabsTrigger value="reports-analytics" className="flex items-center gap-2">
-                <BarChart3 className="h-4 w-4" />
-                Reports
-              </TabsTrigger>
-            </TabsList>
-
-            {Object.entries(guideSteps).map(([tabKey, steps]) => (
-              <TabsContent key={tabKey} value={tabKey}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {steps.map((step) => (
-                    <Card key={step.step} className="border-red-100">
-                      <CardHeader>
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
-                            {step.step}
-                          </div>
-                          <div>
-                            <CardTitle className="text-lg">{step.title}</CardTitle>
-                            <CardDescription>{step.description}</CardDescription>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-gray-600 leading-relaxed">{step.content}</p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </TabsContent>
-            ))}
-          </Tabs>
-        </section>
-
-        {/* Quick Tips */}
-        <section className="mt-16">
-          <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-blue-900">
-                <Star className="h-5 w-5" />
-                Quick Tips for Success
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-semibold text-blue-900 mb-3">Best Practices</h4>
-                  <ul className="space-y-2 text-blue-800">
-                    <li className="flex items-start">
-                      <CheckCircle className="h-4 w-4 text-blue-600 mr-2 mt-0.5" />
-                      Keep your profile information updated
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircle className="h-4 w-4 text-blue-600 mr-2 mt-0.5" />
-                      Submit complete documentation with requests
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircle className="h-4 w-4 text-blue-600 mr-2 mt-0.5" />
-                      Respond promptly to mentor communications
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircle className="h-4 w-4 text-blue-600 mr-2 mt-0.5" />
-                      Regular check system notifications
-                    </li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-blue-900 mb-3">Troubleshooting</h4>
-                  <ul className="space-y-2 text-blue-800">
-                    <li className="flex items-start">
-                      <CheckCircle className="h-4 w-4 text-blue-600 mr-2 mt-0.5" />
-                      Clear browser cache for performance issues
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircle className="h-4 w-4 text-blue-600 mr-2 mt-0.5" />
-                      Use supported browsers (Chrome, Firefox, Safari)
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircle className="h-4 w-4 text-blue-600 mr-2 mt-0.5" />
-                      Contact support with specific error messages
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircle className="h-4 w-4 text-blue-600 mr-2 mt-0.5" />
-                      Keep login credentials secure and private
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* Support Section */}
-        <section className="mt-12">
-          <Card className="bg-gradient-to-r from-red-50 to-red-100 border-red-200">
-            <CardContent className="py-8">
-              <div className="text-center">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  Need Additional Help?
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  Our support team is available to assist you with any questions or issues.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Link href="/faq">
-                    <Button variant="outline" className="border-red-600 text-red-600 hover:bg-red-50">
-                      View FAQ
-                    </Button>
-                  </Link>
-                  <Link href="/contact">
-                    <Button className="bg-red-600 hover:bg-red-700">
-                      Contact Support
-                    </Button>
-                  </Link>
-                  <Link href="/login">
-                    <Button variant="outline" className="border-red-600 text-red-600 hover:bg-red-50">
-                      <ArrowRight className="h-4 w-4 mr-2" />
-                      Access TAMS
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
+        </div>
       </main>
     </div>
   )
