@@ -244,7 +244,18 @@ export default function UserGuidePage() {
                 <BookOpen className="h-3 w-3 mr-1" />
                 Documentation
               </Badge>
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = '/user-guide.pdf';
+                  link.download = 'IOCL_TAMS_User_Guide.pdf';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}
+              >
                 <Download className="h-4 w-4 mr-2" />
                 Download PDF
               </Button>

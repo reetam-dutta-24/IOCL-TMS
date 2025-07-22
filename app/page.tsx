@@ -477,7 +477,7 @@ export default function LandingPage() {
                   </Button>
                 </Link>
                 <Link href="/login">
-                  <Button size="lg" variant="outline" className="border-white text-red-600 hover:bg-red-700 hover:border-red-100 btn-animate hover-lift">
+                  <Button size="lg" variant="outline" className="border-white text-red-600 bg-red-600 hover:bg-red-700 hover:border-red-100 hover:text-white btn-animate hover-lift">
                     Access Dashboard
                   </Button>
                 </Link>

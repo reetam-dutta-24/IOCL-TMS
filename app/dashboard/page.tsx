@@ -26,6 +26,7 @@ import {
   ArrowRight,
   Plus,
   Eye,
+  BookOpen,
 } from "lucide-react";
 import {
   LineChart,
@@ -95,18 +96,161 @@ export default function DashboardPage() {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await fetch(
-        `/api/dashboard/stats?role=${encodeURIComponent(user?.role || "")}`
-      );
-      const data = await response.json();
-
-      if (data.success) {
-        setDashboardData(data.data);
-      }
+      // Simulate role-based dashboard data
+      const mockData = generateRoleBasedData(user?.role);
+      setDashboardData(mockData);
     } catch (error) {
-      console.error("Error fetching dashboard data:", error);
+      console.error("Failed to fetch dashboard data:", error);
     }
   };
+
+  const generateRoleBasedData = (role: string): DashboardData => {
+    // Base data structure
+    const baseStats: DashboardStats = {
+      totalRequests: 45,
+      pendingRequests: 12,
+      approvedRequests: 28,
+      rejectedRequests: 5,
+      totalMentors: 15,
+      activeMentors: 12,
+      totalUsers: 150,
+      activeUsers: 134
+    };
+
+    const baseActivities: RecentActivity[] = [
+      {
+        id: 1,
+        type: "request",
+        title: "New Internship Request",
+        description: "Submitted by engineering department",
+        user: "Rahul Sharma",
+        timestamp: "2 hours ago",
+        status: "pending",
+        department: "Engineering"
+      },
+      {
+        id: 2,
+        type: "approval",
+        title: "Request Approved",
+        description: "Internship request approved by L&D HoD",
+        user: "Priya Singh",
+        timestamp: "4 hours ago",
+        status: "approved",
+        department: "HR"
+      }
+    ];
+
+    // Customize data based on role
+    switch (role) {
+      case 'L&D Coordinator':
+        return {
+          stats: baseStats,
+          recentActivities: baseActivities.filter(a => 
+            ['request', 'assignment', 'status_update'].includes(a.type)
+          ),
+          departmentBreakdown: [
+            { department: 'Engineering', count: 15 },
+            { department: 'HR', count: 8 },
+            { department: 'Finance', count: 12 },
+            { department: 'Operations', count: 10 }
+          ],
+          monthlyTrends: [
+            { month: 'Jan', count: 12 },
+            { month: 'Feb', count: 18 },
+            { month: 'Mar', count: 15 }
+          ]
+        };
+
+      case 'L&D HoD':
+        return {
+          stats: {
+            ...baseStats,
+            totalRequests: 85,
+            pendingRequests: 20
+          },
+          recentActivities: baseActivities,
+          departmentBreakdown: [
+            { department: 'Engineering', count: 25 },
+            { department: 'HR', count: 18 },
+            { department: 'Finance', count: 22 },
+            { department: 'Operations', count: 20 }
+          ],
+          monthlyTrends: [
+            { month: 'Jan', count: 22 },
+            { month: 'Feb', count: 28 },
+            { month: 'Mar', count: 35 }
+          ]
+        };
+
+      case 'Department HoD':
+        // Department HoDs see only their department data
+        return {
+          stats: {
+            ...baseStats,
+            totalRequests: 18,
+            pendingRequests: 5,
+            totalMentors: 8,
+            activeMentors: 6
+          },
+          recentActivities: baseActivities.filter(a => 
+            a.department === user?.department
+          ),
+          departmentBreakdown: [
+            { department: user?.department || 'Your Department', count: 18 }
+          ],
+          monthlyTrends: [
+            { month: 'Jan', count: 5 },
+            { month: 'Feb', count: 8 },
+            { month: 'Mar', count: 5 }
+          ]
+        };
+
+      case 'Mentor':
+        // Mentors see limited data relevant to their assignments
+        return {
+          stats: {
+            totalRequests: 6,
+            pendingRequests: 2,
+            approvedRequests: 4,
+            rejectedRequests: 0,
+            totalMentors: 1,
+            activeMentors: 1,
+            totalUsers: 6,
+            activeUsers: 6
+          },
+          recentActivities: baseActivities.filter(a => 
+            a.type === 'assignment' || a.user === user?.firstName + ' ' + user?.lastName
+          ),
+          departmentBreakdown: [
+            { department: 'My Assignments', count: 6 }
+          ],
+          monthlyTrends: [
+            { month: 'Jan', count: 2 },
+            { month: 'Feb', count: 3 },
+            { month: 'Mar', count: 1 }
+          ]
+        };
+
+      default:
+        return {
+          stats: baseStats,
+          recentActivities: baseActivities,
+          departmentBreakdown: [
+            { department: 'Engineering', count: 15 },
+            { department: 'HR', count: 8 },
+            { department: 'Finance', count: 12 },
+            { department: 'Operations', count: 10 }
+          ],
+          monthlyTrends: [
+            { month: 'Jan', count: 12 },
+            { month: 'Feb', count: 18 },
+            { month: 'Mar', count: 15 }
+          ]
+        };
+    }
+  };
+
+
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -116,41 +260,141 @@ export default function DashboardPage() {
   };
 
   const getQuickActions = () => {
-    const baseActions = [
-      {
-        title: "View All Requests",
-        description: "Manage internship requests",
-        href: "/requests",
-        icon: FileText,
-        color: "bg-blue-500",
-      },
-      {
-        title: "Browse Mentors",
-        description: "View mentor profiles",
-        href: "/mentors",
-        icon: Users,
-        color: "bg-green-500",
-      },
-      {
-        title: "Generate Reports",
-        description: "Create analytics reports",
-        href: "/reports",
-        icon: TrendingUp,
-        color: "bg-purple-500",
-      },
-    ];
+    const actions = [];
 
-    if (user?.role === "L&D Coordinator" || user?.role === "L&D HoD") {
-      baseActions.unshift({
-        title: "Create Request",
-        description: "Submit new internship request",
-        href: "/requests",
-        icon: Plus,
-        color: "bg-red-500",
-      });
+    // Role-based quick actions
+    switch (user?.role) {
+      case 'L&D Coordinator':
+        actions.push(
+          {
+            title: "Process Requests",
+            description: "Review pending internship requests",
+            href: "/requests",
+            icon: FileText,
+            color: "bg-blue-500",
+          },
+          {
+            title: "Assign Mentors",
+            description: "Match mentors with trainees",
+            href: "/mentors",
+            icon: Users,
+            color: "bg-green-500",
+          },
+          {
+            title: "Track Progress",
+            description: "Monitor training progress",
+            href: "/reports",
+            icon: TrendingUp,
+            color: "bg-purple-500",
+          }
+        );
+        break;
+
+      case 'L&D HoD':
+        actions.push(
+          {
+            title: "Admin Panel",
+            description: "Manage access requests",
+            href: "/admin",
+            icon: Users,
+            color: "bg-red-500",
+          },
+          {
+            title: "Approve Requests",
+            description: "Final approval of requests",
+            href: "/requests",
+            icon: CheckCircle,
+            color: "bg-green-500",
+          },
+          {
+            title: "System Reports",
+            description: "Generate executive reports",
+            href: "/reports",
+            icon: TrendingUp,
+            color: "bg-purple-500",
+          }
+        );
+        break;
+
+      case 'Department HoD':
+        actions.push(
+          {
+            title: "Department Requests",
+            description: "Requests for your department",
+            href: "/requests",
+            icon: FileText,
+            color: "bg-blue-500",
+          },
+          {
+            title: "My Mentors",
+            description: "Mentors in your department",
+            href: "/mentors",
+            icon: Users,
+            color: "bg-green-500",
+          },
+          {
+            title: "Department Reports",
+            description: "Department performance",
+            href: "/reports",
+            icon: Building,
+            color: "bg-orange-500",
+          }
+        );
+        break;
+
+      case 'Mentor':
+        actions.push(
+          {
+            title: "My Assignments",
+            description: "View assigned trainees",
+            href: "/requests",
+            icon: Users,
+            color: "bg-green-500",
+          },
+          {
+            title: "Submit Reports",
+            description: "Submit progress reports",
+            href: "/reports",
+            icon: FileText,
+            color: "bg-blue-500",
+          },
+          {
+            title: "Training Materials",
+            description: "Access training resources",
+            href: "/user-guide",
+            icon: BookOpen,
+            color: "bg-purple-500",
+          }
+        );
+        break;
+
+      default:
+        actions.push(
+          {
+            title: "View Requests",
+            description: "Browse internship requests",
+            href: "/requests",
+            icon: FileText,
+            color: "bg-blue-500",
+          },
+          {
+            title: "Browse Mentors",
+            description: "View mentor profiles",
+            href: "/mentors",
+            icon: Users,
+            color: "bg-green-500",
+          },
+          {
+            title: "Reports",
+            description: "View available reports",
+            href: "/reports",
+            icon: TrendingUp,
+            color: "bg-purple-500",
+          }
+        );
     }
 
-    return baseActions;
+    return actions;
   };
 
   const getStatusBadge = (status: string) => {
