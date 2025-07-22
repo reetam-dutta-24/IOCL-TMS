@@ -2294,6 +2294,9 @@ video {
 .underline {
   text-decoration-line: underline;
 }
+.no-underline {
+  text-decoration-line: none;
+}
 .underline-offset-4 {
   text-underline-offset: 4px;
 }
@@ -3065,6 +3068,9 @@ body {
 }
 .hover\:opacity-100:hover {
   opacity: 1;
+}
+.hover\:opacity-80:hover {
+  opacity: 0.8;
 }
 .hover\:shadow-\[0_0_0_1px_hsl\(var\(--sidebar-accent\)\)\]:hover {
   --tw-shadow: 0 0 0 1px hsl(var(--sidebar-accent));

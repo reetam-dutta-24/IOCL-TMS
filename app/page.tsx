@@ -26,7 +26,6 @@ import {
   ChevronDown,
   Download,
   MessageCircle,
-  Headphones,
   Info,
   HelpCircle,
   BookOpen,
@@ -224,9 +223,9 @@ export default function LandingPage() {
       <nav className="bg-white shadow-sm border-b border-red-100 sticky top-0 z-50 animate-slide-in-down">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            {/* Logo */}
+            {/* Logo - Now Clickable */}
             <div className="flex items-center animate-slide-in-left">
-              <IndianOilLogo width={40} height={40} className="mr-3 animate-float" />
+              <IndianOilLogo width={40} height={40} className="mr-3 animate-float" clickable={true} />
               <div>
                 <div className="font-bold text-xl text-gray-900">IOCL TAMS</div>
                 <div className="text-xs text-gray-600">Trainee Approval & Management System</div>
@@ -453,7 +452,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Enhanced CTA Section with Loading */}
+      {/* Enhanced CTA Section with Updated Button Color */}
       <section className="py-20 bg-red-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           {sectionsLoading.cta ? (
@@ -478,7 +477,7 @@ export default function LandingPage() {
                   </Button>
                 </Link>
                 <Link href="/login">
-                  <Button size="lg" variant="outline" className="border-white text-white hover:bg-red-700 hover:border-red-100 btn-animate hover-lift">
+                  <Button size="lg" variant="outline" className="border-white text-red-600 hover:bg-red-700 hover:border-red-100 btn-animate hover-lift">
                     Access Dashboard
                   </Button>
                 </Link>
@@ -488,7 +487,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Enhanced Footer with Loading */}
+      {/* Enhanced Footer with Removed Technical Support */}
       <footer className="bg-gray-900 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {sectionsLoading.footer ? (
@@ -502,7 +501,7 @@ export default function LandingPage() {
                 {/* Company Info */}
                 <div className="col-span-2 animate-slide-in-left">
                   <div className="flex items-center mb-4">
-                    <IndianOilLogo width={32} height={32} className="mr-3 animate-float" />
+                    <IndianOilLogo width={32} height={32} className="mr-3 animate-float" clickable={true} />
                     <div>
                       <div className="font-bold text-xl">IOCL TAMS</div>
                       <div className="text-sm text-gray-400">Trainee Approval & Management System</div>
@@ -553,7 +552,7 @@ export default function LandingPage() {
                   </ul>
                 </div>
 
-                {/* Help & Support */}
+                {/* Help & Support - Technical Support Removed */}
                 <div className="animate-slide-in-up animate-delay-400">
                   <h3 className="font-semibold mb-4 text-white">Help & Support</h3>
                   <ul className="space-y-3 text-gray-400">
@@ -567,12 +566,6 @@ export default function LandingPage() {
                       <Link href="/faq" className="hover:text-white transition-colors flex items-center hover-lift">
                         <HelpCircle className="h-4 w-4 mr-2" />
                         FAQ
-                      </Link>
-                    </li>
-                    <li>
-                      <Link href="/support" className="hover:text-white transition-colors flex items-center hover-lift">
-                        <Headphones className="h-4 w-4 mr-2" />
-                        Technical Support
                       </Link>
                     </li>
                     <li>

@@ -1,18 +1,21 @@
 import React from 'react'
+import Link from 'next/link'
 
 interface LogoProps {
   width?: number
   height?: number
   className?: string
+  clickable?: boolean
 }
 
 export const IndianOilLogo: React.FC<LogoProps> = ({ 
   width = 40, 
   height = 40, 
-  className = "" 
+  className = "",
+  clickable = true
 }) => {
-  return (
-    <div className={`inline-flex items-center ${className}`}>
+  const logoContent = (
+    <div className={`inline-flex items-center ${className} ${clickable ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}>
       <svg 
         width={width} 
         height={height} 
@@ -57,6 +60,16 @@ export const IndianOilLogo: React.FC<LogoProps> = ({
       </svg>
     </div>
   )
+
+  if (clickable) {
+    return (
+      <Link href="/" className="no-underline">
+        {logoContent}
+      </Link>
+    )
+  }
+
+  return logoContent
 }
 
 export default IndianOilLogo

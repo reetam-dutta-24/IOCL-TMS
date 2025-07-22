@@ -3,88 +3,88 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, CheckCircle, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { IndianOilLogo } from "@/components/ui/logo"
+import { ArrowLeft, Loader2, CheckCircle, AlertCircle, UserPlus } from "lucide-react"
+
+interface Role {
+  id: number
+  name: string
+  description: string
+}
+
+interface Department {
+  id: number
+  name: string
+  code: string
+}
 
 export default function RegisterPage() {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [pageLoading, setPageLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const [success, setSuccess] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
+  const [roles, setRoles] = useState<Role[]>([])
+  const [departments, setDepartments] = useState<Department[]>([])
   const [formData, setFormData] = useState({
-    employeeId: "",
     firstName: "",
     lastName: "",
     email: "",
-    password: "",
-    confirmPassword: "",
     phone: "",
-    department: "",
-    role: "L&D Coordinator",
-    reason: ""
+    employeeId: "",
+    requestedRoleId: "",
+    departmentId: "",
+    institutionName: "",
+    purpose: ""
   })
 
   useEffect(() => {
-    // Simulate page loading
-    const timer = setTimeout(() => {
-      setPageLoading(false)
-    }, 1000)
-    return () => clearTimeout(timer)
+    // Fetch roles and departments
+    const fetchData = async () => {
+      try {
+        const [rolesRes, deptRes] = await Promise.all([
+          fetch("/api/roles"),
+          fetch("/api/departments")
+        ])
+
+        if (rolesRes.ok) {
+          const rolesData = await rolesRes.json()
+          setRoles(rolesData)
+        }
+
+        if (deptRes.ok) {
+          const deptData = await deptRes.json()
+          setDepartments(deptData)
+        }
+      } catch (error) {
+        console.error("Failed to fetch data:", error)
+      }
+    }
+
+    fetchData()
   }, [])
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }))
-  }
-
-  const validateForm = () => {
-    if (!formData.employeeId || !formData.firstName || !formData.lastName || 
-        !formData.email || !formData.password || !formData.department || !formData.role) {
-      setError("Please fill in all required fields")
-      return false
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match")
-      return false
-    }
-
-    if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters long")
-      return false
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(formData.email)) {
-      setError("Please enter a valid email address")
-      return false
-    }
-
-    return true
+    if (error) setError("")
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsLoading(true)
     setError("")
 
-    if (!validateForm()) {
-      return
-    }
-
-    setLoading(true)
-
     try {
-      const response = await fetch("/api/auth/register", {
+      const response = await fetch("/api/access-requests", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -94,268 +94,243 @@ export default function RegisterPage() {
 
       const data = await response.json()
 
-      if (!response.ok) {
-        throw new Error(data.error || "Registration failed")
+      if (response.ok) {
+        setIsSuccess(true)
+      } else {
+        setError(data.error || "Failed to submit access request")
       }
-
-      setSuccess(true)
-      
-      // Redirect to login after 3 seconds
-      setTimeout(() => {
-        setPageLoading(true)
-        router.push("/login")
-      }, 3000)
-    } catch (err: any) {
-      setError(err.message || "Registration failed. Please try again.")
+    } catch (error) {
+      console.error("Registration error:", error)
+      setError("An error occurred. Please try again.")
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
-  if (pageLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-red-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading registration form...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (success) {
-    return (
-      <div className="min-h-screen tams-gradient-light flex items-center justify-center p-4">
-        <div className="w-full max-w-md text-center">
-          <Card className="shadow-lg border-red-100">
-            <CardContent className="p-8">
-              <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="h-8 w-8 text-green-600" />
-              </div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">Account Created Successfully!</h1>
-              <p className="text-gray-600 mb-6">
-                Your account has been created successfully. You can now login with your credentials.
-              </p>
-              <div className="flex items-center justify-center mb-4">
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                <p className="text-sm text-gray-500">Redirecting to login page...</p>
-              </div>
-              <Link href="/login">
-                <Button className="bg-red-600 hover:bg-red-700 text-white">
-                  Go to Login Now
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen tams-gradient-light flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl">
-        {/* Back to Home Button */}
-        <div className="mb-6">
-          <Link href="/">
-            <Button variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Home
-            </Button>
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4 animate-fade-in">
+      <div className="w-full max-w-2xl space-y-6">
+        {/* Back to Home */}
+        <div className="animate-slide-in-down">
+          <Link 
+            href="/" 
+            className="inline-flex items-center text-gray-600 hover:text-red-600 transition-colors hover-lift"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Home
           </Link>
         </div>
 
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <IndianOilLogo width={48} height={48} className="mr-2" />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">IOCL TAMS</h1>
-              <p className="text-sm text-gray-600">Trainee Approval & Management System</p>
-            </div>
+        {/* Logo and Title */}
+        <div className="text-center animate-scale-in animate-delay-200">
+          <div className="flex justify-center mb-6">
+            <IndianOilLogo width={60} height={60} className="animate-float" />
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Create Your Account</h2>
-          <p className="text-gray-600">Please fill out the form below to create your TAMS account</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Request System Access</h1>
+          <p className="text-gray-600">Submit your details for admin approval</p>
         </div>
 
-        <Card className="shadow-lg border-red-100">
-          <CardHeader className="text-center">
-            <CardTitle className="text-red-900">Account Registration</CardTitle>
-            <CardDescription>
-              Create your account to access the IOCL TAMS system
+        {/* Registration Form */}
+        <Card className="animate-slide-in-up animate-delay-400 hover-lift border-red-100">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-semibold text-center">Access Request Form</CardTitle>
+            <CardDescription className="text-center">
+              Fill in your details to request access to IOCL TAMS
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {error && (
-                <Alert className="border-red-200 bg-red-50">
-                  <AlertDescription className="text-red-700">{error}</AlertDescription>
-                </Alert>
-              )}
+            {!isSuccess ? (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {error && (
+                  <Alert variant="destructive" className="animate-slide-in-up">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="employeeId">Employee ID *</Label>
-                  <Input
-                    id="employeeId"
-                    type="text"
-                    placeholder="EMP001"
-                    value={formData.employeeId}
-                    onChange={(e) => handleInputChange("employeeId", e.target.value)}
-                    className="border-red-200 focus:border-red-500 focus:ring-red-500"
-                    required
-                    disabled={loading}
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2 animate-slide-in-left animate-delay-600">
+                    <Label htmlFor="firstName">First Name *</Label>
+                    <Input
+                      id="firstName"
+                      placeholder="Enter first name"
+                      value={formData.firstName}
+                      onChange={(e) => handleChange("firstName", e.target.value)}
+                      required
+                      className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
+                      disabled={isLoading}
+                    />
+                  </div>
+
+                  <div className="space-y-2 animate-slide-in-right animate-delay-600">
+                    <Label htmlFor="lastName">Last Name *</Label>
+                    <Input
+                      id="lastName"
+                      placeholder="Enter last name"
+                      value={formData.lastName}
+                      onChange={(e) => handleChange("lastName", e.target.value)}
+                      required
+                      className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
+                      disabled={isLoading}
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
+
+                <div className="space-y-2 animate-slide-in-left animate-delay-700">
                   <Label htmlFor="email">Email Address *</Label>
                   <Input
                     id="email"
                     type="email"
-                    placeholder="your.name@iocl.co.in"
+                    placeholder="Enter email address"
                     value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    className="border-red-200 focus:border-red-500 focus:ring-red-500"
+                    onChange={(e) => handleChange("email", e.target.value)}
                     required
-                    disabled={loading}
+                    className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
+                    disabled={isLoading}
                   />
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name *</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2 animate-slide-in-left animate-delay-800">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      placeholder="Enter phone number"
+                      value={formData.phone}
+                      onChange={(e) => handleChange("phone", e.target.value)}
+                      className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
+                      disabled={isLoading}
+                    />
+                  </div>
+
+                  <div className="space-y-2 animate-slide-in-right animate-delay-800">
+                    <Label htmlFor="employeeId">Employee ID *</Label>
+                    <Input
+                      id="employeeId"
+                      placeholder="Enter employee ID"
+                      value={formData.employeeId}
+                      onChange={(e) => handleChange("employeeId", e.target.value)}
+                      required
+                      className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2 animate-slide-in-left animate-delay-900">
+                    <Label htmlFor="role">Requested Role *</Label>
+                    <Select
+                      value={formData.requestedRoleId}
+                      onValueChange={(value) => handleChange("requestedRoleId", value)}
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger className="transition-all duration-300 hover:border-red-300">
+                        <SelectValue placeholder="Select your role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {roles.map((role) => (
+                          <SelectItem key={role.id} value={role.id.toString()}>
+                            {role.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2 animate-slide-in-right animate-delay-900">
+                    <Label htmlFor="department">Department</Label>
+                    <Select
+                      value={formData.departmentId}
+                      onValueChange={(value) => handleChange("departmentId", value)}
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger className="transition-all duration-300 hover:border-red-300">
+                        <SelectValue placeholder="Select department" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {departments.map((dept) => (
+                          <SelectItem key={dept.id} value={dept.id.toString()}>
+                            {dept.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2 animate-slide-in-up animate-delay-1000">
+                  <Label htmlFor="institutionName">Institution Name</Label>
                   <Input
-                    id="firstName"
-                    type="text"
-                    placeholder="John"
-                    value={formData.firstName}
-                    onChange={(e) => handleInputChange("firstName", e.target.value)}
-                    className="border-red-200 focus:border-red-500 focus:ring-red-500"
-                    required
-                    disabled={loading}
+                    id="institutionName"
+                    placeholder="Enter institution name (if applicable)"
+                    value={formData.institutionName}
+                    onChange={(e) => handleChange("institutionName", e.target.value)}
+                    className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
+                    disabled={isLoading}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name *</Label>
-                  <Input
-                    id="lastName"
-                    type="text"
-                    placeholder="Doe"
-                    value={formData.lastName}
-                    onChange={(e) => handleInputChange("lastName", e.target.value)}
-                    className="border-red-200 focus:border-red-500 focus:ring-red-500"
-                    required
-                    disabled={loading}
+
+                <div className="space-y-2 animate-slide-in-up animate-delay-1100">
+                  <Label htmlFor="purpose">Purpose/Reason for Access</Label>
+                  <Textarea
+                    id="purpose"
+                    placeholder="Briefly explain why you need access to TAMS"
+                    value={formData.purpose}
+                    onChange={(e) => handleChange("purpose", e.target.value)}
+                    className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
+                    disabled={isLoading}
+                    rows={3}
                   />
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password *</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter password (min 6 characters)"
-                    value={formData.password}
-                    onChange={(e) => handleInputChange("password", e.target.value)}
-                    className="border-red-200 focus:border-red-500 focus:ring-red-500"
-                    required
-                    disabled={loading}
-                  />
+                <Button 
+                  type="submit" 
+                  className="w-full bg-red-600 hover:bg-red-700 text-white btn-animate hover-lift hover-glow animate-slide-in-up animate-delay-1200"
+                  disabled={isLoading || !formData.firstName || !formData.lastName || !formData.email || !formData.employeeId || !formData.requestedRoleId}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Submitting Request...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Submit Access Request
+                    </>
+                  )}
+                </Button>
+              </form>
+            ) : (
+              <div className="text-center space-y-4 animate-fade-in">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                  <CheckCircle className="h-8 w-8 text-green-600" />
                 </div>
+                <h3 className="text-lg font-semibold text-gray-900">Request Submitted Successfully!</h3>
+                <p className="text-gray-600">
+                  Your access request has been submitted for admin approval. 
+                  You'll receive an email once your request is reviewed.
+                </p>
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password *</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="Confirm password"
-                    value={formData.confirmPassword}
-                    onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                    className="border-red-200 focus:border-red-500 focus:ring-red-500"
-                    required
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="+91-9876543210"
-                    value={formData.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
-                    className="border-red-200 focus:border-red-500 focus:ring-red-500"
-                    disabled={loading}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="department">Department *</Label>
-                  <Select value={formData.department} onValueChange={(value) => handleInputChange("department", value)} disabled={loading}>
-                    <SelectTrigger className="border-red-200 focus:border-red-500 focus:ring-red-500">
-                      <SelectValue placeholder="Select your department" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Learning & Development">Learning & Development</SelectItem>
-                      <SelectItem value="Information Technology">Information Technology</SelectItem>
-                      <SelectItem value="Operations">Operations</SelectItem>
-                      <SelectItem value="Engineering">Engineering</SelectItem>
-                      <SelectItem value="Finance">Finance</SelectItem>
-                      <SelectItem value="Human Resources">Human Resources</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Button asChild className="w-full">
+                    <Link href="/">Return to Home</Link>
+                  </Button>
+                  <Button asChild variant="outline" className="w-full">
+                    <Link href="/login">Already have access? Sign In</Link>
+                  </Button>
                 </div>
               </div>
+            )}
 
-              <div className="space-y-2">
-                <Label htmlFor="role">Role *</Label>
-                <Select value={formData.role} onValueChange={(value) => handleInputChange("role", value)} disabled={loading}>
-                  <SelectTrigger className="border-red-200 focus:border-red-500 focus:ring-red-500">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="L&D Coordinator">L&D Coordinator</SelectItem>
-                    <SelectItem value="L&D HoD">L&D HoD</SelectItem>
-                    <SelectItem value="Department HoD">Department HoD</SelectItem>
-                    <SelectItem value="Mentor">Mentor</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                <h3 className="font-medium text-green-900 mb-2">✅ Instant Account Creation:</h3>
-                <ul className="text-sm text-green-700 space-y-1">
-                  <li>• Account is created immediately upon registration</li>
-                  <li>• You can login right after successful registration</li>
-                  <li>• Please ensure all information is accurate</li>
-                  <li>• Contact IT support if you encounter any issues</li>
-                </ul>
-              </div>
-
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating Account...
-                  </>
-                ) : (
-                  "Create Account"
-                )}
-              </Button>
-            </form>
-
-            <div className="mt-6 text-center">
+            <div className="mt-6 text-center animate-fade-in animate-delay-1300">
               <p className="text-sm text-gray-600">
                 Already have an account?{" "}
-                <Link href="/login" className="text-red-600 hover:text-red-700 font-medium">
-                  Sign in here
+                <Link 
+                  href="/login" 
+                  className="text-red-600 hover:text-red-700 font-medium hover:underline transition-all"
+                >
+                  Sign In
                 </Link>
               </p>
             </div>
