@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { IndianOilLogo } from "@/components/ui/logo"
-import { PageLoading } from "@/components/ui/loading"
+import { PageLoading } from "@/components/ui/page-loading"
 import { Eye, EyeOff, AlertCircle, ArrowLeft, Loader2 } from "lucide-react"
 
 // Google OAuth configuration

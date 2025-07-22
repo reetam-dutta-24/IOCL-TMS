@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { IndianOilLogo } from "@/components/ui/logo"
-import { PageLoading } from "@/components/ui/page-loading"
+import { PageLoading } from "@/components/ui/loading"
 import { NotificationSystem } from "@/components/ui/notification-system"
 import {
   LayoutDashboard,

@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { IndianOilLogo } from "@/components/ui/logo"
-import { PageLoading, SectionLoading } from "@/components/ui/loading"
+import { PageLoading } from "@/components/ui/page-loading"
+import { SectionLoading } from "@/components/ui/loading"
 import { 
   Users, 
   FileText, 
