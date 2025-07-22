@@ -78,7 +78,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
     }
   }
 
-  // Role-based navigation
+  // Role-based navigation - FIXED to use only existing pages
   const getNavigationItems = () => {
     const baseNavigation = [
       { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard }
@@ -90,53 +90,46 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
         return [
           ...baseNavigation,
           { name: "Access Requests", href: "/admin", icon: Shield },
-          { name: "User Management", href: "/admin/users", icon: Users },
-          { name: "System Analytics", href: "/admin/analytics", icon: BarChart3 },
-          { name: "Audit Logs", href: "/admin/audit", icon: Activity },
-          { name: "Database", href: "/admin/database", icon: Database },
-          { name: "System Settings", href: "/admin/settings", icon: Settings }
+          { name: "All Requests", href: "/requests", icon: FileText },
+          { name: "All Mentors", href: "/mentors", icon: Users },
+          { name: "System Reports", href: "/reports", icon: TrendingUp },
+          { name: "Settings", href: "/settings", icon: Settings }
         ]
 
       case "L&D HoD":
         return [
           ...baseNavigation,
-          { name: "Final Approvals", href: "/approvals", icon: Award },
-          { name: "All L&D Data", href: "/requests", icon: FileText },
-          { name: "Closure Approvals", href: "/closures", icon: CheckCircle },
-          { name: "Policy Management", href: "/policies", icon: BookOpen },
+          { name: "All Requests", href: "/requests", icon: FileText },
+          { name: "All Mentors", href: "/mentors", icon: Users },
           { name: "Executive Reports", href: "/reports", icon: TrendingUp },
-          { name: "System Configuration", href: "/config", icon: Settings }
+          { name: "Settings", href: "/settings", icon: Settings }
         ]
 
       case "L&D Coordinator":
         return [
           ...baseNavigation,
           { name: "All Requests", href: "/requests", icon: FileText },
-          { name: "Process Requests", href: "/requests/process", icon: ClipboardList },
-          { name: "Monitor Progress", href: "/monitoring", icon: Eye },
-          { name: "Department Routing", href: "/routing", icon: Users },
-          { name: "Communication Hub", href: "/communication", icon: MessageSquare },
-          { name: "Generate Reports", href: "/reports", icon: TrendingUp }
+          { name: "All Mentors", href: "/mentors", icon: Users },
+          { name: "Coordination Reports", href: "/reports", icon: TrendingUp },
+          { name: "Settings", href: "/settings", icon: Settings }
         ]
 
       case "Department HoD":
         return [
           ...baseNavigation,
-          { name: "Department Requests", href: "/requests/department", icon: FileText },
-          { name: "Assign Mentors", href: "/mentors/assign", icon: UserCheck },
-          { name: "Resource Allocation", href: "/resources", icon: Building },
-          { name: "Mentor Workload", href: "/mentors/workload", icon: Users },
-          { name: "Dept Reports", href: "/reports/department", icon: TrendingUp }
+          { name: "Department Requests", href: "/requests", icon: FileText },
+          { name: "Department Mentors", href: "/mentors", icon: Users },
+          { name: "Department Reports", href: "/reports", icon: TrendingUp },
+          { name: "Settings", href: "/settings", icon: Settings }
         ]
 
       case "Mentor":
         return [
           ...baseNavigation,
-          { name: "My Trainees", href: "/trainees", icon: Users },
-          { name: "Submit Reports", href: "/reports/submit", icon: FileText },
-          { name: "Project Status", href: "/projects", icon: Activity },
-          { name: "Training Materials", href: "/materials", icon: BookOpen },
-          { name: "Performance Reviews", href: "/reviews", icon: Award }
+          { name: "My Requests", href: "/requests", icon: FileText },
+          { name: "Fellow Mentors", href: "/mentors", icon: Users },
+          { name: "My Performance", href: "/reports", icon: TrendingUp },
+          { name: "Settings", href: "/settings", icon: Settings }
         ]
 
       default:
@@ -378,11 +371,11 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleNavigation('/settings', 'Settings')}>
                     <User className="mr-2 h-4 w-4" />
                     Profile
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleNavigation('/settings', 'Settings')}>
                     <Settings className="mr-2 h-4 w-4" />
                     Settings
                   </DropdownMenuItem>
