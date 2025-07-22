@@ -28,6 +28,7 @@ interface Department {
 export default function RegisterPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const [isDataLoading, setIsDataLoading] = useState(true)
   const [error, setError] = useState("")
   const [isSuccess, setIsSuccess] = useState(false)
   const [roles, setRoles] = useState<Role[]>([])
@@ -47,6 +48,7 @@ export default function RegisterPage() {
   useEffect(() => {
     // Fetch roles and departments
     const fetchData = async () => {
+      setIsDataLoading(true)
       try {
         const [rolesRes, deptRes] = await Promise.all([
           fetch("/api/roles"),
@@ -56,14 +58,21 @@ export default function RegisterPage() {
         if (rolesRes.ok) {
           const rolesData = await rolesRes.json()
           setRoles(rolesData)
+        } else {
+          console.error("Failed to fetch roles:", await rolesRes.text())
         }
 
         if (deptRes.ok) {
           const deptData = await deptRes.json()
           setDepartments(deptData)
+        } else {
+          console.error("Failed to fetch departments:", await deptRes.text())
         }
       } catch (error) {
         console.error("Failed to fetch data:", error)
+        setError("Failed to load form data. Please refresh the page.")
+      } finally {
+        setIsDataLoading(false)
       }
     }
 
@@ -82,6 +91,13 @@ export default function RegisterPage() {
     e.preventDefault()
     setIsLoading(true)
     setError("")
+
+    // Basic validation
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.employeeId || !formData.requestedRoleId) {
+      setError("Please fill in all required fields.")
+      setIsLoading(false)
+      return
+    }
 
     try {
       const response = await fetch("/api/access-requests", {
@@ -148,6 +164,13 @@ export default function RegisterPage() {
                   </Alert>
                 )}
 
+                {isDataLoading && (
+                  <Alert className="animate-slide-in-up border-blue-200 bg-blue-50">
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                    <AlertDescription className="text-blue-700">Loading form data...</AlertDescription>
+                  </Alert>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2 animate-slide-in-left animate-delay-600">
                     <Label htmlFor="firstName">First Name *</Label>
@@ -158,7 +181,7 @@ export default function RegisterPage() {
                       onChange={(e) => handleChange("firstName", e.target.value)}
                       required
                       className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                      disabled={isLoading}
+                      disabled={isLoading || isDataLoading}
                     />
                   </div>
 
@@ -171,7 +194,7 @@ export default function RegisterPage() {
                       onChange={(e) => handleChange("lastName", e.target.value)}
                       required
                       className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                      disabled={isLoading}
+                      disabled={isLoading || isDataLoading}
                     />
                   </div>
                 </div>
@@ -186,7 +209,7 @@ export default function RegisterPage() {
                     onChange={(e) => handleChange("email", e.target.value)}
                     required
                     className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                    disabled={isLoading}
+                    disabled={isLoading || isDataLoading}
                   />
                 </div>
 
@@ -199,7 +222,7 @@ export default function RegisterPage() {
                       value={formData.phone}
                       onChange={(e) => handleChange("phone", e.target.value)}
                       className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                      disabled={isLoading}
+                      disabled={isLoading || isDataLoading}
                     />
                   </div>
 
@@ -212,7 +235,7 @@ export default function RegisterPage() {
                       onChange={(e) => handleChange("employeeId", e.target.value)}
                       required
                       className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                      disabled={isLoading}
+                      disabled={isLoading || isDataLoading}
                     />
                   </div>
                 </div>
@@ -223,17 +246,28 @@ export default function RegisterPage() {
                     <Select
                       value={formData.requestedRoleId}
                       onValueChange={(value) => handleChange("requestedRoleId", value)}
-                      disabled={isLoading}
+                      disabled={isLoading || isDataLoading}
                     >
                       <SelectTrigger className="transition-all duration-300 hover:border-red-300">
-                        <SelectValue placeholder="Select your role" />
+                        <SelectValue placeholder={isDataLoading ? "Loading roles..." : "Select your role"} />
                       </SelectTrigger>
-                      <SelectContent>
-                        {roles.map((role) => (
-                          <SelectItem key={role.id} value={role.id.toString()}>
-                            {role.name}
+                      <SelectContent className="max-h-60">
+                        {roles.length > 0 ? (
+                          roles.map((role) => (
+                            <SelectItem key={role.id} value={role.id.toString()}>
+                              <div className="flex flex-col">
+                                <span className="font-medium">{role.name}</span>
+                                {role.description && (
+                                  <span className="text-xs text-gray-500">{role.description}</span>
+                                )}
+                              </div>
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="loading" disabled>
+                            {isDataLoading ? "Loading..." : "No roles available"}
                           </SelectItem>
-                        ))}
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -243,17 +277,26 @@ export default function RegisterPage() {
                     <Select
                       value={formData.departmentId}
                       onValueChange={(value) => handleChange("departmentId", value)}
-                      disabled={isLoading}
+                      disabled={isLoading || isDataLoading}
                     >
                       <SelectTrigger className="transition-all duration-300 hover:border-red-300">
-                        <SelectValue placeholder="Select department" />
+                        <SelectValue placeholder={isDataLoading ? "Loading departments..." : "Select department"} />
                       </SelectTrigger>
-                      <SelectContent>
-                        {departments.map((dept) => (
-                          <SelectItem key={dept.id} value={dept.id.toString()}>
-                            {dept.name}
+                      <SelectContent className="max-h-60">
+                        {departments.length > 0 ? (
+                          departments.map((dept) => (
+                            <SelectItem key={dept.id} value={dept.id.toString()}>
+                              <div className="flex flex-col">
+                                <span className="font-medium">{dept.name}</span>
+                                <span className="text-xs text-gray-500">Code: {dept.code}</span>
+                              </div>
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="loading" disabled>
+                            {isDataLoading ? "Loading..." : "No departments available"}
                           </SelectItem>
-                        ))}
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -267,7 +310,7 @@ export default function RegisterPage() {
                     value={formData.institutionName}
                     onChange={(e) => handleChange("institutionName", e.target.value)}
                     className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                    disabled={isLoading}
+                    disabled={isLoading || isDataLoading}
                   />
                 </div>
 
@@ -279,7 +322,7 @@ export default function RegisterPage() {
                     value={formData.purpose}
                     onChange={(e) => handleChange("purpose", e.target.value)}
                     className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                    disabled={isLoading}
+                    disabled={isLoading || isDataLoading}
                     rows={3}
                   />
                 </div>
@@ -287,7 +330,7 @@ export default function RegisterPage() {
                 <Button 
                   type="submit" 
                   className="w-full bg-red-600 hover:bg-red-700 text-white btn-animate hover-lift hover-glow animate-slide-in-up animate-delay-1200"
-                  disabled={isLoading || !formData.firstName || !formData.lastName || !formData.email || !formData.employeeId || !formData.requestedRoleId}
+                  disabled={isLoading || isDataLoading || !formData.firstName || !formData.lastName || !formData.email || !formData.employeeId || !formData.requestedRoleId}
                 >
                   {isLoading ? (
                     <>
@@ -313,10 +356,10 @@ export default function RegisterPage() {
                   You'll receive an email once your request is reviewed.
                 </p>
                 <div className="space-y-2">
-                  <Button asChild className="w-full">
+                  <Button asChild className="w-full bg-red-600 hover:bg-red-700">
                     <Link href="/">Return to Home</Link>
                   </Button>
-                  <Button asChild variant="outline" className="w-full">
+                  <Button asChild variant="outline" className="w-full border-red-300 text-red-600 hover:bg-red-50">
                     <Link href="/login">Already have access? Sign In</Link>
                   </Button>
                 </div>
@@ -334,6 +377,21 @@ export default function RegisterPage() {
                 </Link>
               </p>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Help Text */}
+        <Card className="animate-slide-in-up animate-delay-1400 border-blue-200 bg-blue-50">
+          <CardContent className="pt-6">
+            <h3 className="font-semibold text-blue-900 mb-2">Need Help?</h3>
+            <p className="text-sm text-blue-700 mb-3">
+              If you're having trouble with the registration process or need to select a specific role/department 
+              that isn't listed, please contact our support team.
+            </p>
+            <p className="text-sm text-blue-600">
+              📧 Email: <a href="mailto:tams@iocl.co.in" className="hover:underline">tams@iocl.co.in</a><br />
+              📞 Phone: +91-11-2338-9999
+            </p>
           </CardContent>
         </Card>
       </div>

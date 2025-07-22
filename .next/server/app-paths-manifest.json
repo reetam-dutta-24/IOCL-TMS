@@ -1,1 +1,4 @@
-{}
+{
+  "/api/roles/route": "app/api/roles/route.js",
+  "/api/departments/route": "app/api/departments/route.js"
+}
