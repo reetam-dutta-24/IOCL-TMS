@@ -46,6 +46,17 @@ export function verifyToken(token: string): AuthUser | null {
 
 export async function authenticateUser(employeeId: string, password: string): Promise<AuthUser | null> {
   try {
+    console.log("🔍 Exact search parameters:")
+    console.log("  - employeeId:", JSON.stringify(employeeId))
+    console.log("  - employeeId length:", employeeId.length)
+    console.log("  - password:", JSON.stringify(password))
+    
+    // First, let's see all users in database
+    const allUsers = await prisma.user.findMany({
+      select: { employeeId: true, isActive: true, firstName: true }
+    })
+    console.log("🔍 All users in database:", allUsers)
+    
     const user = await prisma.user.findUnique({
       where: { employeeId },
       include: {
@@ -54,20 +65,46 @@ export async function authenticateUser(employeeId: string, password: string): Pr
       },
     })
 
-    if (!user || !user.isActive) {
+    console.log("🔍 Database query result:", {
+      found: !!user,
+      isActive: user?.isActive,
+      hasPassword: !!user?.password,
+      hasRole: !!user?.role,
+      roleName: user?.role?.name,
+      actualEmployeeId: user?.employeeId
+    })
+
+    if (!user) {
+      console.log("❌ User not found in database")
       return null
     }
 
-    const isValid = await verifyPassword(password, user.password)
-    if (!isValid) {
+    if (!user.isActive) {
+      console.log("❌ User account is inactive")
       return null
     }
+
+    console.log("🔍 About to verify password...")
+    console.log("🔍 Input password:", password)
+    console.log("🔍 Stored hash (first 20 chars):", user.password.substring(0, 20) + "...")
+    
+    const isValid = await verifyPassword(password, user.password)
+    console.log("🔍 Password verification result:", isValid)
+    
+    if (!isValid) {
+      console.log("❌ Password verification failed")
+      return null
+    }
+
+    console.log("✅ Authentication successful, updating last login...")
 
     // Update last login
     await prisma.user.update({
       where: { id: user.id },
       data: { lastLogin: new Date() },
     })
+
+    console.log("✅ Returning user data")
 
     return {
       id: user.id,
@@ -79,7 +116,7 @@ export async function authenticateUser(employeeId: string, password: string): Pr
       department: user.department?.name || "Unknown",
     }
   } catch (error) {
-    console.error("Authentication error:", error)
+    console.error("💥 Authentication error:", error)
     return null
   }
 }
