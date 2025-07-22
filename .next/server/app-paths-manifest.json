@@ -1,10 +1,11 @@
 {
-  "/login/page": "app/login/page.js",
-  "/requests/page": "app/requests/page.js",
-  "/register/page": "app/register/page.js",
-  "/mentors/page": "app/mentors/page.js",
   "/page": "app/page.js",
-  "/api/auth/register/route": "app/api/auth/register/route.js",
+  "/about/page": "app/about/page.js",
+  "/faq/page": "app/faq/page.js",
+  "/user-guide/page": "app/user-guide/page.js",
+  "/contact/page": "app/contact/page.js",
+  "/register/page": "app/register/page.js",
+  "/login/page": "app/login/page.js",
   "/api/auth/route": "app/api/auth/route.js",
   "/dashboard/page": "app/dashboard/page.js",
   "/api/dashboard/stats/route": "app/api/dashboard/stats/route.js"
