@@ -6,7 +6,75 @@ const prisma = new PrismaClient()
 async function main() {
   console.log("🌱 Starting database seed...")
 
-  // Create Roles
+  // Create Roles - Based on Project Requirements
+  const ldCoordinatorRole = await prisma.role.upsert({
+    where: { name: "L&D Coordinator" },
+    update: {},
+    create: {
+      name: "L&D Coordinator",
+      description: "Learning & Development Coordinator - Initial processing and coordination",
+      permissions: {
+        requests: ["create", "read", "update"],
+        mentors: ["read"],
+        reports: ["create", "read"],
+        users: ["read"],
+        dashboard: ["read"],
+      },
+    },
+  })
+
+  const ldHodRole = await prisma.role.upsert({
+    where: { name: "L&D HoD" },
+    update: {},
+    create: {
+      name: "L&D HoD",
+      description: "Learning & Development Head of Department - Final approval and policy oversight",
+      permissions: {
+        requests: ["create", "read", "update", "approve", "reject"],
+        mentors: ["create", "read", "update"],
+        reports: ["create", "read", "update"],
+        users: ["read", "update"],
+        dashboard: ["read", "admin"],
+        closure: ["approve"],
+      },
+    },
+  })
+
+  const deptHodRole = await prisma.role.upsert({
+    where: { name: "Department HoD" },
+    update: {},
+    create: {
+      name: "Department HoD",
+      description: "Department Head of Department - Mentor assignment and departmental coordination",
+      permissions: {
+        requests: ["read", "update"],
+        mentors: ["assign", "read", "update"],
+        reports: ["read"],
+        users: ["read"],
+        dashboard: ["read"],
+        departmental: ["manage"],
+      },
+    },
+  })
+
+  const mentorRole = await prisma.role.upsert({
+    where: { name: "Mentor" },
+    update: {},
+    create: {
+      name: "Mentor",
+      description: "Trainee Mentor - Direct supervision and guidance",
+      permissions: {
+        requests: ["read"],
+        mentors: ["read"],
+        reports: ["create", "read", "update"],
+        trainees: ["manage"],
+        progress: ["update"],
+        evaluation: ["create", "update"],
+      },
+    },
+  })
+
+  // Admin role for system management
   const adminRole = await prisma.role.upsert({
     where: { name: "Admin" },
     update: {},
@@ -18,49 +86,7 @@ async function main() {
         requests: ["create", "read", "update", "delete"],
         mentors: ["create", "read", "update", "delete"],
         reports: ["create", "read", "update", "delete"],
-      },
-    },
-  })
-
-  const hodRole = await prisma.role.upsert({
-    where: { name: "L&D HoD" },
-    update: {},
-    create: {
-      name: "L&D HoD",
-      description: "Learning & Development Head of Department",
-      permissions: {
-        users: ["read", "update"],
-        requests: ["create", "read", "update"],
-        mentors: ["create", "read", "update"],
-        reports: ["create", "read"],
-      },
-    },
-  })
-
-  const coordinatorRole = await prisma.role.upsert({
-    where: { name: "L&D Coordinator" },
-    update: {},
-    create: {
-      name: "L&D Coordinator",
-      description: "Learning & Development Coordinator",
-      permissions: {
-        requests: ["create", "read", "update"],
-        mentors: ["read"],
-        reports: ["create", "read"],
-      },
-    },
-  })
-
-  const mentorRole = await prisma.role.upsert({
-    where: { name: "Mentor" },
-    update: {},
-    create: {
-      name: "Mentor",
-      description: "Trainee Mentor",
-      permissions: {
-        requests: ["read"],
-        mentors: ["read"],
-        reports: ["create", "read"],
+        system: ["manage"],
       },
     },
   })
@@ -121,7 +147,18 @@ async function main() {
     },
   })
 
-  // Create Users
+  const hrDept = await prisma.department.upsert({
+    where: { code: "HR" },
+    update: {},
+    create: {
+      name: "Human Resources",
+      code: "HR",
+      description: "Human resource management and employee relations",
+      isActive: true,
+    },
+  })
+
+  // Create Users - Covering all roles
   const users = [
     {
       employeeId: "EMP001",
@@ -130,7 +167,7 @@ async function main() {
       email: "rajesh.kumar@iocl.co.in",
       password: await hashPassword("demo123"),
       phone: "+91-9876543210",
-      roleId: hodRole.id,
+      roleId: ldHodRole.id,
       departmentId: ldDept.id,
       isActive: true,
     },
@@ -141,7 +178,7 @@ async function main() {
       email: "priya.sharma@iocl.co.in",
       password: await hashPassword("demo123"),
       phone: "+91-9876543211",
-      roleId: coordinatorRole.id,
+      roleId: ldCoordinatorRole.id,
       departmentId: ldDept.id,
       isActive: true,
     },
@@ -152,7 +189,7 @@ async function main() {
       email: "amit.singh@iocl.co.in",
       password: await hashPassword("demo123"),
       phone: "+91-9876543212",
-      roleId: hodRole.id,
+      roleId: deptHodRole.id,
       departmentId: itDept.id,
       isActive: true,
     },
@@ -178,6 +215,39 @@ async function main() {
       departmentId: opsDept.id,
       isActive: true,
     },
+    {
+      employeeId: "EMP006",
+      firstName: "Suresh",
+      lastName: "Patel",
+      email: "suresh.patel@iocl.co.in",
+      password: await hashPassword("demo123"),
+      phone: "+91-9876543215",
+      roleId: deptHodRole.id,
+      departmentId: engDept.id,
+      isActive: true,
+    },
+    {
+      employeeId: "EMP007",
+      firstName: "Kavita",
+      lastName: "Verma",
+      email: "kavita.verma@iocl.co.in",
+      password: await hashPassword("demo123"),
+      phone: "+91-9876543216",
+      roleId: deptHodRole.id,
+      departmentId: finDept.id,
+      isActive: true,
+    },
+    {
+      employeeId: "ADMIN001",
+      firstName: "System",
+      lastName: "Admin",
+      email: "admin@iocl.co.in",
+      password: await hashPassword("admin123"),
+      phone: "+91-9876543200",
+      roleId: adminRole.id,
+      departmentId: itDept.id,
+      isActive: true,
+    },
   ]
 
   for (const userData of users) {
@@ -199,10 +269,10 @@ async function main() {
       courseDetails: "Computer Science Engineering",
       internshipDuration: 60,
       preferredDepartment: itDept.id,
-      requestDescription: "Summer internship in software development",
+      requestDescription: "Summer internship in software development and AI/ML projects",
       priority: "HIGH" as const,
       status: "SUBMITTED" as const,
-      requestedBy: 2, // Priya Sharma
+      requestedBy: 2, // Priya Sharma (L&D Coordinator)
     },
     {
       requestNumber: "REQ002",
@@ -213,7 +283,7 @@ async function main() {
       courseDetails: "Information Technology",
       internshipDuration: 90,
       preferredDepartment: itDept.id,
-      requestDescription: "Internship in data analytics and AI",
+      requestDescription: "Internship in data analytics and business intelligence",
       priority: "MEDIUM" as const,
       status: "UNDER_REVIEW" as const,
       requestedBy: 2,
@@ -227,9 +297,37 @@ async function main() {
       courseDetails: "Mechanical Engineering",
       internshipDuration: 120,
       preferredDepartment: engDept.id,
-      requestDescription: "Internship in process engineering",
+      requestDescription: "Internship in process engineering and automation",
       priority: "HIGH" as const,
       status: "APPROVED" as const,
+      requestedBy: 2,
+    },
+    {
+      requestNumber: "REQ004",
+      traineeName: "Ananya Das",
+      traineeEmail: "ananya.das@student.edu",
+      traineePhone: "+91-8765432106",
+      institutionName: "IIM Calcutta",
+      courseDetails: "Financial Management",
+      internshipDuration: 45,
+      preferredDepartment: finDept.id,
+      requestDescription: "Internship in financial planning and analysis",
+      priority: "MEDIUM" as const,
+      status: "MENTOR_ASSIGNED" as const,
+      requestedBy: 2,
+    },
+    {
+      requestNumber: "REQ005",
+      traineeName: "Karthik Nair",
+      traineeEmail: "karthik.nair@student.edu",
+      traineePhone: "+91-8765432105",
+      institutionName: "Anna University",
+      courseDetails: "Chemical Engineering",
+      internshipDuration: 180,
+      preferredDepartment: opsDept.id,
+      requestDescription: "Internship in refinery operations and process optimization",
+      priority: "HIGH" as const,
+      status: "IN_PROGRESS" as const,
       requestedBy: 2,
     },
   ]
@@ -243,6 +341,14 @@ async function main() {
   }
 
   console.log("✅ Database seeded successfully!")
+  console.log("📋 Created roles:")
+  console.log("   - L&D Coordinator (EMP002 - Priya Sharma)")
+  console.log("   - L&D HoD (EMP001 - Rajesh Kumar)")
+  console.log("   - Department HoD (EMP003 - Amit Singh, EMP006 - Suresh Patel, EMP007 - Kavita Verma)")
+  console.log("   - Mentor (EMP004 - Vikram Gupta, EMP005 - Meera Joshi)")
+  console.log("   - Admin (ADMIN001 - System Admin)")
+  console.log("🏢 Created departments: L&D, IT, Operations, Engineering, Finance, HR")
+  console.log("📝 Created 5 sample internship requests")
 }
 
 main()
