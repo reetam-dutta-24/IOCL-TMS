@@ -43,7 +43,10 @@ import {
   UserCheck,
   ClipboardList,
   Award,
-  BookOpen
+  BookOpen,
+  CheckCircle,
+  Eye,
+  MessageSquare
 } from "lucide-react"
 
 interface DashboardLayoutProps {
@@ -97,40 +100,43 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
       case "L&D HoD":
         return [
           ...baseNavigation,
-          { name: "All Requests", href: "/requests", icon: FileText },
-          { name: "Mentors", href: "/mentors", icon: Users },
-          { name: "Reports", href: "/reports", icon: TrendingUp },
-          { name: "Closure Approvals", href: "/closures", icon: Award },
+          { name: "Final Approvals", href: "/approvals", icon: Award },
+          { name: "All L&D Data", href: "/requests", icon: FileText },
+          { name: "Closure Approvals", href: "/closures", icon: CheckCircle },
           { name: "Policy Management", href: "/policies", icon: BookOpen },
-          { name: "Settings", href: "/settings", icon: Settings }
+          { name: "Executive Reports", href: "/reports", icon: TrendingUp },
+          { name: "System Configuration", href: "/config", icon: Settings }
         ]
 
       case "L&D Coordinator":
         return [
           ...baseNavigation,
-          { name: "My Requests", href: "/requests", icon: FileText },
-          { name: "Create Request", href: "/requests/create", icon: ClipboardList },
-          { name: "Mentors", href: "/mentors", icon: Users },
-          { name: "Reports", href: "/reports", icon: TrendingUp },
-          { name: "Settings", href: "/settings", icon: Settings }
+          { name: "All Requests", href: "/requests", icon: FileText },
+          { name: "Process Requests", href: "/requests/process", icon: ClipboardList },
+          { name: "Monitor Progress", href: "/monitoring", icon: Eye },
+          { name: "Department Routing", href: "/routing", icon: Users },
+          { name: "Communication Hub", href: "/communication", icon: MessageSquare },
+          { name: "Generate Reports", href: "/reports", icon: TrendingUp }
         ]
 
       case "Department HoD":
         return [
           ...baseNavigation,
-          { name: "Department Requests", href: "/requests", icon: FileText },
+          { name: "Department Requests", href: "/requests/department", icon: FileText },
           { name: "Assign Mentors", href: "/mentors/assign", icon: UserCheck },
-          { name: "Department Reports", href: "/reports", icon: TrendingUp },
-          { name: "Settings", href: "/settings", icon: Settings }
+          { name: "Resource Allocation", href: "/resources", icon: Building },
+          { name: "Mentor Workload", href: "/mentors/workload", icon: Users },
+          { name: "Dept Reports", href: "/reports/department", icon: TrendingUp }
         ]
 
       case "Mentor":
         return [
           ...baseNavigation,
-          { name: "My Mentees", href: "/mentees", icon: Users },
-          { name: "Progress Reports", href: "/reports", icon: TrendingUp },
-          { name: "Resources", href: "/resources", icon: BookOpen },
-          { name: "Settings", href: "/settings", icon: Settings }
+          { name: "My Trainees", href: "/trainees", icon: Users },
+          { name: "Submit Reports", href: "/reports/submit", icon: FileText },
+          { name: "Project Status", href: "/projects", icon: Activity },
+          { name: "Training Materials", href: "/materials", icon: BookOpen },
+          { name: "Performance Reviews", href: "/reviews", icon: Award }
         ]
 
       default:

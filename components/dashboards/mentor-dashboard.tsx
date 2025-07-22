@@ -17,19 +17,24 @@ import {
   FileText,
   MessageSquare,
   ArrowRight,
-  Eye
+  Eye,
+  Award,
+  Activity,
+  RefreshCw,
+  Target,
+  User
 } from "lucide-react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts"
 import Link from "next/link"
 
 export function MentorDashboard({ user }: { user: any }) {
   const [stats, setStats] = useState({
-    activeMentees: 5,
-    completedMentorships: 12,
-    averageRating: 4.7,
-    totalHours: 156,
-    pendingReports: 2,
-    upcomingSessions: 3
+    assignedTrainees: 4,      // Direct supervision
+    pendingReports: 3,        // Report submission pending
+    completedEvaluations: 8,  // Performance evaluations done
+    activeProjects: 5,        // Project guidance
+    totalSupervisionHours: 156,
+    averageRating: 4.7
   })
 
   const getGreeting = () => {
@@ -41,88 +46,123 @@ export function MentorDashboard({ user }: { user: any }) {
 
   const quickActions = [
     {
-      title: "My Mentees",
-      description: "View and manage current mentees",
-      href: "/mentees",
+      title: "My Assigned Trainees",
+      description: "Direct supervision of assigned trainees",
+      href: "/trainees",
       icon: Users,
       color: "bg-blue-500",
-      count: stats.activeMentees
+      count: stats.assignedTrainees
     },
     {
-      title: "Progress Reports",
-      description: "Submit mentee progress reports",
-      href: "/reports",
+      title: "Submit Progress Reports",
+      description: "Report submission and documentation",
+      href: "/reports/submit",
       icon: FileText,
-      color: "bg-green-500",
+      color: "bg-red-500",
       count: stats.pendingReports
     },
     {
-      title: "Learning Resources",
-      description: "Access training materials",
-      href: "/resources",
-      icon: BookOpen,
+      title: "Project Guidance",
+      description: "Technical support and project oversight",
+      href: "/projects",
+      icon: Target,
+      color: "bg-green-500",
+      count: stats.activeProjects
+    },
+    {
+      title: "Performance Evaluations",
+      description: "Performance evaluation and feedback",
+      href: "/evaluations",
+      icon: Award,
       color: "bg-purple-500"
     },
     {
-      title: "Schedule Sessions",
-      description: "Plan mentoring sessions",
-      href: "/sessions",
-      icon: Calendar,
+      title: "Training Materials",
+      description: "Access training materials and resources",
+      href: "/materials",
+      icon: BookOpen,
       color: "bg-orange-500"
+    },
+    {
+      title: "Update Project Status",
+      description: "Update current project progress",
+      href: "/projects/status",
+      icon: Activity,
+      color: "bg-indigo-500"
     }
   ]
 
-  const activeMentees = [
+  const assignedTrainees = [
     {
       id: 1,
       name: "Aarav Sharma",
-      program: "Software Development Internship",
+      employeeId: "INT001",
+      project: "API Development System",
       startDate: "2024-01-15",
       progress: 75,
       status: "ON_TRACK",
-      lastSession: "2024-01-20"
+      lastEvaluation: "2024-01-20",
+      reportDue: "2024-01-25"
     },
     {
       id: 2,
-      name: "Priya Patel",
-      program: "Data Analytics Training",
+      name: "Priya Patel", 
+      employeeId: "INT002",
+      project: "Data Analytics Dashboard",
       startDate: "2024-01-10",
       progress: 60,
-      status: "NEEDS_ATTENTION",
-      lastSession: "2024-01-18"
+      status: "NEEDS_GUIDANCE",
+      lastEvaluation: "2024-01-18",
+      reportDue: "2024-01-23"
     },
     {
       id: 3,
       name: "Rohit Kumar",
-      program: "Process Engineering",
+      employeeId: "INT003", 
+      project: "Process Automation Tool",
       startDate: "2024-01-08",
       progress: 90,
       status: "EXCELLENT",
-      lastSession: "2024-01-19"
+      lastEvaluation: "2024-01-19",
+      reportDue: "2024-01-26"
+    },
+    {
+      id: 4,
+      name: "Sneha Gupta",
+      employeeId: "INT004",
+      project: "Quality Management System",
+      startDate: "2024-01-12",
+      progress: 45,
+      status: "BEHIND_SCHEDULE",
+      lastEvaluation: "2024-01-17",
+      reportDue: "2024-01-24"
     }
   ]
 
-  const upcomingSessions = [
+  const pendingTasks = [
     {
       id: 1,
-      mentee: "Aarav Sharma",
-      date: "2024-01-25",
-      time: "10:00 AM",
-      topic: "API Development Best Practices"
+      trainee: "Aarav Sharma",
+      task: "Weekly Progress Report",
+      type: "REPORT_SUBMISSION",
+      dueDate: "2024-01-25",
+      priority: "HIGH"
     },
     {
       id: 2,
-      mentee: "Priya Patel",
-      date: "2024-01-25",
-      time: "2:00 PM",
-      topic: "Data Visualization Techniques"
+      trainee: "Priya Patel",
+      task: "Performance Evaluation",
+      type: "EVALUATION",
+      dueDate: "2024-01-23",
+      priority: "URGENT"
     },
     {
       id: 3,
-      mentee: "Rohit Kumar",
-      date: "2024-01-26",
-      time: "11:00 AM",
-      topic: "Project Presentation Review"
+      trainee: "Rohit Kumar",
+      task: "Project Review Meeting",
+      type: "GUIDANCE",
+      dueDate: "2024-01-26",
+      priority: "MEDIUM"
     }
   ]
 
@@ -130,30 +170,45 @@ export function MentorDashboard({ user }: { user: any }) {
     switch (status) {
       case "ON_TRACK":
         return <Badge className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />On Track</Badge>
-      case "NEEDS_ATTENTION":
-        return <Badge className="bg-yellow-100 text-yellow-800"><AlertCircle className="h-3 w-3 mr-1" />Needs Attention</Badge>
+      case "NEEDS_GUIDANCE":
+        return <Badge className="bg-yellow-100 text-yellow-800"><AlertCircle className="h-3 w-3 mr-1" />Needs Guidance</Badge>
       case "EXCELLENT":
         return <Badge className="bg-blue-100 text-blue-800"><Star className="h-3 w-3 mr-1" />Excellent</Badge>
-      case "AT_RISK":
-        return <Badge className="bg-red-100 text-red-800"><AlertCircle className="h-3 w-3 mr-1" />At Risk</Badge>
+      case "BEHIND_SCHEDULE":
+        return <Badge className="bg-red-100 text-red-800"><Clock className="h-3 w-3 mr-1" />Behind Schedule</Badge>
       default:
         return <Badge variant="secondary">{status}</Badge>
     }
   }
 
-  const progressData = [
-    { month: "Jan", hours: 24 },
-    { month: "Feb", hours: 32 },
-    { month: "Mar", hours: 28 },
-    { month: "Apr", hours: 36 },
-    { month: "May", hours: 30 },
-    { month: "Jun", hours: 42 }
+  const getPriorityBadge = (priority: string) => {
+    switch (priority) {
+      case "URGENT":
+        return <Badge className="bg-red-100 text-red-800">Urgent</Badge>
+      case "HIGH":
+        return <Badge className="bg-orange-100 text-orange-800">High</Badge>
+      case "MEDIUM":
+        return <Badge className="bg-yellow-100 text-yellow-800">Medium</Badge>
+      case "LOW":
+        return <Badge className="bg-green-100 text-green-800">Low</Badge>
+      default:
+        return <Badge variant="secondary">{priority}</Badge>
+    }
+  }
+
+  const monthlySupervisionData = [
+    { month: "Jan", hours: 32, evaluations: 4 },
+    { month: "Feb", hours: 38, evaluations: 5 },
+    { month: "Mar", hours: 28, evaluations: 3 },
+    { month: "Apr", hours: 42, evaluations: 6 },
+    { month: "May", hours: 35, evaluations: 4 },
+    { month: "Jun", hours: 45, evaluations: 7 }
   ]
 
-  const menteeCompletionData = [
-    { name: "Completed", value: stats.completedMentorships, color: "#16a34a" },
-    { name: "Active", value: stats.activeMentees, color: "#3b82f6" },
-    { name: "On Hold", value: 2, color: "#eab308" }
+  const projectStatusData = [
+    { name: "Completed", value: 8, color: "#16a34a" },
+    { name: "In Progress", value: stats.activeProjects, color: "#3b82f6" },
+    { name: "Behind Schedule", value: 2, color: "#dc2626" }
   ]
 
   return (
@@ -166,7 +221,7 @@ export function MentorDashboard({ user }: { user: any }) {
               {getGreeting()}, {user?.firstName}!
             </h1>
             <p className="text-gray-600 mt-1">
-              Mentor Dashboard - Guide and support your mentees on their learning journey
+              Mentor Dashboard - Direct supervision, project guidance, and performance evaluation
             </p>
           </div>
           <div className="mt-4 sm:mt-0 flex items-center gap-3">
@@ -178,25 +233,29 @@ export function MentorDashboard({ user }: { user: any }) {
               <Star className="h-4 w-4 text-yellow-500 fill-current" />
               <span className="text-sm font-medium">{stats.averageRating}/5.0</span>
             </div>
+            <Button variant="outline" size="sm">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
           </div>
         </div>
 
-        {/* Pending Actions Alert */}
+        {/* Urgent Tasks Alert */}
         {stats.pendingReports > 0 && (
-          <Card className="border-orange-200 bg-orange-50">
+          <Card className="border-red-200 bg-red-50">
             <CardContent className="p-4">
               <div className="flex items-center">
-                <AlertCircle className="h-5 w-5 text-orange-600 mr-3" />
+                <AlertCircle className="h-5 w-5 text-red-600 mr-3" />
                 <div>
-                  <p className="font-medium text-orange-800">
+                  <p className="font-medium text-red-800">
                     {stats.pendingReports} progress reports pending submission
                   </p>
-                  <p className="text-sm text-orange-600">
-                    Please submit pending progress reports to keep mentee records up to date.
+                  <p className="text-sm text-red-600">
+                    Submit pending reports and evaluations to maintain trainee supervision records.
                   </p>
                 </div>
-                <Link href="/reports" className="ml-auto">
-                  <Button size="sm" className="bg-orange-600 hover:bg-orange-700">
+                <Link href="/reports/submit" className="ml-auto">
+                  <Button size="sm" className="bg-red-600 hover:bg-red-700">
                     Submit Reports
                   </Button>
                 </Link>
@@ -205,14 +264,15 @@ export function MentorDashboard({ user }: { user: any }) {
           </Card>
         )}
 
-        {/* Stats Cards */}
+        {/* Stats Cards - Mentor Responsibilities */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Active Mentees</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.activeMentees}</p>
+                  <p className="text-sm font-medium text-gray-600">Assigned Trainees</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.assignedTrainees}</p>
+                  <p className="text-xs text-blue-600 mt-1">Direct supervision</p>
                 </div>
                 <Users className="h-8 w-8 text-blue-600" />
               </div>
@@ -223,46 +283,11 @@ export function MentorDashboard({ user }: { user: any }) {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Completed</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.completedMentorships}</p>
-                </div>
-                <CheckCircle className="h-8 w-8 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Average Rating</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.averageRating}</p>
-                </div>
-                <Star className="h-8 w-8 text-yellow-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Hours</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalHours}</p>
-                </div>
-                <Clock className="h-8 w-8 text-purple-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
                   <p className="text-sm font-medium text-gray-600">Pending Reports</p>
                   <p className="text-2xl font-bold text-gray-900">{stats.pendingReports}</p>
+                  <p className="text-xs text-red-600 mt-1">Need submission</p>
                 </div>
-                <FileText className="h-8 w-8 text-orange-600" />
+                <FileText className="h-8 w-8 text-red-600" />
               </div>
             </CardContent>
           </Card>
@@ -271,10 +296,50 @@ export function MentorDashboard({ user }: { user: any }) {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Next Sessions</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.upcomingSessions}</p>
+                  <p className="text-sm font-medium text-gray-600">Evaluations Done</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.completedEvaluations}</p>
+                  <p className="text-xs text-green-600 mt-1">Performance reviews</p>
                 </div>
-                <Calendar className="h-8 w-8 text-indigo-600" />
+                <Award className="h-8 w-8 text-green-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Active Projects</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.activeProjects}</p>
+                  <p className="text-xs text-purple-600 mt-1">Project guidance</p>
+                </div>
+                <Target className="h-8 w-8 text-purple-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Supervision Hours</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.totalSupervisionHours}</p>
+                  <p className="text-xs text-orange-600 mt-1">Total logged</p>
+                </div>
+                <Clock className="h-8 w-8 text-orange-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Mentor Rating</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.averageRating}</p>
+                  <p className="text-xs text-yellow-600 mt-1">Trainee feedback</p>
+                </div>
+                <Star className="h-8 w-8 text-yellow-600" />
               </div>
             </CardContent>
           </Card>
@@ -282,12 +347,12 @@ export function MentorDashboard({ user }: { user: any }) {
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Quick Actions */}
+          {/* Mentor Responsibilities */}
           <div className="lg:col-span-1">
             <Card>
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>Common mentoring tasks</CardDescription>
+                <CardTitle>Mentor Responsibilities</CardTitle>
+                <CardDescription>Core mentoring tasks and activities</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 {quickActions.map((action, index) => (
@@ -310,46 +375,44 @@ export function MentorDashboard({ user }: { user: any }) {
             </Card>
           </div>
 
-          {/* Active Mentees */}
+          {/* Assigned Trainees - Direct Supervision */}
           <div className="lg:col-span-2">
             <Card>
               <CardHeader>
-                <CardTitle>Active Mentees</CardTitle>
-                <CardDescription>Current mentees and their progress</CardDescription>
+                <CardTitle>Assigned Trainees</CardTitle>
+                <CardDescription>Direct supervision and guidance of your trainees</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {activeMentees.map((mentee) => (
-                    <div key={mentee.id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
+                  {assignedTrainees.map((trainee) => (
+                    <div key={trainee.id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
                       <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                        <Users className="h-6 w-6 text-blue-600" />
+                        <User className="h-6 w-6 text-blue-600" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-gray-900">{mentee.name}</p>
-                          {getStatusBadge(mentee.status)}
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{trainee.name}</p>
+                            <p className="text-xs text-gray-500">ID: {trainee.employeeId}</p>
+                          </div>
+                          {getStatusBadge(trainee.status)}
                         </div>
-                        <p className="text-sm text-gray-500">{mentee.program}</p>
+                        <p className="text-sm text-gray-600 mt-1">Project: {trainee.project}</p>
                         <div className="mt-2">
                           <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-                            <span>Progress</span>
-                            <span>{mentee.progress}%</span>
+                            <span>Project Progress</span>
+                            <span>{trainee.progress}%</span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div 
                               className="bg-blue-600 h-2 rounded-full" 
-                              style={{ width: `${mentee.progress}%` }}
+                              style={{ width: `${trainee.progress}%` }}
                             ></div>
                           </div>
                         </div>
-                        <div className="mt-2 flex items-center space-x-4">
-                          <span className="text-xs text-gray-400">
-                            <Calendar className="h-3 w-3 inline mr-1" />
-                            Started: {new Date(mentee.startDate).toLocaleDateString()}
-                          </span>
-                          <span className="text-xs text-gray-400">
-                            Last session: {new Date(mentee.lastSession).toLocaleDateString()}
-                          </span>
+                        <div className="mt-2 flex items-center space-x-4 text-xs text-gray-400">
+                          <span>Last Evaluation: {new Date(trainee.lastEvaluation).toLocaleDateString()}</span>
+                          <span>Report Due: {new Date(trainee.reportDue).toLocaleDateString()}</span>
                         </div>
                       </div>
                       <Button variant="ghost" size="sm">
@@ -359,9 +422,9 @@ export function MentorDashboard({ user }: { user: any }) {
                   ))}
                 </div>
                 <div className="mt-4 text-center">
-                  <Link href="/mentees">
+                  <Link href="/trainees">
                     <Button variant="outline">
-                      View All Mentees
+                      View All Trainees
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
@@ -371,34 +434,32 @@ export function MentorDashboard({ user }: { user: any }) {
           </div>
         </div>
 
-        {/* Upcoming Sessions */}
+        {/* Pending Tasks & Actions */}
         <Card>
           <CardHeader>
-            <CardTitle>Upcoming Sessions</CardTitle>
-            <CardDescription>Scheduled mentoring sessions this week</CardDescription>
+            <CardTitle>Pending Mentor Tasks</CardTitle>
+            <CardDescription>Reports, evaluations, and guidance sessions requiring attention</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {upcomingSessions.map((session) => (
-                <div key={session.id} className="p-4 border rounded-lg bg-white hover:bg-gray-50 transition-colors">
+              {pendingTasks.map((task) => (
+                <div key={task.id} className="p-4 border rounded-lg bg-white hover:bg-gray-50 transition-colors">
                   <div className="flex items-center justify-between mb-3">
-                    <Calendar className="h-5 w-5 text-indigo-600" />
-                    <Badge variant="outline">{session.time}</Badge>
+                    <div className="flex items-center gap-2">
+                      {task.type === 'REPORT_SUBMISSION' && <FileText className="h-4 w-4 text-red-600" />}
+                      {task.type === 'EVALUATION' && <Award className="h-4 w-4 text-purple-600" />}
+                      {task.type === 'GUIDANCE' && <Target className="h-4 w-4 text-green-600" />}
+                      <span className="text-sm font-medium">{task.task}</span>
+                    </div>
+                    {getPriorityBadge(task.priority)}
                   </div>
-                  <h4 className="font-medium text-gray-900 mb-1">{session.mentee}</h4>
-                  <p className="text-sm text-gray-600 mb-2">{session.topic}</p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(session.date).toLocaleDateString()}
+                  <p className="text-sm text-gray-600 mb-2">Trainee: {task.trainee}</p>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Due: {new Date(task.dueDate).toLocaleDateString()}
                   </p>
-                  <div className="mt-3 flex space-x-2">
-                    <Button size="sm" className="flex-1">
-                      <MessageSquare className="h-3 w-3 mr-1" />
-                      Join
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      <Calendar className="h-3 w-3" />
-                    </Button>
-                  </div>
+                  <Button size="sm" className="w-full">
+                    Complete Task
+                  </Button>
                 </div>
               ))}
             </div>
@@ -409,17 +470,18 @@ export function MentorDashboard({ user }: { user: any }) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Monthly Mentoring Hours</CardTitle>
-              <CardDescription>Your mentoring activity over time</CardDescription>
+              <CardTitle>Monthly Supervision Activity</CardTitle>
+              <CardDescription>Hours spent and evaluations completed</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={progressData}>
+                <LineChart data={monthlySupervisionData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip />
-                  <Line type="monotone" dataKey="hours" stroke="#dc2626" strokeWidth={2} />
+                  <Line type="monotone" dataKey="hours" stroke="#dc2626" strokeWidth={2} name="Hours" />
+                  <Line type="monotone" dataKey="evaluations" stroke="#16a34a" strokeWidth={2} name="Evaluations" />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
@@ -427,12 +489,12 @@ export function MentorDashboard({ user }: { user: any }) {
 
           <Card>
             <CardHeader>
-              <CardTitle>Mentorship Distribution</CardTitle>
-              <CardDescription>Current and completed mentorships</CardDescription>
+              <CardTitle>Project Status Overview</CardTitle>
+              <CardDescription>Current status of all guided projects</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={menteeCompletionData}>
+                <BarChart data={projectStatusData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
@@ -444,36 +506,36 @@ export function MentorDashboard({ user }: { user: any }) {
           </Card>
         </div>
 
-        {/* Mentoring Tips */}
+        {/* Mentoring Guidelines */}
         <Card>
           <CardHeader>
-            <CardTitle>Mentoring Best Practices</CardTitle>
-            <CardDescription>Tips for effective mentoring</CardDescription>
+            <CardTitle>Mentoring Excellence Guidelines</CardTitle>
+            <CardDescription>Key practices for effective mentorship</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-medium text-blue-900 mb-2">Regular Check-ins</h4>
+                <h4 className="font-medium text-blue-900 mb-2">Direct Supervision</h4>
                 <p className="text-sm text-blue-700">
-                  Schedule consistent one-on-one sessions to track progress and provide continuous support.
+                  Provide close guidance and oversight for assigned trainees, ensuring they receive proper technical support.
                 </p>
               </div>
               <div className="p-4 bg-green-50 rounded-lg">
-                <h4 className="font-medium text-green-900 mb-2">Goal Setting</h4>
+                <h4 className="font-medium text-green-900 mb-2">Project Guidance</h4>
                 <p className="text-sm text-green-700">
-                  Help mentees set clear, achievable goals and create actionable plans to reach them.
+                  Offer technical expertise and problem-solving support to help trainees successfully complete their projects.
                 </p>
               </div>
               <div className="p-4 bg-purple-50 rounded-lg">
-                <h4 className="font-medium text-purple-900 mb-2">Knowledge Sharing</h4>
+                <h4 className="font-medium text-purple-900 mb-2">Performance Evaluation</h4>
                 <p className="text-sm text-purple-700">
-                  Share your experience and industry insights to accelerate their learning curve.
+                  Conduct regular evaluations and provide constructive feedback to help trainees improve and grow.
                 </p>
               </div>
               <div className="p-4 bg-orange-50 rounded-lg">
-                <h4 className="font-medium text-orange-900 mb-2">Feedback Culture</h4>
+                <h4 className="font-medium text-orange-900 mb-2">Report Documentation</h4>
                 <p className="text-sm text-orange-700">
-                  Provide constructive feedback regularly and encourage open communication.
+                  Maintain accurate records and submit timely reports on trainee progress and behavioral observations.
                 </p>
               </div>
             </div>
