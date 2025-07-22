@@ -37,6 +37,16 @@ import {
   MapPin,
   Building,
   Loader2,
+  Database,
+  Activity,
+  BarChart3,
+  UserCheck,
+  ClipboardList,
+  Award,
+  BookOpen,
+  CheckCircle,
+  Eye,
+  MessageSquare
 } from "lucide-react"
 
 interface DashboardLayoutProps {
@@ -68,23 +78,119 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
     }
   }
 
-  const navigation = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Requests", href: "/requests", icon: FileText },
-    { name: "Mentors", href: "/mentors", icon: Users },
-    { name: "Reports", href: "/reports", icon: TrendingUp },
-    { name: "Settings", href: "/settings", icon: Settings },
-  ]
+  // Role-based navigation
+  const getNavigationItems = () => {
+    const baseNavigation = [
+      { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard }
+    ]
 
-  // Add admin panel for admin users
-  const isAdmin = user && ['L&D HoD', 'System Administrator'].includes(user.role)
-  if (isAdmin) {
-    navigation.push({ name: "Admin Panel", href: "/admin", icon: Shield })
+    switch (user?.role) {
+      case "Admin":
+      case "System Administrator":
+        return [
+          ...baseNavigation,
+          { name: "Access Requests", href: "/admin", icon: Shield },
+          { name: "User Management", href: "/admin/users", icon: Users },
+          { name: "System Analytics", href: "/admin/analytics", icon: BarChart3 },
+          { name: "Audit Logs", href: "/admin/audit", icon: Activity },
+          { name: "Database", href: "/admin/database", icon: Database },
+          { name: "System Settings", href: "/admin/settings", icon: Settings }
+        ]
+
+      case "L&D HoD":
+        return [
+          ...baseNavigation,
+          { name: "Final Approvals", href: "/approvals", icon: Award },
+          { name: "All L&D Data", href: "/requests", icon: FileText },
+          { name: "Closure Approvals", href: "/closures", icon: CheckCircle },
+          { name: "Policy Management", href: "/policies", icon: BookOpen },
+          { name: "Executive Reports", href: "/reports", icon: TrendingUp },
+          { name: "System Configuration", href: "/config", icon: Settings }
+        ]
+
+      case "L&D Coordinator":
+        return [
+          ...baseNavigation,
+          { name: "All Requests", href: "/requests", icon: FileText },
+          { name: "Process Requests", href: "/requests/process", icon: ClipboardList },
+          { name: "Monitor Progress", href: "/monitoring", icon: Eye },
+          { name: "Department Routing", href: "/routing", icon: Users },
+          { name: "Communication Hub", href: "/communication", icon: MessageSquare },
+          { name: "Generate Reports", href: "/reports", icon: TrendingUp }
+        ]
+
+      case "Department HoD":
+        return [
+          ...baseNavigation,
+          { name: "Department Requests", href: "/requests/department", icon: FileText },
+          { name: "Assign Mentors", href: "/mentors/assign", icon: UserCheck },
+          { name: "Resource Allocation", href: "/resources", icon: Building },
+          { name: "Mentor Workload", href: "/mentors/workload", icon: Users },
+          { name: "Dept Reports", href: "/reports/department", icon: TrendingUp }
+        ]
+
+      case "Mentor":
+        return [
+          ...baseNavigation,
+          { name: "My Trainees", href: "/trainees", icon: Users },
+          { name: "Submit Reports", href: "/reports/submit", icon: FileText },
+          { name: "Project Status", href: "/projects", icon: Activity },
+          { name: "Training Materials", href: "/materials", icon: BookOpen },
+          { name: "Performance Reviews", href: "/reviews", icon: Award }
+        ]
+
+      default:
+        return [
+          ...baseNavigation,
+          { name: "Requests", href: "/requests", icon: FileText },
+          { name: "Settings", href: "/settings", icon: Settings }
+        ]
+    }
   }
+
+  const navigation = getNavigationItems()
 
   // Function to check if current page matches navigation item
   const isCurrentPage = (href: string) => {
     return pathname === href
+  }
+
+  // Get role-specific badge color
+  const getRoleBadgeColor = () => {
+    switch (user?.role) {
+      case "Admin":
+      case "System Administrator":
+        return "bg-red-100 text-red-800"
+      case "L&D HoD":
+        return "bg-purple-100 text-purple-800"
+      case "L&D Coordinator":
+        return "bg-blue-100 text-blue-800"
+      case "Department HoD":
+        return "bg-green-100 text-green-800"
+      case "Mentor":
+        return "bg-orange-100 text-orange-800"
+      default:
+        return "bg-gray-100 text-gray-800"
+    }
+  }
+
+  // Get role-specific description
+  const getRoleDescription = () => {
+    switch (user?.role) {
+      case "Admin":
+      case "System Administrator":
+        return "Full system administration and management"
+      case "L&D HoD":
+        return "Learning & Development leadership and policy oversight"
+      case "L&D Coordinator":
+        return "Training coordination and initial request processing"
+      case "Department HoD":
+        return "Departmental coordination and mentor assignment"
+      case "Mentor":
+        return "Trainee guidance and progress monitoring"
+      default:
+        return "System user"
+    }
   }
 
   if (loggingOut) {
@@ -110,6 +216,15 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
               <X className="h-5 w-5" />
             </Button>
           </div>
+          
+          {/* Role Badge */}
+          <div className="px-4 py-3 border-b border-gray-200">
+            <Badge className={`${getRoleBadgeColor()} px-3 py-1 text-xs font-medium`}>
+              {user?.role}
+            </Badge>
+            <p className="text-xs text-gray-500 mt-1">{getRoleDescription()}</p>
+          </div>
+
           <nav className="flex-1 space-y-1 px-3 py-4">
             {navigation.map((item) => {
               const current = isCurrentPage(item.href)
@@ -145,7 +260,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
               </Avatar>
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-700">{user.firstName} {user.lastName}</p>
-                <p className="text-xs text-gray-500">{user.role}</p>
+                <p className="text-xs text-gray-500">{user.department}</p>
               </div>
             </div>
           </div>
@@ -159,6 +274,15 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
             <IndianOilLogo width={32} height={32} />
             <span className="ml-2 text-xl font-bold text-white">IOCL TAMS</span>
           </div>
+
+          {/* Role Badge */}
+          <div className="px-4 py-3 border-b border-gray-200">
+            <Badge className={`${getRoleBadgeColor()} px-3 py-1 text-xs font-medium`}>
+              {user?.role}
+            </Badge>
+            <p className="text-xs text-gray-500 mt-1">{getRoleDescription()}</p>
+          </div>
+
           <nav className="flex-1 space-y-1 px-3 py-4">
             {navigation.map((item) => {
               const current = isCurrentPage(item.href)
@@ -194,7 +318,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
               </Avatar>
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-700">{user.firstName} {user.lastName}</p>
-                <p className="text-xs text-gray-500">{user.role}</p>
+                <p className="text-xs text-gray-500">{user.department}</p>
               </div>
             </div>
           </div>
@@ -202,139 +326,68 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className="lg:pl-64 flex flex-col flex-1">
         {/* Top navigation */}
-        <div className="sticky top-0 z-40 flex h-16 items-center gap-x-4 border-b border-red-100 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
-          <Button variant="ghost" size="sm" className="lg:hidden text-red-600 hover:bg-red-50" onClick={() => setSidebarOpen(true)}>
+        <div className="sticky top-0 z-40 flex h-16 bg-white border-b border-gray-200 shadow-sm">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="lg:hidden ml-2"
+            onClick={() => setSidebarOpen(true)}
+          >
             <Menu className="h-5 w-5" />
           </Button>
 
-          <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-            <div className="flex flex-1 items-center">
-              <div className="text-sm text-gray-500">
-                Welcome back, <span className="font-medium text-gray-900">{user.firstName} {user.lastName}</span>
-              </div>
+          <div className="flex-1 flex justify-between items-center px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center space-x-4">
+              <h2 className="text-lg font-semibold text-gray-900 hidden sm:block">
+                {navigation.find(item => item.href === pathname)?.name || "Dashboard"}
+              </h2>
             </div>
-            <div className="flex items-center gap-x-4 lg:gap-x-6">
-              {/* Home Button */}
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-red-600 hover:bg-red-50"
-                onClick={() => {
-                  setNavigatingTo("Home")
-                  setTimeout(() => router.push("/"), 800)
-                }}
-                disabled={!!navigatingTo}
-              >
-                {navigatingTo === "Home" ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <Home className="h-5 w-5" />
-                )}
+
+            <div className="flex items-center space-x-4">
+              {/* Notifications */}
+              <Button variant="ghost" size="sm" className="relative">
+                <Bell className="h-5 w-5" />
+                <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                  3
+                </span>
               </Button>
 
-              {/* Notifications */}
-              <NotificationSystem userId={user.id} />
-
-              {/* Enhanced User menu */}
+              {/* User menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-2 hover:bg-red-50" disabled={!!navigatingTo}>
+                  <Button variant="ghost" className="flex items-center space-x-2 px-3 py-2">
                     <Avatar className="h-8 w-8" style={{ backgroundColor: user.profileColor || '#ef4444' }}>
                       <AvatarFallback className="text-white font-semibold" style={{ backgroundColor: user.profileColor || '#ef4444' }}>
                         {user.firstName?.[0]?.toUpperCase()}{user.lastName?.[0]?.toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="hidden lg:block text-left">
-                      <div className="text-sm font-medium text-gray-700">{user.firstName} {user.lastName}</div>
-                      <div className="text-xs text-gray-500">{user.role}</div>
+                    <div className="hidden md:block text-left">
+                      <p className="text-sm font-medium">{user.firstName} {user.lastName}</p>
+                      <p className="text-xs text-gray-500">{user.role}</p>
                     </div>
-                    <ChevronDown className="h-4 w-4 text-gray-400" />
+                    <ChevronDown className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80">
+                <DropdownMenuContent className="w-56" align="end">
                   <DropdownMenuLabel>
-                    <div className="flex items-center space-x-3">
-                      <Avatar className="h-12 w-12" style={{ backgroundColor: user.profileColor || '#ef4444' }}>
-                        <AvatarFallback className="text-white font-semibold text-lg" style={{ backgroundColor: user.profileColor || '#ef4444' }}>
-                          {user.firstName?.[0]?.toUpperCase()}{user.lastName?.[0]?.toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="font-medium text-gray-900">{user.firstName} {user.lastName}</div>
-                        <div className="text-sm text-gray-500">{user.employeeId}</div>
-                        <Badge className="mt-1 bg-red-100 text-red-800 text-xs">
-                          {user.role}
-                        </Badge>
-                      </div>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium">{user.firstName} {user.lastName}</p>
+                      <p className="text-xs text-gray-500">{user.email}</p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  
-                  {/* Profile Details */}
-                  <div className="px-2 py-1 space-y-2">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Mail className="mr-2 h-4 w-4" />
-                      {user.email}
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Building className="mr-2 h-4 w-4" />
-                      {user.department}
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Shield className="mr-2 h-4 w-4" />
-                      Employee ID: {user.employeeId}
-                    </div>
-                  </div>
-
-                  <DropdownMenuSeparator />
-                  
-                  {/* Menu Items */}
-                  <DropdownMenuItem 
-                    className="cursor-pointer"
-                    onClick={() => {
-                      setNavigatingTo("Profile")
-                      setTimeout(() => router.push("/settings?tab=profile"), 800)
-                    }}
-                  >
+                  <DropdownMenuItem>
                     <User className="mr-2 h-4 w-4" />
-                    View Profile
+                    Profile
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="cursor-pointer"
-                    onClick={() => {
-                      setNavigatingTo("Settings")
-                      setTimeout(() => router.push("/settings"), 800)
-                    }}
-                  >
+                  <DropdownMenuItem>
                     <Settings className="mr-2 h-4 w-4" />
-                    Account Settings
+                    Settings
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="cursor-pointer"
-                    onClick={() => {
-                      setNavigatingTo("Notifications")
-                      setTimeout(() => router.push("/settings?tab=notifications"), 800)
-                    }}
-                  >
-                    <Bell className="mr-2 h-4 w-4" />
-                    Notification Preferences
-                  </DropdownMenuItem>
-                  
                   <DropdownMenuSeparator />
-                  
-                  <DropdownMenuItem 
-                    className="text-gray-600 cursor-pointer"
-                    onClick={() => {
-                      setNavigatingTo("Home")
-                      setTimeout(() => router.push("/"), 800)
-                    }}
-                  >
-                    <Home className="mr-2 h-4 w-4" />
-                    Go to Home
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-600">
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign out
                   </DropdownMenuItem>
@@ -345,10 +398,14 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
         </div>
 
         {/* Page content */}
-        <main className="py-8">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">{children}</div>
+        <main className="flex-1">
+          <div className="py-6 px-4 sm:px-6 lg:px-8">
+            {children}
+          </div>
         </main>
       </div>
+
+      <NotificationSystem />
     </div>
   )
-};
+}
