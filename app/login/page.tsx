@@ -1,64 +1,70 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/src/context/auth-context";
-import { ArrowLeft, Eye, EyeOff, Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { IndianOilLogo } from "@/components/ui/logo"
+import { ArrowLeft, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { IndianOilLogo } from "@/components/ui/logo";
 
 export default function LoginPage() {
-  const router = useRouter()
-  const { login } = useAuth()
-  const [loading, setLoading] = useState(false)
-  const [pageLoading, setPageLoading] = useState(true)
-  const [redirecting, setRedirecting] = useState(false)
-  const [error, setError] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
+  const router = useRouter();
+  const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [redirecting, setRedirecting] = useState(false);
+  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     employeeId: "",
-    password: ""
-  })
+    password: "",
+  });
 
   useEffect(() => {
     // Simulate page loading
     const timer = setTimeout(() => {
-      setPageLoading(false)
-    }, 800)
-    return () => clearTimeout(timer)
-  }, [])
+      setPageLoading(false);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
-    }))
+      [field]: value,
+    }));
     // Clear error when user starts typing
-    if (error) setError("")
-  }
+    if (error) setError("");
+  };
 
   const validateForm = () => {
     if (!formData.employeeId || !formData.password) {
-      setError("Please enter both Employee ID and password")
-      return false
+      setError("Please enter both Employee ID and password");
+      return false;
     }
-    return true
-  }
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     if (!validateForm()) {
-      return
+      return;
     }
 
-    setLoading(true)
-    setError("")
+    setLoading(true);
+    setError("");
 
     try {
       const response = await fetch("/api/auth", {
@@ -66,31 +72,37 @@ export default function LoginPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
-      })
+        body: JSON.stringify({
+          employeeId: formData.employeeId.trim(),
+          password: formData.password.trim(),
+        }),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Login failed")
+        throw new Error(data.error || "Login failed");
       }
 
       // Store user data and token
-      login(data.user, data.token)
-      
+      login(data.user, data.token);
+
       // Show redirecting state
-      setRedirecting(true)
-      
+      setRedirecting(true);
+
       // Redirect to dashboard after a brief delay
       setTimeout(() => {
-        router.push("/dashboard")
-      }, 1500)
+        router.push("/dashboard");
+      }, 1500);
     } catch (err: any) {
-      setError(err.message || "Login failed. Please check your credentials and try again.")
+      setError(
+        err.message ||
+          "Login failed. Please check your credentials and try again."
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (pageLoading) {
     return (
@@ -100,7 +112,7 @@ export default function LoginPage() {
           <p className="text-gray-600">Loading login page...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (redirecting) {
@@ -108,11 +120,13 @@ export default function LoginPage() {
       <div className="min-h-screen flex items-center justify-center bg-red-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Login Successful!</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Login Successful!
+          </h2>
           <p className="text-gray-600">Redirecting to your dashboard...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -121,7 +135,10 @@ export default function LoginPage() {
         {/* Back to Home Button */}
         <div className="mb-6">
           <Link href="/">
-            <Button variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+            <Button
+              variant="ghost"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Home
             </Button>
@@ -133,7 +150,9 @@ export default function LoginPage() {
             <IndianOilLogo width={48} height={48} className="mr-2" />
             <div>
               <h1 className="text-2xl font-bold text-gray-900">IOCL TAMS</h1>
-              <p className="text-sm text-gray-600">Trainee Approval & Management System</p>
+              <p className="text-sm text-gray-600">
+                Trainee Approval & Management System
+              </p>
             </div>
           </div>
           <h2 className="text-xl font-semibold text-gray-900">Welcome Back</h2>
@@ -151,7 +170,9 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
                 <Alert className="border-red-200 bg-red-50">
-                  <AlertDescription className="text-red-700">{error}</AlertDescription>
+                  <AlertDescription className="text-red-700">
+                    {error}
+                  </AlertDescription>
                 </Alert>
               )}
 
@@ -162,7 +183,9 @@ export default function LoginPage() {
                   type="text"
                   placeholder="Enter your employee ID"
                   value={formData.employeeId}
-                  onChange={(e) => handleInputChange("employeeId", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("employeeId", e.target.value)
+                  }
                   className="border-red-200 focus:border-red-500 focus:ring-red-500"
                   required
                   disabled={loading}
@@ -178,7 +201,9 @@ export default function LoginPage() {
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     value={formData.password}
-                    onChange={(e) => handleInputChange("password", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("password", e.target.value)
+                    }
                     className="border-red-200 focus:border-red-500 focus:ring-red-500 pr-10"
                     required
                     disabled={loading}
@@ -190,7 +215,11 @@ export default function LoginPage() {
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:opacity-50"
                     disabled={loading}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -222,24 +251,37 @@ export default function LoginPage() {
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Don't have access?{" "}
-                <Link href="/register" className="text-red-600 hover:text-red-700 font-medium">
+                <Link
+                  href="/register"
+                  className="text-red-600 hover:text-red-700 font-medium"
+                >
                   Request access here
                 </Link>
               </p>
             </div>
 
             <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-              <h3 className="font-medium text-blue-900 mb-2">Demo Credentials:</h3>
+              <h3 className="font-medium text-blue-900 mb-2">
+                Demo Credentials:
+              </h3>
               <div className="text-sm text-blue-700 space-y-1">
-                <div><strong>L&D HoD:</strong> EMP001 / demo123</div>
-                <div><strong>L&D Coordinator:</strong> EMP002 / demo123</div>
-                <div><strong>Department HoD:</strong> EMP003 / demo123</div>
-                <div><strong>Mentor:</strong> EMP004 / demo123</div>
+                <div>
+                  <strong>L&D HoD:</strong> EMP001 / demo123
+                </div>
+                <div>
+                  <strong>L&D Coordinator:</strong> EMP002 / demo123
+                </div>
+                <div>
+                  <strong>Department HoD:</strong> EMP003 / demo123
+                </div>
+                <div>
+                  <strong>Mentor:</strong> EMP004 / demo123
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
     </div>
-  )
-};
+  );
+}
