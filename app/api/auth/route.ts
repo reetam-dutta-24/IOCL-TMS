@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     // Generate JWT token
     const token = generateToken(user)
 
-    // Create response with user data
+    // Create response with user data (fixed the role and department access)
     const response = NextResponse.json({
       success: true,
       user: {
@@ -29,8 +29,9 @@ export async function POST(request: NextRequest) {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        role: user.role,
-        department: user.department,
+        role: user.role, // This is already a string from authenticateUser
+        department: user.department, // This is already a string from authenticateUser
+        isActive: true,
       },
       token,
     })

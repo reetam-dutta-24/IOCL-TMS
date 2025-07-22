@@ -1,40 +1,42 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { createUser } from "@/lib/auth"
+import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { hashPassword } from "@/lib/auth"
 
 export async function POST(request: NextRequest) {
   try {
-    const { employeeId, firstName, lastName, email, password, department, role, phone } = await request.json()
+    const body = await request.json()
+    const { employeeId, firstName, lastName, email, password, phone, department, role, reason } = body
 
     // Validate required fields
-    if (!employeeId || !firstName || !lastName || !email || !password) {
+    if (!employeeId || !firstName || !lastName || !email || !password || !department || !role) {
       return NextResponse.json(
-        { error: "All required fields must be provided" },
+        { error: "Please fill in all required fields" },
         { status: 400 }
       )
     }
 
-    // Check if user already exists
+    // Check if employee ID or email already exists
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
           { employeeId },
-          { email },
-        ],
-      },
+          { email }
+        ]
+      }
     })
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "User with this employee ID or email already exists" },
-        { status: 409 }
+        { error: "Employee ID or email already exists" },
+        { status: 400 }
       )
     }
 
-    // Get role ID (default to L&D Coordinator for new registrations)
-    const userRole = await prisma.role.findFirst({
-      where: { name: role || "L&D Coordinator" },
-    })
+    // Find role and department - validate both exist
+    const [userRole, userDepartment] = await Promise.all([
+      prisma.role.findFirst({ where: { name: role } }),
+      prisma.department.findFirst({ where: { name: department } })
+    ])
 
     if (!userRole) {
       return NextResponse.json(
@@ -43,51 +45,62 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get department ID
-    let departmentId: number | null = null
-    if (department) {
-      const userDepartment = await prisma.department.findFirst({
-        where: { name: department },
-      })
-      departmentId = userDepartment?.id || null
-    }
-
-    // Create user with proper typing
-    const newUser = await createUser({
-      employeeId,
-      firstName,
-      lastName,
-      email,
-      password,
-      roleId: userRole.id,
-      departmentId,
-      phone: phone || undefined,
-    })
-
-    if (!newUser) {
+    if (!userDepartment) {
       return NextResponse.json(
-        { error: "Failed to create user" },
-        { status: 500 }
+        { error: "Invalid department specified" },
+        { status: 400 }
       )
     }
 
+    // Hash password
+    const hashedPassword = await hashPassword(password)
+
+    // Create user account - we know department exists now
+    const newUser = await prisma.user.create({
+      data: {
+        employeeId,
+        firstName,
+        lastName,
+        email,
+        password: hashedPassword,
+        phone: phone || null,
+        roleId: userRole.id,
+        departmentId: userDepartment.id,
+        isActive: true,
+      },
+      include: {
+        role: true,
+        department: true,
+      }
+    })
+
+    // Safe to access department.name since we validated it exists
     return NextResponse.json(
-      {
-        success: true,
-        message: "User registered successfully",
+      { 
+        success: true, 
+        message: "Account created successfully! You can now login.",
         user: {
           id: newUser.id,
           employeeId: newUser.employeeId,
-          name: `${newUser.firstName} ${newUser.lastName}`,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
           email: newUser.email,
-          role: newUser.role,
-          department: newUser.department,
-        },
+          role: newUser.role.name,
+          department: newUser.department!.name, // Using non-null assertion since we validated
+        }
       },
       { status: 201 }
     )
-  } catch (error) {
+  } catch (error: any) {
     console.error("Registration error:", error)
+    
+    if (error.code === "P2002") {
+      return NextResponse.json(
+        { error: "Employee ID or email already exists" },
+        { status: 400 }
+      )
+    }
+
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

@@ -23,18 +23,12 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Fetch requests from database
+    // Fetch requests from database - Only include department relation for now
     const requests = await prisma.internshipRequest.findMany({
       where,
       include: {
-        trainee: {
-          select: { firstName: true, lastName: true },
-        },
         department: {
           select: { name: true },
-        },
-        mentor: {
-          select: { firstName: true, lastName: true },
         },
       },
       orderBy: {

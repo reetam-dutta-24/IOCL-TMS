@@ -106,7 +106,7 @@ export default function RegisterPage() {
         router.push("/login")
       }, 3000)
     } catch (err: any) {
-      setError(err.message || "Registration request failed. Please try again.")
+      setError(err.message || "Registration failed. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -132,10 +132,9 @@ export default function RegisterPage() {
               <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">Request Submitted Successfully!</h1>
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">Account Created Successfully!</h1>
               <p className="text-gray-600 mb-6">
-                Your access request has been submitted to the IOCL TAMS administrators. 
-                You can now login with your credentials immediately.
+                Your account has been created successfully. You can now login with your credentials.
               </p>
               <div className="flex items-center justify-center mb-4">
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -174,15 +173,15 @@ export default function RegisterPage() {
               <p className="text-sm text-gray-600">Trainee Approval & Management System</p>
             </div>
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Request System Access</h2>
-          <p className="text-gray-600">Please fill out the form below to request access to TAMS</p>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Create Your Account</h2>
+          <p className="text-gray-600">Please fill out the form below to create your TAMS account</p>
         </div>
 
         <Card className="shadow-lg border-red-100">
           <CardHeader className="text-center">
-            <CardTitle className="text-red-900">Access Request Form</CardTitle>
+            <CardTitle className="text-red-900">Account Registration</CardTitle>
             <CardDescription>
-              Please provide your details to request access to the IOCL TAMS system
+              Create your account to access the IOCL TAMS system
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -312,7 +311,7 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="role">Requested Role *</Label>
+                <Label htmlFor="role">Role *</Label>
                 <Select value={formData.role} onValueChange={(value) => handleInputChange("role", value)} disabled={loading}>
                   <SelectTrigger className="border-red-200 focus:border-red-500 focus:ring-red-500">
                     <SelectValue />
@@ -326,23 +325,10 @@ export default function RegisterPage() {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="reason">Reason for Access Request</Label>
-                <Textarea
-                  id="reason"
-                  placeholder="Please explain why you need access to TAMS and how you plan to use it..."
-                  value={formData.reason}
-                  onChange={(e) => handleInputChange("reason", e.target.value)}
-                  className="border-red-200 focus:border-red-500 focus:ring-red-500"
-                  rows={3}
-                  disabled={loading}
-                />
-              </div>
-
-              <div className="bg-red-50 p-4 rounded-lg">
-                <h3 className="font-medium text-red-900 mb-2">Important Notes:</h3>
-                <ul className="text-sm text-red-700 space-y-1">
-                  <li>• Registration creates account immediately - no approval required</li>
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <h3 className="font-medium text-green-900 mb-2">✅ Instant Account Creation:</h3>
+                <ul className="text-sm text-green-700 space-y-1">
+                  <li>• Account is created immediately upon registration</li>
                   <li>• You can login right after successful registration</li>
                   <li>• Please ensure all information is accurate</li>
                   <li>• Contact IT support if you encounter any issues</li>
@@ -367,7 +353,7 @@ export default function RegisterPage() {
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
-                Already have access?{" "}
+                Already have an account?{" "}
                 <Link href="/login" className="text-red-600 hover:text-red-700 font-medium">
                   Sign in here
                 </Link>
