@@ -71,6 +71,7 @@ export function AdminDashboard({ user }: { user: any }) {
   const fetchDashboardData = async () => {
     try {
       setRefreshing(true)
+      console.log("🔍 Fetching admin dashboard data...")
       
       // Fetch admin statistics
       const [statsRes, activitiesRes] = await Promise.all([
@@ -78,17 +79,47 @@ export function AdminDashboard({ user }: { user: any }) {
         fetch("/api/admin/activities")
       ])
 
+      console.log("📊 Stats API response status:", statsRes.status)
+      console.log("📝 Activities API response status:", activitiesRes.status)
+
       if (statsRes.ok) {
         const statsData = await statsRes.json()
+        console.log("✅ Real stats data received:", statsData)
         setStats(statsData)
+      } else {
+        console.error("❌ Stats API failed:", statsRes.status, statsRes.statusText)
+        // Set fallback data with clear indicators
+        setStats({
+          totalUsers: 0,
+          activeUsers: 0,
+          pendingAccessRequests: 0,
+          totalRequests: 0,
+          systemHealth: 0,
+          databaseSize: "Unknown",
+          lastBackup: "N/A",
+          criticalAlerts: 1 // Indicate API failure
+        })
       }
 
       if (activitiesRes.ok) {
         const activitiesData = await activitiesRes.json()
+        console.log("✅ Activities data received:", activitiesData)
         setActivities(activitiesData)
+      } else {
+        console.error("❌ Activities API failed:", activitiesRes.status)
+        setActivities([
+          {
+            id: 1,
+            type: "SYSTEM_ALERT",
+            user: "System",
+            action: "API connection failed - showing fallback data",
+            timestamp: new Date().toISOString(),
+            status: "ERROR"
+          }
+        ])
       }
 
-      // Mock metrics data for now
+      // Mock metrics data for now (will be replaced with real data later)
       setMetrics({
         userGrowth: [
           { month: "Jan", count: 45 },
@@ -116,7 +147,28 @@ export function AdminDashboard({ user }: { user: any }) {
       })
 
     } catch (error) {
-      console.error("Failed to fetch admin dashboard data:", error)
+      console.error("💥 Failed to fetch admin dashboard data:", error)
+      // Set clear error state
+      setStats({
+        totalUsers: 0,
+        activeUsers: 0,
+        pendingAccessRequests: 0,
+        totalRequests: 0,
+        systemHealth: 0,
+        databaseSize: "Error",
+        lastBackup: "Error",
+        criticalAlerts: 1
+      })
+      setActivities([
+        {
+          id: 1,
+          type: "SYSTEM_ALERT",
+          user: "System",
+          action: `Dashboard API error: ${error}`,
+          timestamp: new Date().toISOString(),
+          status: "ERROR"
+        }
+      ])
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -240,8 +292,21 @@ export function AdminDashboard({ user }: { user: any }) {
           </div>
         </div>
 
+        {/* Data Source Indicator */}
+        <Alert className="border-blue-200 bg-blue-50">
+          <Activity className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-700">
+            <strong>📊 Dashboard Status:</strong> 
+            {stats?.databaseSize === "Error" || stats?.databaseSize === "Unknown" ? (
+              <span className="text-red-600 ml-2">⚠️ API Connection Failed - Showing fallback data. Check console for details.</span>
+            ) : (
+              <span className="text-green-600 ml-2">✅ Real-time data from database (Last updated: {new Date().toLocaleTimeString()})</span>
+            )}
+          </AlertDescription>
+        </Alert>
+
         {/* Critical Alerts */}
-        {stats && stats.criticalAlerts > 0 && (
+        {stats && stats.criticalAlerts > 0 && stats.databaseSize !== "Error" && stats.databaseSize !== "Unknown" && (
           <Alert className="border-red-200 bg-red-50">
             <AlertTriangle className="h-4 w-4 text-red-600" />
             <AlertDescription className="text-red-700">
