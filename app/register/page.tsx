@@ -39,6 +39,8 @@ export default function RegisterPage() {
     email: "",
     phone: "",
     employeeId: "",
+    password: "",
+    confirmPassword: "",
     requestedRoleId: "",
     departmentId: "",
     institutionName: "",
@@ -93,8 +95,21 @@ export default function RegisterPage() {
     setError("")
 
     // Basic validation
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.employeeId || !formData.requestedRoleId) {
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.employeeId || !formData.password || !formData.confirmPassword || !formData.requestedRoleId) {
       setError("Please fill in all required fields.")
+      setIsLoading(false)
+      return
+    }
+
+    // Password validation
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match.")
+      setIsLoading(false)
+      return
+    }
+
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long.")
       setIsLoading(false)
       return
     }
@@ -241,6 +256,36 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2 animate-slide-in-left animate-delay-850">
+                    <Label htmlFor="password">Password *</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="Enter password"
+                      value={formData.password}
+                      onChange={(e) => handleChange("password", e.target.value)}
+                      required
+                      className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
+                      disabled={isLoading || isDataLoading}
+                    />
+                  </div>
+
+                  <div className="space-y-2 animate-slide-in-right animate-delay-850">
+                    <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      placeholder="Confirm password"
+                      value={formData.confirmPassword}
+                      onChange={(e) => handleChange("confirmPassword", e.target.value)}
+                      required
+                      className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
+                      disabled={isLoading || isDataLoading}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2 animate-slide-in-left animate-delay-900">
                     <Label htmlFor="role">Requested Role *</Label>
                     <Select
@@ -350,17 +395,23 @@ export default function RegisterPage() {
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
                   <CheckCircle className="h-8 w-8 text-green-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900">Request Submitted Successfully!</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Account Created Successfully!</h3>
                 <p className="text-gray-600">
-                  Your access request has been submitted for admin approval. 
-                  You'll receive an email once your request is reviewed.
+                  Your account has been created and you can now login with your credentials.
                 </p>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-2 mb-4">
+                  <h4 className="font-semibold text-green-900">Login Instructions:</h4>
+                  <div className="space-y-1 text-sm text-green-700">
+                    <p><strong>Employee ID:</strong> {formData.employeeId}</p>
+                    <p><strong>Password:</strong> The password you just created</p>
+                  </div>
+                </div>
                 <div className="space-y-2">
-                  <Button asChild className="w-full bg-red-600 hover:bg-red-700">
-                    <Link href="/">Return to Home</Link>
+                  <Button asChild className="w-full bg-green-600 hover:bg-green-700">
+                    <Link href="/login">Login Now</Link>
                   </Button>
                   <Button asChild variant="outline" className="w-full border-red-300 text-red-600 hover:bg-red-50">
-                    <Link href="/login">Already have access? Sign In</Link>
+                    <Link href="/">Return to Home</Link>
                   </Button>
                 </div>
               </div>

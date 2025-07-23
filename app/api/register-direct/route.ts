@@ -12,6 +12,7 @@ export async function POST(request: NextRequest) {
       email,
       phone,
       employeeId,
+      password,
       requestedRoleId,
       departmentId,
       institutionName,
@@ -45,8 +46,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create user account directly
-    const defaultPassword = "Welcome@123"
-    const hashedPassword = await hashPassword(defaultPassword)
+    const hashedPassword = await hashPassword(password)
 
     console.log("✅ Creating user account directly...")
 
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
           to: email,
           userName: `${firstName} ${lastName}`,
           employeeId: employeeId,
-          password: defaultPassword
+          password: password
         })
       })
       console.log("📧 Welcome email sent successfully")
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
       },
       loginCredentials: {
         employeeId: user.employeeId,
-        password: defaultPassword,
+        password: password,
         loginUrl: `${request.nextUrl.origin}/login`
       }
     })
