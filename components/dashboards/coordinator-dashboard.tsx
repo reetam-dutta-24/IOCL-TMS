@@ -158,7 +158,7 @@ export function CoordinatorDashboard({ user }: { user: any }) {
   }
 
   const getUrgencyBadge = (urgency: string) => {
-    const urgencyConfig = {
+    const urgencyConfig: Record<string, string> = {
       "Urgent": "bg-red-100 text-red-800",
       "High": "bg-orange-100 text-orange-800", 
       "Normal": "bg-green-100 text-green-800"
