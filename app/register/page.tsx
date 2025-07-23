@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { IndianOilLogo } from "@/components/ui/logo"
 import { ArrowLeft, Loader2, CheckCircle, AlertCircle, UserPlus } from "lucide-react"
@@ -126,16 +126,19 @@ export default function RegisterPage() {
       <div className="w-full max-w-2xl space-y-6">
         {/* Back to Home */}
         <div className="animate-slide-in-down">
-          <Link 
-            href="/" 
-            className="inline-flex items-center text-gray-600 hover:text-red-600 transition-colors hover-lift"
+          <Button 
+            asChild 
+            variant="ghost" 
+            className="text-gray-600 hover:text-gray-900 hover:bg-white/50 transition-all"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
-          </Link>
+            <Link href="/" className="flex items-center">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Home
+            </Link>
+          </Button>
         </div>
 
-        {/* Logo and Title */}
+        {/* Logo and Title - Positioned Above Form */}
         <div className="text-center animate-scale-in animate-delay-200">
           <div className="flex justify-center mb-4">
             <IndianOilLogo width={60} height={60} className="animate-float" />
@@ -146,247 +149,255 @@ export default function RegisterPage() {
 
         {/* Registration Form */}
         <Card className="animate-slide-in-up animate-delay-400 hover-lift border-red-100">
-          <CardContent>
+          <CardContent className="space-y-6 pt-6">
+            {error && (
+              <Alert className="border-red-200 bg-red-50 animate-shake">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-700">{error}</AlertDescription>
+              </Alert>
+            )}
+
             {!isSuccess ? (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {error && (
-                  <Alert variant="destructive" className="animate-slide-in-up">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Personal Information */}
+                <div className="space-y-4 animate-fade-in animate-delay-700">
+                  <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Personal Information</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2 animate-slide-in-left animate-delay-600">
+                      <Label htmlFor="firstName">First Name *</Label>
+                      <Input
+                        id="firstName"
+                        placeholder="Enter first name"
+                        value={formData.firstName}
+                        onChange={(e) => handleChange("firstName", e.target.value)}
+                        className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
+                        disabled={isLoading || isDataLoading}
+                        required
+                      />
+                    </div>
 
-                {isDataLoading && (
-                  <Alert className="animate-slide-in-up border-blue-200 bg-blue-50">
-                    <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                    <AlertDescription className="text-blue-700">Loading form data...</AlertDescription>
-                  </Alert>
-                )}
+                    <div className="space-y-2 animate-slide-in-right animate-delay-600">
+                      <Label htmlFor="lastName">Last Name *</Label>
+                      <Input
+                        id="lastName"
+                        placeholder="Enter last name"
+                        value={formData.lastName}
+                        onChange={(e) => handleChange("lastName", e.target.value)}
+                        className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
+                        disabled={isLoading || isDataLoading}
+                        required
+                      />
+                    </div>
+                  </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2 animate-slide-in-left animate-delay-600">
-                    <Label htmlFor="firstName">First Name *</Label>
+                  <div className="space-y-2 animate-slide-in-left animate-delay-700">
+                    <Label htmlFor="email">Email Address *</Label>
                     <Input
-                      id="firstName"
-                      placeholder="Enter first name"
-                      value={formData.firstName}
-                      onChange={(e) => handleChange("firstName", e.target.value)}
-                      required
+                      id="email"
+                      type="email"
+                      placeholder="Enter email address"
+                      value={formData.email}
+                      onChange={(e) => handleChange("email", e.target.value)}
                       className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
                       disabled={isLoading || isDataLoading}
+                      required
                     />
                   </div>
 
-                  <div className="space-y-2 animate-slide-in-right animate-delay-600">
-                    <Label htmlFor="lastName">Last Name *</Label>
-                    <Input
-                      id="lastName"
-                      placeholder="Enter last name"
-                      value={formData.lastName}
-                      onChange={(e) => handleChange("lastName", e.target.value)}
-                      required
-                      className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                      disabled={isLoading || isDataLoading}
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2 animate-slide-in-left animate-delay-750">
+                      <Label htmlFor="phone">Phone Number</Label>
+                      <Input
+                        id="phone"
+                        placeholder="Enter phone number"
+                        value={formData.phone}
+                        onChange={(e) => handleChange("phone", e.target.value)}
+                        className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
+                        disabled={isLoading || isDataLoading}
+                      />
+                    </div>
+
+                    <div className="space-y-2 animate-slide-in-right animate-delay-800">
+                      <Label htmlFor="employeeId">Employee ID *</Label>
+                      <Input
+                        id="employeeId"
+                        placeholder="Enter employee ID"
+                        value={formData.employeeId}
+                        onChange={(e) => handleChange("employeeId", e.target.value)}
+                        required
+                        className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
+                        disabled={isLoading || isDataLoading}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2 animate-slide-in-left animate-delay-850">
+                      <Label htmlFor="password">Password *</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="Enter password"
+                        value={formData.password}
+                        onChange={(e) => handleChange("password", e.target.value)}
+                        required
+                        className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
+                        disabled={isLoading || isDataLoading}
+                      />
+                    </div>
+
+                    <div className="space-y-2 animate-slide-in-right animate-delay-850">
+                      <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        placeholder="Confirm password"
+                        value={formData.confirmPassword}
+                        onChange={(e) => handleChange("confirmPassword", e.target.value)}
+                        required
+                        className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
+                        disabled={isLoading || isDataLoading}
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-2 animate-slide-in-left animate-delay-700">
-                  <Label htmlFor="email">Email Address *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter email address"
-                    value={formData.email}
-                    onChange={(e) => handleChange("email", e.target.value)}
-                    required
-                    className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                    disabled={isLoading || isDataLoading}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2 animate-slide-in-left animate-delay-800">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input
-                      id="phone"
-                      placeholder="Enter phone number"
-                      value={formData.phone}
-                      onChange={(e) => handleChange("phone", e.target.value)}
-                      className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                      disabled={isLoading || isDataLoading}
-                    />
-                  </div>
-
-                  <div className="space-y-2 animate-slide-in-right animate-delay-800">
-                    <Label htmlFor="employeeId">Employee ID *</Label>
-                    <Input
-                      id="employeeId"
-                      placeholder="Enter employee ID"
-                      value={formData.employeeId}
-                      onChange={(e) => handleChange("employeeId", e.target.value)}
-                      required
-                      className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                      disabled={isLoading || isDataLoading}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2 animate-slide-in-left animate-delay-850">
-                    <Label htmlFor="password">Password *</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="Enter password"
-                      value={formData.password}
-                      onChange={(e) => handleChange("password", e.target.value)}
-                      required
-                      className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                      disabled={isLoading || isDataLoading}
-                    />
-                  </div>
-
-                  <div className="space-y-2 animate-slide-in-right animate-delay-850">
-                    <Label htmlFor="confirmPassword">Confirm Password *</Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      placeholder="Confirm password"
-                      value={formData.confirmPassword}
-                      onChange={(e) => handleChange("confirmPassword", e.target.value)}
-                      required
-                      className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                      disabled={isLoading || isDataLoading}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2 animate-slide-in-left animate-delay-900">
-                    <Label htmlFor="role">Requested Role *</Label>
-                    <Select
-                      value={formData.requestedRoleId}
-                      onValueChange={(value) => handleChange("requestedRoleId", value)}
-                      disabled={isLoading || isDataLoading}
-                    >
-                      <SelectTrigger className="transition-all duration-300 hover:border-red-300">
-                        <SelectValue placeholder={isDataLoading ? "Loading roles..." : "Select your role"} />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-60">
-                        {roles.length > 0 ? (
-                          roles
-                            .filter((role) => !role.name.toLowerCase().includes('admin') && !role.name.toLowerCase().includes('hod'))
-                            .map((role) => (
-                              <SelectItem key={role.id} value={role.id.toString()}>
-                                <div className="flex flex-col">
-                                  <span className="font-medium">{role.name}</span>
-                                  {role.description && (
-                                    <span className="text-xs text-gray-500">{role.description}</span>
-                                  )}
-                                </div>
-                              </SelectItem>
-                            ))
-                        ) : (
-                          <SelectItem value="loading" disabled>
-                            {isDataLoading ? "Loading..." : "No roles available"}
+                {/* Role and Department */}
+                <div className="space-y-4 animate-fade-in animate-delay-900">
+                  <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Role & Department</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2 animate-slide-in-left animate-delay-900">
+                      <Label htmlFor="role">Requested Role *</Label>
+                      <Select
+                        value={formData.requestedRoleId}
+                        onValueChange={(value) => handleChange("requestedRoleId", value)}
+                        disabled={isLoading || isDataLoading}
+                      >
+                        <SelectTrigger className="transition-all duration-300 hover:border-red-300">
+                          <SelectValue placeholder={isDataLoading ? "Loading roles..." : "Select your role"} />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60">
+                          {roles.length > 0 ? (
+                            roles
+                              .filter((role) => !role.name.toLowerCase().includes('admin') && !role.name.toLowerCase().includes('hod'))
+                              .map((role) => (
+                                <SelectItem key={role.id} value={role.id.toString()}>
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">{role.name}</span>
+                                    {role.description && (
+                                      <span className="text-xs text-gray-500">{role.description}</span>
+                                    )}
+                                  </div>
+                                </SelectItem>
+                              ))
+                          ) : (
+                            <SelectItem value="loading" disabled>
+                              {isDataLoading ? "Loading..." : "No roles available"}
+                            </SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2 animate-slide-in-right animate-delay-900">
+                      <Label htmlFor="department">Department</Label>
+                      <Select
+                        value={formData.departmentId}
+                        onValueChange={(value) => handleChange("departmentId", value)}
+                        disabled={isLoading}
+                      >
+                        <SelectTrigger className="transition-all duration-300 hover:border-red-300">
+                          <SelectValue placeholder="Select department (optional)" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60">
+                          <SelectItem value="1">
+                            <div className="flex flex-col">
+                              <span className="font-medium">Learning & Development</span>
+                              <span className="text-xs text-gray-500">Code: LD</span>
+                            </div>
                           </SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2 animate-slide-in-right animate-delay-900">
-                    <Label htmlFor="department">Department</Label>
-                    <Select
-                      value={formData.departmentId}
-                      onValueChange={(value) => handleChange("departmentId", value)}
-                      disabled={isLoading}
-                    >
-                      <SelectTrigger className="transition-all duration-300 hover:border-red-300">
-                        <SelectValue placeholder="Select department (optional)" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-60">
-                        <SelectItem value="1">
-                          <div className="flex flex-col">
-                            <span className="font-medium">Learning & Development</span>
-                            <span className="text-xs text-gray-500">Code: LD</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="2">
-                          <div className="flex flex-col">
-                            <span className="font-medium">Information Technology</span>
-                            <span className="text-xs text-gray-500">Code: IT</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="3">
-                          <div className="flex flex-col">
-                            <span className="font-medium">Operations</span>
-                            <span className="text-xs text-gray-500">Code: OPS</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="4">
-                          <div className="flex flex-col">
-                            <span className="font-medium">Engineering</span>
-                            <span className="text-xs text-gray-500">Code: ENG</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="5">
-                          <div className="flex flex-col">
-                            <span className="font-medium">Finance</span>
-                            <span className="text-xs text-gray-500">Code: FIN</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="6">
-                          <div className="flex flex-col">
-                            <span className="font-medium">Human Resources</span>
-                            <span className="text-xs text-gray-500">Code: HR</span>
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                          <SelectItem value="2">
+                            <div className="flex flex-col">
+                              <span className="font-medium">Information Technology</span>
+                              <span className="text-xs text-gray-500">Code: IT</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="3">
+                            <div className="flex flex-col">
+                              <span className="font-medium">Operations</span>
+                              <span className="text-xs text-gray-500">Code: OPS</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="4">
+                            <div className="flex flex-col">
+                              <span className="font-medium">Engineering</span>
+                              <span className="text-xs text-gray-500">Code: ENG</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="5">
+                            <div className="flex flex-col">
+                              <span className="font-medium">Finance</span>
+                              <span className="text-xs text-gray-500">Code: FIN</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="6">
+                            <div className="flex flex-col">
+                              <span className="font-medium">Human Resources</span>
+                              <span className="text-xs text-gray-500">Code: HR</span>
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-2 animate-slide-in-up animate-delay-1000">
-                  <Label htmlFor="institutionName">Institution Name</Label>
-                  <Input
-                    id="institutionName"
-                    placeholder="Enter institution name (if applicable)"
-                    value={formData.institutionName}
-                    onChange={(e) => handleChange("institutionName", e.target.value)}
-                    className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                    disabled={isLoading || isDataLoading}
-                  />
-                </div>
+                {/* Additional Information */}
+                <div className="space-y-4 animate-fade-in animate-delay-1100">
+                  <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Additional Information</h3>
+                  
+                  <div className="space-y-2 animate-slide-in-left animate-delay-1100">
+                    <Label htmlFor="institutionName">Institution/Organization Name</Label>
+                    <Input
+                      id="institutionName"
+                      placeholder="Enter institution or organization name (if applicable)"
+                      value={formData.institutionName}
+                      onChange={(e) => handleChange("institutionName", e.target.value)}
+                      className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
+                      disabled={isLoading || isDataLoading}
+                    />
+                  </div>
 
-                <div className="space-y-2 animate-slide-in-up animate-delay-1100">
-                  <Label htmlFor="purpose">Purpose/Reason for Access</Label>
-                  <Textarea
-                    id="purpose"
-                    placeholder="Briefly explain why you need access to TAMS"
-                    value={formData.purpose}
-                    onChange={(e) => handleChange("purpose", e.target.value)}
-                    className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                    disabled={isLoading || isDataLoading}
-                    rows={3}
-                  />
+                  <div className="space-y-2 animate-slide-in-right animate-delay-1200">
+                    <Label htmlFor="purpose">Purpose/Reason for Access</Label>
+                    <Textarea
+                      id="purpose"
+                      placeholder="Briefly describe why you need access to the system (e.g., training participation, assessment, research, etc.)"
+                      value={formData.purpose}
+                      onChange={(e) => handleChange("purpose", e.target.value)}
+                      className="min-h-[80px] transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
+                      disabled={isLoading || isDataLoading}
+                      rows={3}
+                    />
+                  </div>
                 </div>
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-red-600 hover:bg-red-700 text-white btn-animate hover-lift hover-glow animate-slide-in-up animate-delay-1200"
-                  disabled={isLoading || isDataLoading || !formData.firstName || !formData.lastName || !formData.email || !formData.employeeId || !formData.requestedRoleId}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white py-3 transition-all animate-fade-in animate-delay-1300 transform hover:scale-[1.02]"
+                  disabled={isLoading || isDataLoading}
                 >
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Submitting Request...
+                      Creating Account...
                     </>
                   ) : (
                     <>
                       <UserPlus className="mr-2 h-4 w-4" />
-                      Submit Access Request
+                      Create Account
                     </>
                   )}
                 </Button>
