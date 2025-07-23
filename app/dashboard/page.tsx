@@ -10,9 +10,20 @@ import { HodDashboard } from "@/components/dashboards/hod-dashboard";
 import { MentorDashboard } from "@/components/dashboards/mentor-dashboard";
 import { PageLoading } from "@/components/ui/loading";
 
+interface User {
+  id: number;
+  employeeId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  department: string;
+  isActive: boolean;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,7 +32,16 @@ export default function DashboardPage() {
       router.push("/login");
       return;
     }
-    setUser(JSON.parse(userData));
+    
+    try {
+      const parsedUser = JSON.parse(userData);
+      setUser(parsedUser);
+    } catch (error) {
+      console.error("Error parsing user data:", error);
+      router.push("/login");
+      return;
+    }
+    
     setLoading(false);
   }, [router]);
 
@@ -54,9 +74,14 @@ export default function DashboardPage() {
       
       default:
         // Fallback to coordinator dashboard for unknown roles
+        console.warn(`Unknown role: ${user.role}, falling back to coordinator dashboard`);
         return <CoordinatorDashboard user={user} />;
     }
   };
 
-  return renderDashboard();
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {renderDashboard()}
+    </div>
+  );
 }
