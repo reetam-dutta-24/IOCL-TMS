@@ -100,7 +100,7 @@ export default function RegisterPage() {
     }
 
     try {
-      const response = await fetch("/api/access-requests", {
+      const response = await fetch("/api/register-direct", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -112,8 +112,14 @@ export default function RegisterPage() {
 
       if (response.ok) {
         setIsSuccess(true)
+        // Store the login credentials for display
+        setFormData(prev => ({
+          ...prev,
+          loginEmployeeId: data.user.employeeId,
+          loginPassword: data.loginCredentials.password
+        }))
       } else {
-        setError(data.error || "Failed to submit access request")
+        setError(data.error || "Failed to create account")
       }
     } catch (error) {
       console.error("Registration error:", error)
@@ -350,17 +356,35 @@ export default function RegisterPage() {
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
                   <CheckCircle className="h-8 w-8 text-green-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900">Request Submitted Successfully!</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Account Created Successfully!</h3>
                 <p className="text-gray-600">
-                  Your access request has been submitted for admin approval. 
-                  You'll receive an email once your request is reviewed.
+                  Your account has been created and you can now login immediately.
                 </p>
+                
+                {/* Login Credentials Display */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
+                  <h4 className="font-semibold text-blue-900">Your Login Credentials:</h4>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Employee ID:</span>
+                      <span className="font-mono bg-white px-2 py-1 rounded border">{formData.employeeId}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Password:</span>
+                      <span className="font-mono bg-white px-2 py-1 rounded border">Welcome@123</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-blue-600 mt-2">
+                    💡 Please change your password after first login for security.
+                  </p>
+                </div>
+                
                 <div className="space-y-2">
-                  <Button asChild className="w-full bg-red-600 hover:bg-red-700">
-                    <Link href="/">Return to Home</Link>
+                  <Button asChild className="w-full bg-green-600 hover:bg-green-700">
+                    <Link href="/login">Login Now</Link>
                   </Button>
                   <Button asChild variant="outline" className="w-full border-red-300 text-red-600 hover:bg-red-50">
-                    <Link href="/login">Already have access? Sign In</Link>
+                    <Link href="/">Return to Home</Link>
                   </Button>
                 </div>
               </div>
