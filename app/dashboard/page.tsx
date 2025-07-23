@@ -2,33 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
-
-// Dynamic imports to avoid TypeScript conflicts
-const AdminDashboard = dynamic(() => import("../../components/dashboards/admin-dashboard").then(mod => ({ default: mod.AdminDashboard })), {
-  loading: () => <div>Loading Admin Dashboard...</div>
-});
-
-const CoordinatorDashboard = dynamic(() => import("../../components/dashboards/coordinator-dashboard").then(mod => ({ default: mod.CoordinatorDashboard })), {
-  loading: () => <div>Loading Coordinator Dashboard...</div>
-});
-
-const HodDashboard = dynamic(() => import("../../components/dashboards/hod-dashboard").then(mod => ({ default: mod.HodDashboard })), {
-  loading: () => <div>Loading HoD Dashboard...</div>
-});
-
-const MentorDashboard = dynamic(() => import("../../components/dashboards/mentor-dashboard").then(mod => ({ default: mod.MentorDashboard })), {
-  loading: () => <div>Loading Mentor Dashboard...</div>
-});
-
-const PageLoading = dynamic(() => import("../../components/ui/loading").then(mod => ({ default: mod.PageLoading })), {
-  loading: () => <div>Loading...</div>
-});
 
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [DashboardComponent, setDashboardComponent] = useState<any>(null);
 
   useEffect(() => {
     const userData = localStorage.getItem("user");
@@ -40,6 +19,7 @@ export default function DashboardPage() {
     try {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
+      loadDashboardComponent(parsedUser.role);
     } catch (error) {
       console.error("Error parsing user data:", error);
       router.push("/login");
@@ -49,42 +29,76 @@ export default function DashboardPage() {
     setLoading(false);
   }, [router]);
 
+  const loadDashboardComponent = async (role: string) => {
+    try {
+      let component;
+      
+      switch (role) {
+        case "Admin":
+        case "System Administrator":
+          const adminModule = await import("../../components/dashboards/admin-dashboard");
+          component = React.createElement(adminModule.AdminDashboard, { user });
+          break;
+          
+        case "L&D HoD":
+          const ldHodModule = await import("../../components/dashboards/hod-dashboard");
+          component = React.createElement(ldHodModule.HodDashboard, { user, roleType: "LD_HOD" });
+          break;
+          
+        case "Department HoD":
+          const deptHodModule = await import("../../components/dashboards/hod-dashboard");
+          component = React.createElement(deptHodModule.HodDashboard, { user, roleType: "DEPT_HOD" });
+          break;
+          
+        case "L&D Coordinator":
+          const coordinatorModule = await import("../../components/dashboards/coordinator-dashboard");
+          component = React.createElement(coordinatorModule.CoordinatorDashboard, { user });
+          break;
+          
+        case "Mentor":
+          const mentorModule = await import("../../components/dashboards/mentor-dashboard");
+          component = React.createElement(mentorModule.MentorDashboard, { user });
+          break;
+          
+        default:
+          console.warn(`Unknown role: ${role}, falling back to coordinator dashboard`);
+          const fallbackModule = await import("../../components/dashboards/coordinator-dashboard");
+          component = React.createElement(fallbackModule.CoordinatorDashboard, { user });
+          break;
+      }
+      
+      setDashboardComponent(() => component);
+    } catch (error) {
+      console.error("Error loading dashboard component:", error);
+      setDashboardComponent(() => <div className="p-8 text-center text-red-600">Error loading dashboard</div>);
+    }
+  };
+
   if (loading) {
-    return <PageLoading message="Loading dashboard..." />;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
     return null;
   }
 
-  // Route to role-specific dashboard
-  const renderDashboard = () => {
-    switch (user.role) {
-      case "Admin":
-      case "System Administrator":
-        return <AdminDashboard user={user} />;
-      
-      case "L&D HoD":
-        return <HodDashboard user={user} roleType="LD_HOD" />;
-      
-      case "Department HoD":
-        return <HodDashboard user={user} roleType="DEPT_HOD" />;
-      
-      case "L&D Coordinator":
-        return <CoordinatorDashboard user={user} />;
-      
-      case "Mentor":
-        return <MentorDashboard user={user} />;
-      
-      default:
-        console.warn(`Unknown role: ${user.role}, falling back to coordinator dashboard`);
-        return <CoordinatorDashboard user={user} />;
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
-      {renderDashboard()}
+      {DashboardComponent || (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading dashboard components...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
