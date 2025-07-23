@@ -8,7 +8,8 @@ import {
   AdminDashboard,
   CoordinatorDashboard,
   HodDashboard,
-  MentorDashboard
+  MentorDashboard,
+  type HodDashboardProps
 } from "@/components/dashboards";
 import { PageLoading } from "@/components/ui/loading";
 
@@ -62,11 +63,15 @@ export default function DashboardPage() {
       case "System Administrator":
         return <AdminDashboard user={user} />;
       
-      case "L&D HoD":
-        return <HodDashboard user={user} roleType="LD_HOD" />;
+      case "L&D HoD": {
+        const props: HodDashboardProps = { user, roleType: "LD_HOD" };
+        return <HodDashboard {...props} />;
+      }
       
-      case "Department HoD":
-        return <HodDashboard user={user} roleType="DEPT_HOD" />;
+      case "Department HoD": {
+        const props: HodDashboardProps = { user, roleType: "DEPT_HOD" };
+        return <HodDashboard {...props} />;
+      }
       
       case "L&D Coordinator":
         return <CoordinatorDashboard user={user} />;

@@ -24,7 +24,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import Link from "next/link"
 
-interface HodDashboardProps {
+export interface HodDashboardProps {
   user: any
   roleType: "LD_HOD" | "DEPT_HOD"
 }
