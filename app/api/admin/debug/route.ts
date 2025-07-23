@@ -63,11 +63,13 @@ export async function GET(request: NextRequest) {
       })),
       summary: {
         usersByRole: users.reduce((acc, user) => {
-          acc[user.role] = (acc[user.role] || 0) + 1
+          const roleName = user.role.name
+          acc[roleName] = (acc[roleName] || 0) + 1
           return acc
         }, {} as Record<string, number>),
         usersByDepartment: users.reduce((acc, user) => {
-          acc[user.department] = (acc[user.department] || 0) + 1
+          const deptName = user.department?.name || "No Department"
+          acc[deptName] = (acc[deptName] || 0) + 1
           return acc
         }, {} as Record<string, number>),
         accessRequestsByStatus: accessRequests.reduce((acc, req) => {
