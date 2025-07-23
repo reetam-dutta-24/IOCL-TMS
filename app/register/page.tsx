@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -8,18 +8,24 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { IndianOilLogo } from "@/components/ui/logo"
-import { ArrowLeft, Loader2, CheckCircle, AlertCircle, UserPlus, Eye, EyeOff } from "lucide-react"
+import { ArrowLeft, Loader2, CheckCircle, AlertCircle, UserPlus } from "lucide-react"
+
+interface Role {
+  id: number
+  name: string
+  description: string
+}
 
 export default function RegisterPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const [isDataLoading, setIsDataLoading] = useState(true)
   const [error, setError] = useState("")
   const [isSuccess, setIsSuccess] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [roles, setRoles] = useState<Role[]>([])
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -31,28 +37,32 @@ export default function RegisterPage() {
     requestedRoleId: "",
     departmentId: "",
     institutionName: "",
-    purpose: "",
-    dateOfBirth: "",
-    address: ""
+    purpose: ""
   })
 
-  // Hardcoded roles (only 4 roles as you mentioned)
-  const roles = [
-    { id: "1", name: "L&D Coordinator", description: "Learning & Development Coordinator" },
-    { id: "2", name: "L&D HoD", description: "Learning & Development Head of Department" },
-    { id: "3", name: "Department HoD", description: "Department Head of Department" },
-    { id: "4", name: "Mentor", description: "Trainee Mentor" }
-  ]
+  useEffect(() => {
+    // Fetch roles only (departments are now static)
+    const fetchData = async () => {
+      setIsDataLoading(true)
+      try {
+        const rolesRes = await fetch("/api/roles")
 
-  // Hardcoded departments
-  const departments = [
-    { id: "1", name: "Learning & Development", code: "LD" },
-    { id: "2", name: "Information Technology", code: "IT" },
-    { id: "3", name: "Operations", code: "OPS" },
-    { id: "4", name: "Engineering", code: "ENG" },
-    { id: "5", name: "Finance", code: "FIN" },
-    { id: "6", name: "Human Resources", code: "HR" }
-  ]
+        if (rolesRes.ok) {
+          const rolesData = await rolesRes.json()
+          setRoles(rolesData)
+        } else {
+          console.error("Failed to fetch roles:", await rolesRes.text())
+        }
+      } catch (error) {
+        console.error("Failed to fetch data:", error)
+        setError("Failed to load form data. Please refresh the page.")
+      } finally {
+        setIsDataLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -68,35 +78,27 @@ export default function RegisterPage() {
     setError("")
 
     // Basic validation
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.employeeId || !formData.password || !formData.requestedRoleId) {
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.employeeId || !formData.password || !formData.confirmPassword || !formData.requestedRoleId) {
       setError("Please fill in all required fields.")
       setIsLoading(false)
       return
     }
 
     // Password validation
-    if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters long.")
-      setIsLoading(false)
-      return
-    }
-
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match.")
       setIsLoading(false)
       return
     }
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(formData.email)) {
-      setError("Please enter a valid email address.")
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long.")
       setIsLoading(false)
       return
     }
 
     try {
-      const response = await fetch("/api/access-requests", {
+      const response = await fetch("/api/register-direct", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -121,50 +123,45 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4 animate-fade-in">
-      <div className="w-full max-w-4xl space-y-6">
+      <div className="w-full max-w-2xl space-y-6">
         {/* Back to Home */}
         <div className="animate-slide-in-down">
-          <Link 
-            href="/" 
-            className="inline-flex items-center text-gray-600 hover:text-red-600 transition-colors hover-lift"
+          <Button 
+            asChild 
+            variant="ghost" 
+            className="text-gray-600 hover:text-gray-900 hover:bg-white/50 transition-all"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
-          </Link>
+            <Link href="/" className="flex items-center">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Home
+            </Link>
+          </Button>
         </div>
 
-        {/* Logo and Title */}
+        {/* Logo and Title - Positioned Above Form */}
         <div className="text-center animate-scale-in animate-delay-200">
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-4">
             <IndianOilLogo width={60} height={60} className="animate-float" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Request System Access</h1>
-          <p className="text-gray-600">Submit your details for admin approval</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
+          <p className="text-gray-600">Register for IOCL Training & Assessment Management System</p>
         </div>
 
         {/* Registration Form */}
         <Card className="animate-slide-in-up animate-delay-400 hover-lift border-red-100">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-semibold text-center">Access Request Form</CardTitle>
-            <CardDescription className="text-center">
-              Fill in your details to request access to IOCL TAMS
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6 pt-6">
+            {error && (
+              <Alert className="border-red-200 bg-red-50 animate-shake">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-700">{error}</AlertDescription>
+              </Alert>
+            )}
+
             {!isSuccess ? (
               <form onSubmit={handleSubmit} className="space-y-6">
-                {error && (
-                  <Alert variant="destructive" className="animate-slide-in-up">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
-
-                {/* Personal Information Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
-                    Personal Information
-                  </h3>
+                {/* Personal Information */}
+                <div className="space-y-4 animate-fade-in animate-delay-700">
+                  <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Personal Information</h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2 animate-slide-in-left animate-delay-600">
@@ -174,9 +171,9 @@ export default function RegisterPage() {
                         placeholder="Enter first name"
                         value={formData.firstName}
                         onChange={(e) => handleChange("firstName", e.target.value)}
-                        required
                         className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                        disabled={isLoading}
+                        disabled={isLoading || isDataLoading}
+                        required
                       />
                     </div>
 
@@ -187,29 +184,29 @@ export default function RegisterPage() {
                         placeholder="Enter last name"
                         value={formData.lastName}
                         onChange={(e) => handleChange("lastName", e.target.value)}
-                        required
                         className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                        disabled={isLoading}
+                        disabled={isLoading || isDataLoading}
+                        required
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2 animate-slide-in-left animate-delay-700">
-                      <Label htmlFor="email">Email Address *</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="Enter email address"
-                        value={formData.email}
-                        onChange={(e) => handleChange("email", e.target.value)}
-                        required
-                        className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                        disabled={isLoading}
-                      />
-                    </div>
+                  <div className="space-y-2 animate-slide-in-left animate-delay-700">
+                    <Label htmlFor="email">Email Address *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="Enter email address"
+                      value={formData.email}
+                      onChange={(e) => handleChange("email", e.target.value)}
+                      className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
+                      disabled={isLoading || isDataLoading}
+                      required
+                    />
+                  </div>
 
-                    <div className="space-y-2 animate-slide-in-right animate-delay-700">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2 animate-slide-in-left animate-delay-750">
                       <Label htmlFor="phone">Phone Number</Label>
                       <Input
                         id="phone"
@@ -217,21 +214,7 @@ export default function RegisterPage() {
                         value={formData.phone}
                         onChange={(e) => handleChange("phone", e.target.value)}
                         className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                        disabled={isLoading}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2 animate-slide-in-left animate-delay-800">
-                      <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                      <Input
-                        id="dateOfBirth"
-                        type="date"
-                        value={formData.dateOfBirth}
-                        onChange={(e) => handleChange("dateOfBirth", e.target.value)}
-                        className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                        disabled={isLoading}
+                        disabled={isLoading || isDataLoading}
                       />
                     </div>
 
@@ -244,126 +227,81 @@ export default function RegisterPage() {
                         onChange={(e) => handleChange("employeeId", e.target.value)}
                         required
                         className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                        disabled={isLoading}
+                        disabled={isLoading || isDataLoading}
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-2 animate-slide-in-up animate-delay-900">
-                    <Label htmlFor="address">Address</Label>
-                    <Textarea
-                      id="address"
-                      placeholder="Enter your full address"
-                      value={formData.address}
-                      onChange={(e) => handleChange("address", e.target.value)}
-                      className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                      disabled={isLoading}
-                      rows={2}
-                    />
-                  </div>
-                </div>
-
-                {/* Account Setup Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
-                    Account Setup
-                  </h3>
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2 animate-slide-in-left animate-delay-1000">
+                    <div className="space-y-2 animate-slide-in-left animate-delay-850">
                       <Label htmlFor="password">Password *</Label>
-                      <div className="relative">
-                        <Input
-                          id="password"
-                          type={showPassword ? "text" : "password"}
-                          placeholder="Create a password"
-                          value={formData.password}
-                          onChange={(e) => handleChange("password", e.target.value)}
-                          required
-                          className="pr-10 transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                          disabled={isLoading}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                          onClick={() => setShowPassword(!showPassword)}
-                          disabled={isLoading}
-                        >
-                          {showPassword ? (
-                            <EyeOff className="h-4 w-4 text-gray-400" />
-                          ) : (
-                            <Eye className="h-4 w-4 text-gray-400" />
-                          )}
-                        </Button>
-                      </div>
-                      <p className="text-xs text-gray-500">Minimum 6 characters</p>
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="Enter password"
+                        value={formData.password}
+                        onChange={(e) => handleChange("password", e.target.value)}
+                        required
+                        className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
+                        disabled={isLoading || isDataLoading}
+                      />
                     </div>
 
-                    <div className="space-y-2 animate-slide-in-right animate-delay-1000">
+                    <div className="space-y-2 animate-slide-in-right animate-delay-850">
                       <Label htmlFor="confirmPassword">Confirm Password *</Label>
-                      <div className="relative">
-                        <Input
-                          id="confirmPassword"
-                          type={showConfirmPassword ? "text" : "password"}
-                          placeholder="Confirm your password"
-                          value={formData.confirmPassword}
-                          onChange={(e) => handleChange("confirmPassword", e.target.value)}
-                          required
-                          className="pr-10 transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                          disabled={isLoading}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          disabled={isLoading}
-                        >
-                          {showConfirmPassword ? (
-                            <EyeOff className="h-4 w-4 text-gray-400" />
-                          ) : (
-                            <Eye className="h-4 w-4 text-gray-400" />
-                          )}
-                        </Button>
-                      </div>
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        placeholder="Confirm password"
+                        value={formData.confirmPassword}
+                        onChange={(e) => handleChange("confirmPassword", e.target.value)}
+                        required
+                        className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
+                        disabled={isLoading || isDataLoading}
+                      />
                     </div>
                   </div>
                 </div>
 
-                {/* Role & Department Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
-                    Role & Department
-                  </h3>
-
+                {/* Role and Department */}
+                <div className="space-y-4 animate-fade-in animate-delay-900">
+                  <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Role & Department</h3>
+                  
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2 animate-slide-in-left animate-delay-1100">
+                    <div className="space-y-2 animate-slide-in-left animate-delay-900">
                       <Label htmlFor="role">Requested Role *</Label>
                       <Select
                         value={formData.requestedRoleId}
                         onValueChange={(value) => handleChange("requestedRoleId", value)}
-                        disabled={isLoading}
+                        disabled={isLoading || isDataLoading}
                       >
                         <SelectTrigger className="transition-all duration-300 hover:border-red-300">
-                          <SelectValue placeholder="Select your role" />
+                          <SelectValue placeholder={isDataLoading ? "Loading roles..." : "Select your role"} />
                         </SelectTrigger>
-                        <SelectContent>
-                          {roles.map((role) => (
-                            <SelectItem key={role.id} value={role.id}>
-                              <div className="flex flex-col">
-                                <span className="font-medium">{role.name}</span>
-                                <span className="text-xs text-gray-500">{role.description}</span>
-                              </div>
+                        <SelectContent className="max-h-60">
+                          {roles.length > 0 ? (
+                            roles
+                              .filter((role) => role.name !== 'System Administrator' && role.name !== 'Admin')
+                              .map((role) => (
+                                <SelectItem key={role.id} value={role.id.toString()}>
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">{role.name}</span>
+                                    {role.description && (
+                                      <span className="text-xs text-gray-500">{role.description}</span>
+                                    )}
+                                  </div>
+                                </SelectItem>
+                              ))
+                          ) : (
+                            <SelectItem value="loading" disabled>
+                              {isDataLoading ? "Loading..." : "No roles available"}
                             </SelectItem>
-                          ))}
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
-
-                    <div className="space-y-2 animate-slide-in-right animate-delay-1100">
+                    
+                    <div className="space-y-2 animate-slide-in-right animate-delay-900">
                       <Label htmlFor="department">Department</Label>
                       <Select
                         value={formData.departmentId}
@@ -371,50 +309,76 @@ export default function RegisterPage() {
                         disabled={isLoading}
                       >
                         <SelectTrigger className="transition-all duration-300 hover:border-red-300">
-                          <SelectValue placeholder="Select department" />
+                          <SelectValue placeholder="Select department (optional)" />
                         </SelectTrigger>
-                        <SelectContent>
-                          {departments.map((dept) => (
-                            <SelectItem key={dept.id} value={dept.id}>
-                              <div className="flex flex-col">
-                                <span className="font-medium">{dept.name}</span>
-                                <span className="text-xs text-gray-500">Code: {dept.code}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
+                        <SelectContent className="max-h-60">
+                          <SelectItem value="1">
+                            <div className="flex flex-col">
+                              <span className="font-medium">Learning & Development</span>
+                              <span className="text-xs text-gray-500">Code: LD</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="2">
+                            <div className="flex flex-col">
+                              <span className="font-medium">Information Technology</span>
+                              <span className="text-xs text-gray-500">Code: IT</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="3">
+                            <div className="flex flex-col">
+                              <span className="font-medium">Operations</span>
+                              <span className="text-xs text-gray-500">Code: OPS</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="4">
+                            <div className="flex flex-col">
+                              <span className="font-medium">Engineering</span>
+                              <span className="text-xs text-gray-500">Code: ENG</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="5">
+                            <div className="flex flex-col">
+                              <span className="font-medium">Finance</span>
+                              <span className="text-xs text-gray-500">Code: FIN</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="6">
+                            <div className="flex flex-col">
+                              <span className="font-medium">Human Resources</span>
+                              <span className="text-xs text-gray-500">Code: HR</span>
+                            </div>
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
                 </div>
 
-                {/* Additional Information Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
-                    Additional Information
-                  </h3>
-
-                  <div className="space-y-2 animate-slide-in-up animate-delay-1200">
-                    <Label htmlFor="institutionName">Institution Name</Label>
+                {/* Additional Information */}
+                <div className="space-y-4 animate-fade-in animate-delay-1100">
+                  <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Additional Information</h3>
+                  
+                  <div className="space-y-2 animate-slide-in-left animate-delay-1100">
+                    <Label htmlFor="institutionName">Institution/Organization Name</Label>
                     <Input
                       id="institutionName"
-                      placeholder="Enter institution name (if applicable)"
+                      placeholder="Enter institution or organization name (if applicable)"
                       value={formData.institutionName}
                       onChange={(e) => handleChange("institutionName", e.target.value)}
                       className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                      disabled={isLoading}
+                      disabled={isLoading || isDataLoading}
                     />
                   </div>
 
-                  <div className="space-y-2 animate-slide-in-up animate-delay-1300">
+                  <div className="space-y-2 animate-slide-in-right animate-delay-1200">
                     <Label htmlFor="purpose">Purpose/Reason for Access</Label>
                     <Textarea
                       id="purpose"
-                      placeholder="Briefly explain why you need access to TAMS"
+                      placeholder="Briefly describe why you need access to the system (e.g., training participation, assessment, research, etc.)"
                       value={formData.purpose}
                       onChange={(e) => handleChange("purpose", e.target.value)}
-                      className="transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
-                      disabled={isLoading}
+                      className="min-h-[80px] transition-all duration-300 focus:scale-[1.02] hover:border-red-300"
+                      disabled={isLoading || isDataLoading}
                       rows={3}
                     />
                   </div>
@@ -422,18 +386,18 @@ export default function RegisterPage() {
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-red-600 hover:bg-red-700 text-white btn-animate hover-lift hover-glow animate-slide-in-up animate-delay-1400"
-                  disabled={isLoading || !formData.firstName || !formData.lastName || !formData.email || !formData.employeeId || !formData.password || !formData.requestedRoleId}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white py-3 transition-all animate-fade-in animate-delay-1300 transform hover:scale-[1.02]"
+                  disabled={isLoading || isDataLoading}
                 >
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Submitting Request...
+                      Creating Account...
                     </>
                   ) : (
                     <>
                       <UserPlus className="mr-2 h-4 w-4" />
-                      Submit Access Request
+                      Create Account
                     </>
                   )}
                 </Button>
@@ -443,23 +407,29 @@ export default function RegisterPage() {
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
                   <CheckCircle className="h-8 w-8 text-green-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900">Request Submitted Successfully!</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Account Created Successfully!</h3>
                 <p className="text-gray-600">
-                  Your access request has been submitted for admin approval. 
-                  You'll receive an email once your request is reviewed.
+                  Your account has been created and you can now login with your credentials.
                 </p>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-2 mb-4">
+                  <h4 className="font-semibold text-green-900">Login Instructions:</h4>
+                  <div className="space-y-1 text-sm text-green-700">
+                    <p><strong>Employee ID:</strong> {formData.employeeId}</p>
+                    <p><strong>Password:</strong> The password you just created</p>
+                  </div>
+                </div>
                 <div className="space-y-2">
-                  <Button asChild className="w-full bg-red-600 hover:bg-red-700">
-                    <Link href="/">Return to Home</Link>
+                  <Button asChild className="w-full bg-green-600 hover:bg-green-700">
+                    <Link href="/login">Login Now</Link>
                   </Button>
                   <Button asChild variant="outline" className="w-full border-red-300 text-red-600 hover:bg-red-50">
-                    <Link href="/login">Already have access? Sign In</Link>
+                    <Link href="/">Return to Home</Link>
                   </Button>
                 </div>
               </div>
             )}
 
-            <div className="mt-6 text-center animate-fade-in animate-delay-1500">
+            <div className="mt-6 text-center animate-fade-in animate-delay-1300">
               <p className="text-sm text-gray-600">
                 Already have an account?{" "}
                 <Link 
@@ -474,7 +444,7 @@ export default function RegisterPage() {
         </Card>
 
         {/* Help Text */}
-        <Card className="animate-slide-in-up animate-delay-1600 border-blue-200 bg-blue-50">
+        <Card className="animate-slide-in-up animate-delay-1400 border-blue-200 bg-blue-50">
           <CardContent className="pt-6">
             <h3 className="font-semibold text-blue-900 mb-2">Need Help?</h3>
             <p className="text-sm text-blue-700 mb-3">

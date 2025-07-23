@@ -52,6 +52,8 @@ export const verifyToken = (token: string): AuthUser | null => {
 
 export const authenticateUser = async (employeeId: string, password: string) => {
   try {
+    console.log(`🔍 Authentication attempt for Employee ID: ${employeeId}`)
+    
     const user = await prisma.user.findUnique({
       where: { employeeId },
       include: {
@@ -60,16 +62,30 @@ export const authenticateUser = async (employeeId: string, password: string) => 
       }
     })
 
-    if (!user || !user.password) {
+    if (!user) {
+      console.log(`❌ User not found for Employee ID: ${employeeId}`)
       return null
     }
 
+    if (!user.password) {
+      console.log(`❌ User ${employeeId} has no password set`)
+      return null
+    }
+
+    console.log(`✅ User found: ${user.firstName} ${user.lastName} (${user.employeeId})`)
+    console.log(`✅ User active: ${user.isActive}`)
+    console.log(`✅ Password hash exists: ${!!user.password}`)
+
     const isPasswordValid = await verifyPassword(password, user.password)
+    console.log(`🔑 Password validation result: ${isPasswordValid}`)
+    
     if (!isPasswordValid) {
+      console.log(`❌ Invalid password for user: ${employeeId}`)
       return null
     }
 
     if (!user.isActive) {
+      console.log(`❌ User ${employeeId} is not active`)
       return null
     }
 

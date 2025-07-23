@@ -60,6 +60,16 @@ export async function PATCH(
         const defaultPassword = "Welcome@123" // User will need to change this on first login
         const hashedPassword = await hashPassword(defaultPassword)
 
+        console.log("Creating user with data:", {
+          employeeId: accessRequest.employeeId,
+          firstName: accessRequest.firstName,
+          lastName: accessRequest.lastName,
+          email: accessRequest.email,
+          roleId: accessRequest.requestedRoleId,
+          departmentId: accessRequest.departmentId,
+          defaultPassword: defaultPassword
+        })
+
         const user = await prisma.user.create({
           data: {
             employeeId: accessRequest.employeeId,
@@ -74,6 +84,13 @@ export async function PATCH(
             profileColor: `#${Math.floor(Math.random()*16777215).toString(16)}`,
             profileInitials: `${accessRequest.firstName[0]}${accessRequest.lastName[0]}`.toUpperCase()
           }
+        })
+
+        console.log("User created successfully:", {
+          id: user.id,
+          employeeId: user.employeeId,
+          isActive: user.isActive,
+          hasPassword: !!user.password
         })
 
         return NextResponse.json({

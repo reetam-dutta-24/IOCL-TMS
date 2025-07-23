@@ -36,6 +36,11 @@
       "static/chunks/main-app.js",
       "static/chunks/app/login/page.js"
     ],
+    "/register/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/register/page.js"
+    ],
     "/_not-found/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -50,36 +55,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/loading.js"
-    ],
-    "/requests/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/requests/page.js"
-    ],
-    "/requests/loading": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/requests/loading.js"
-    ],
-    "/mentors/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/mentors/page.js"
-    ],
-    "/mentors/loading": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/mentors/loading.js"
-    ],
-    "/settings/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/settings/page.js"
-    ],
-    "/register/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/register/page.js"
     ]
   }
 }
