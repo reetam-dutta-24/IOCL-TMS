@@ -66,6 +66,7 @@ export function CoordinatorDashboard({ user }: { user: any }) {
   const [recentRequests, setRecentRequests] = useState<RecentRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchDashboardData()
@@ -74,93 +75,53 @@ export function CoordinatorDashboard({ user }: { user: any }) {
   const fetchDashboardData = async () => {
     try {
       setRefreshing(true)
+      setError(null)
       console.log("🔍 Fetching L&D Coordinator dashboard data...")
       
-      // Mock data for L&D Coordinator specific metrics
-      setStats({
-        totalRequests: 142,
-        pendingRequests: 18,
-        activeRequests: 34,
-        completedRequests: 90,
-        departmentRequests: 25,
-        monthlyProcessed: 47,
-        avgProcessingTime: "2.3 days",
-        urgentRequests: 6
+      const response = await fetch("/api/coordinator-dashboard", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
       })
 
-      setMetrics({
-        statusDistribution: [
-          { name: "Pending Review", value: 18, color: "#f59e0b" },
-          { name: "Under Processing", value: 34, color: "#3b82f6" },
-          { name: "Awaiting HoD", value: 12, color: "#8b5cf6" },
-          { name: "Completed", value: 90, color: "#10b981" }
-        ],
-        monthlyTrends: [
-          { month: "Jan", submitted: 28, processed: 25, routed: 22 },
-          { month: "Feb", submitted: 35, processed: 31, routed: 28 },
-          { month: "Mar", submitted: 42, processed: 38, routed: 35 },
-          { month: "Apr", submitted: 38, processed: 40, routed: 37 },
-          { month: "May", submitted: 45, processed: 43, routed: 41 },
-          { month: "Jun", submitted: 47, processed: 45, routed: 42 }
-        ],
-        departmentBreakdown: [
-          { department: "Engineering", pending: 5, active: 8, completed: 22 },
-          { department: "Operations", pending: 4, active: 7, completed: 18 },
-          { department: "IT", pending: 3, active: 6, completed: 15 },
-          { department: "Finance", pending: 2, active: 4, completed: 12 },
-          { department: "HR", pending: 4, active: 9, completed: 23 }
-        ]
-      })
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
 
-      setRecentRequests([
-        {
-          id: 1,
-          employeeId: "ENG001",
-          applicantName: "Rahul Kumar",
-          department: "Engineering",
-          requestType: "Industrial Training",
-          status: "Pending Review",
-          submittedDate: "2024-01-15",
-          urgency: "Normal",
-          nextAction: "Initial Review Required"
-        },
-        {
-          id: 2,
-          employeeId: "OPS002",
-          applicantName: "Priya Sharma",
-          department: "Operations",
-          requestType: "Project Internship",
-          status: "Awaiting HoD Approval",
-          submittedDate: "2024-01-14",
-          urgency: "High",
-          nextAction: "Route to Dept HoD"
-        },
-        {
-          id: 3,
-          employeeId: "IT003",
-          applicantName: "Anil Singh",
-          department: "IT",
-          requestType: "Summer Internship",
-          status: "Under Processing",
-          submittedDate: "2024-01-13",
-          urgency: "Normal",
-          nextAction: "Documentation Review"
-        },
-        {
-          id: 4,
-          employeeId: "FIN004",
-          applicantName: "Sneha Patel",
-          department: "Finance",
-          requestType: "Research Project",
-          status: "Pending Review",
-          submittedDate: "2024-01-12",
-          urgency: "Urgent",
-          nextAction: "Priority Review"
-        }
-      ])
+      const data = await response.json()
+      
+      if (data.error) {
+        throw new Error(data.error)
+      }
+
+      console.log("📊 Received dashboard data:", data)
+      
+      setStats(data.stats)
+      setMetrics(data.metrics)
+      setRecentRequests(data.recentRequests || [])
 
     } catch (error) {
       console.error("💥 Failed to fetch coordinator dashboard data:", error)
+      setError(error instanceof Error ? error.message : "Failed to load dashboard data")
+      
+      // Fallback to minimal data structure to prevent crashes
+      setStats({
+        totalRequests: 0,
+        pendingRequests: 0,
+        activeRequests: 0,
+        completedRequests: 0,
+        departmentRequests: 0,
+        monthlyProcessed: 0,
+        avgProcessingTime: "N/A",
+        urgentRequests: 0
+      })
+      setMetrics({
+        statusDistribution: [],
+        monthlyTrends: [],
+        departmentBreakdown: []
+      })
+      setRecentRequests([])
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -179,6 +140,9 @@ export function CoordinatorDashboard({ user }: { user: any }) {
       "Pending Review": { color: "bg-yellow-100 text-yellow-800", icon: Clock },
       "Under Processing": { color: "bg-blue-100 text-blue-800", icon: Activity },
       "Awaiting HoD Approval": { color: "bg-purple-100 text-purple-800", icon: Users },
+      "Active User": { color: "bg-green-100 text-green-800", icon: CheckCircle },
+      "Approved": { color: "bg-green-100 text-green-800", icon: CheckCircle },
+      "Rejected": { color: "bg-red-100 text-red-800", icon: AlertTriangle },
       "Completed": { color: "bg-green-100 text-green-800", icon: CheckCircle }
     }
     
@@ -206,7 +170,7 @@ export function CoordinatorDashboard({ user }: { user: any }) {
   const quickActions = [
     {
       title: "Review New Requests",
-      description: "Process pending internship applications",
+      description: "Process pending access requests",
       href: "/requests?filter=pending",
       icon: FileText,
       color: "bg-blue-500",
@@ -214,7 +178,7 @@ export function CoordinatorDashboard({ user }: { user: any }) {
     },
     {
       title: "Active Monitoring",
-      description: "Track ongoing internship progress",
+      description: "Track approved user activities",
       href: "/requests?filter=active",
       icon: Activity,
       color: "bg-green-500",
@@ -274,7 +238,7 @@ export function CoordinatorDashboard({ user }: { user: any }) {
               {getGreeting()}, {user?.firstName}!
             </h1>
             <p className="text-gray-600 mt-1">
-              L&D Coordinator Dashboard - Internship request processing and coordination
+              L&D Coordinator Dashboard - Real-time access request processing and coordination
             </p>
           </div>
           <div className="mt-4 sm:mt-0 flex items-center gap-3">
@@ -294,11 +258,29 @@ export function CoordinatorDashboard({ user }: { user: any }) {
           </div>
         </div>
 
+        {/* Error Alert */}
+        {error && (
+          <Alert className="border-red-200 bg-red-50">
+            <AlertTriangle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-700">
+              <strong>Error:</strong> {error}
+              <Button 
+                onClick={fetchDashboardData} 
+                variant="outline" 
+                size="sm" 
+                className="ml-2"
+              >
+                Retry
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Role Information */}
         <Alert className="border-blue-200 bg-blue-50">
           <Users className="h-4 w-4 text-blue-600" />
           <AlertDescription className="text-blue-700">
-            <strong>📋 Your Role:</strong> You handle initial processing of internship requests, coordinate between departments, monitor progress, and maintain documentation. You have access to view all requests, update statuses, generate reports, and communicate with stakeholders.
+            <strong>📋 Your Role:</strong> You handle initial processing of access requests, coordinate between departments, monitor user activities, and maintain documentation. You have access to view all requests, update statuses, generate reports, and communicate with stakeholders.
           </AlertDescription>
         </Alert>
 
@@ -331,7 +313,7 @@ export function CoordinatorDashboard({ user }: { user: any }) {
               </div>
               <div className="mt-4 flex items-center text-sm">
                 <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                <span className="text-green-600">+12% this month</span>
+                <span className="text-green-600">Live data</span>
               </div>
             </CardContent>
           </Card>
@@ -350,7 +332,7 @@ export function CoordinatorDashboard({ user }: { user: any }) {
               </div>
               <div className="mt-4">
                 <Link href="/requests?filter=pending">
-                  <Button size="sm" className="w-full">
+                  <Button size="sm" className="w-full" disabled={!stats?.pendingRequests}>
                     Review Now
                   </Button>
                 </Link>
@@ -362,9 +344,9 @@ export function CoordinatorDashboard({ user }: { user: any }) {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Active Requests</p>
+                  <p className="text-sm font-medium text-gray-600">Active Users</p>
                   <p className="text-2xl font-bold text-gray-900">{stats?.activeRequests || 0}</p>
-                  <p className="text-xs text-blue-600 mt-1">Currently processing</p>
+                  <p className="text-xs text-blue-600 mt-1">Currently active</p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                   <Activity className="h-6 w-6 text-blue-600" />
@@ -372,7 +354,7 @@ export function CoordinatorDashboard({ user }: { user: any }) {
               </div>
               <div className="mt-4">
                 <Progress 
-                  value={stats ? (stats.activeRequests / stats.totalRequests) * 100 : 0} 
+                  value={stats && stats.totalRequests > 0 ? (stats.activeRequests / stats.totalRequests) * 100 : 0} 
                   className="h-2"
                 />
               </div>
@@ -393,7 +375,7 @@ export function CoordinatorDashboard({ user }: { user: any }) {
               </div>
               <div className="mt-4 flex items-center text-sm">
                 <Calendar className="h-4 w-4 text-green-500 mr-1" />
-                <span className="text-green-600">-0.5 days improved</span>
+                <span className="text-green-600">Real-time data</span>
               </div>
             </CardContent>
           </Card>
@@ -419,7 +401,7 @@ export function CoordinatorDashboard({ user }: { user: any }) {
                         <p className="text-sm font-medium text-gray-900">{action.title}</p>
                         <p className="text-xs text-gray-500">{action.description}</p>
                       </div>
-                      {action.count !== undefined && (
+                      {action.count !== undefined && action.count > 0 && (
                         <Badge variant="secondary">{action.count}</Badge>
                       )}
                     </div>
@@ -434,50 +416,57 @@ export function CoordinatorDashboard({ user }: { user: any }) {
             <Card>
               <CardHeader>
                 <CardTitle>Recent Requests</CardTitle>
-                <CardDescription>Latest internship applications requiring attention</CardDescription>
+                <CardDescription>Latest access requests requiring attention</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {recentRequests.map((request) => (
-                    <div key={request.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium text-gray-900">{request.applicantName}</h4>
-                          <div className="flex items-center space-x-2">
-                            {getUrgencyBadge(request.urgency)}
-                            {getStatusBadge(request.status)}
+                {recentRequests.length > 0 ? (
+                  <div className="space-y-4">
+                    {recentRequests.map((request) => (
+                      <div key={request.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-medium text-gray-900">{request.applicantName}</h4>
+                            <div className="flex items-center space-x-2">
+                              {getUrgencyBadge(request.urgency)}
+                              {getStatusBadge(request.status)}
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                            <div>
+                              <span className="font-medium">ID:</span> {request.employeeId}
+                            </div>
+                            <div>
+                              <span className="font-medium">Department:</span> {request.department}
+                            </div>
+                            <div>
+                              <span className="font-medium">Role:</span> {request.requestType}
+                            </div>
+                            <div>
+                              <span className="font-medium">Submitted:</span> {new Date(request.submittedDate).toLocaleDateString()}
+                            </div>
+                          </div>
+                          <div className="mt-2 flex items-center text-sm">
+                            <ArrowRight className="h-4 w-4 text-blue-500 mr-1" />
+                            <span className="text-blue-600 font-medium">{request.nextAction}</span>
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
-                          <div>
-                            <span className="font-medium">ID:</span> {request.employeeId}
-                          </div>
-                          <div>
-                            <span className="font-medium">Department:</span> {request.department}
-                          </div>
-                          <div>
-                            <span className="font-medium">Type:</span> {request.requestType}
-                          </div>
-                          <div>
-                            <span className="font-medium">Submitted:</span> {new Date(request.submittedDate).toLocaleDateString()}
-                          </div>
-                        </div>
-                        <div className="mt-2 flex items-center text-sm">
-                          <ArrowRight className="h-4 w-4 text-blue-500 mr-1" />
-                          <span className="text-blue-600 font-medium">{request.nextAction}</span>
+                        <div className="ml-4 flex space-x-2">
+                          <Button variant="outline" size="sm">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm">
+                            <Send className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
-                      <div className="ml-4 flex space-x-2">
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm">
-                          <Send className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                    <p>No recent requests found</p>
+                  </div>
+                )}
                 <div className="mt-4 text-center">
                   <Link href="/requests">
                     <Button variant="outline">
@@ -499,25 +488,34 @@ export function CoordinatorDashboard({ user }: { user: any }) {
               <CardDescription>Current status breakdown of all requests</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={metrics?.statusDistribution}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {metrics?.statusDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              {metrics?.statusDistribution && metrics.statusDistribution.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={metrics.statusDistribution}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {metrics.statusDistribution.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center text-gray-500">
+                  <div className="text-center">
+                    <BarChart3 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                    <p>No data available</p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -527,17 +525,26 @@ export function CoordinatorDashboard({ user }: { user: any }) {
               <CardDescription>Request submission, processing, and routing trends</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={metrics?.monthlyTrends}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="submitted" stroke="#3b82f6" strokeWidth={2} name="Submitted" />
-                  <Line type="monotone" dataKey="processed" stroke="#10b981" strokeWidth={2} name="Processed" />
-                  <Line type="monotone" dataKey="routed" stroke="#8b5cf6" strokeWidth={2} name="Routed to HoDs" />
-                </LineChart>
-              </ResponsiveContainer>
+              {metrics?.monthlyTrends && metrics.monthlyTrends.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={metrics.monthlyTrends}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="submitted" stroke="#3b82f6" strokeWidth={2} name="Submitted" />
+                    <Line type="monotone" dataKey="processed" stroke="#10b981" strokeWidth={2} name="Processed" />
+                    <Line type="monotone" dataKey="routed" stroke="#8b5cf6" strokeWidth={2} name="Routed to HoDs" />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center text-gray-500">
+                  <div className="text-center">
+                    <TrendingUp className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                    <p>No trends data available</p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -549,34 +556,41 @@ export function CoordinatorDashboard({ user }: { user: any }) {
             <CardDescription>Request status breakdown by department</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {metrics?.departmentBreakdown.map((dept, index) => (
-                <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center">
-                    <Building className="h-5 w-5 text-gray-400 mr-3" />
-                    <span className="font-medium text-gray-900">{dept.department}</span>
+            {metrics?.departmentBreakdown && metrics.departmentBreakdown.length > 0 ? (
+              <div className="space-y-4">
+                {metrics.departmentBreakdown.map((dept, index) => (
+                  <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center">
+                      <Building className="h-5 w-5 text-gray-400 mr-3" />
+                      <span className="font-medium text-gray-900">{dept.department}</span>
+                    </div>
+                    <div className="flex items-center space-x-6">
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-orange-600">{dept.pending}</p>
+                        <p className="text-xs text-gray-500">Pending</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-blue-600">{dept.active}</p>
+                        <p className="text-xs text-gray-500">Active</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-green-600">{dept.completed}</p>
+                        <p className="text-xs text-gray-500">Completed</p>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        <Mail className="h-4 w-4 mr-1" />
+                        Contact HoD
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-6">
-                    <div className="text-center">
-                      <p className="text-sm font-medium text-orange-600">{dept.pending}</p>
-                      <p className="text-xs text-gray-500">Pending</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm font-medium text-blue-600">{dept.active}</p>
-                      <p className="text-xs text-gray-500">Active</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm font-medium text-green-600">{dept.completed}</p>
-                      <p className="text-xs text-gray-500">Completed</p>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      <Mail className="h-4 w-4 mr-1" />
-                      Contact HoD
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Building className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p>No department data available</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -598,7 +612,12 @@ export function CoordinatorDashboard({ user }: { user: any }) {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Completion Rate</span>
-                <span className="text-lg font-semibold text-green-600">94%</span>
+                <span className="text-lg font-semibold text-green-600">
+                  {stats && stats.totalRequests > 0 
+                    ? `${Math.round((stats.completedRequests / stats.totalRequests) * 100)}%`
+                    : "N/A"
+                  }
+                </span>
               </div>
               <div className="pt-4">
                 <Button className="w-full" variant="outline">
@@ -617,7 +636,7 @@ export function CoordinatorDashboard({ user }: { user: any }) {
             <CardContent className="space-y-3">
               <div className="flex items-center p-3 bg-blue-50 rounded-lg">
                 <CheckCircle className="h-5 w-5 text-blue-600 mr-3" />
-                <span className="text-sm text-gray-700">Initial processing of internship requests</span>
+                <span className="text-sm text-gray-700">Initial processing of access requests</span>
               </div>
               <div className="flex items-center p-3 bg-green-50 rounded-lg">
                 <CheckCircle className="h-5 w-5 text-green-600 mr-3" />
@@ -625,7 +644,7 @@ export function CoordinatorDashboard({ user }: { user: any }) {
               </div>
               <div className="flex items-center p-3 bg-purple-50 rounded-lg">
                 <CheckCircle className="h-5 w-5 text-purple-600 mr-3" />
-                <span className="text-sm text-gray-700">Request status monitoring and follow-up</span>
+                <span className="text-sm text-gray-700">User activity monitoring and follow-up</span>
               </div>
               <div className="flex items-center p-3 bg-orange-50 rounded-lg">
                 <CheckCircle className="h-5 w-5 text-orange-600 mr-3" />
