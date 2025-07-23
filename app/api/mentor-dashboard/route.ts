@@ -113,8 +113,7 @@ export async function GET(request: NextRequest) {
         submitter: assignment.mentor,
         assignment: {
           request: assignment.request
-        },
-        traineeName: assignment.request.traineeName
+        }
       }))
     }
 
@@ -181,8 +180,11 @@ export async function GET(request: NextRequest) {
 
     // Recent activities and upcoming tasks
     const recentActivities = projectReports.slice(0, 8).map(report => {
-      const traineeName = report.traineeName || 
-        (report.assignment?.request ? report.assignment.request.traineeName : 'Unknown Trainee')
+      // For real data from database, get traineeName from assignment.request.traineeName
+      // For simulated data, we added traineeName directly to the report object
+      const traineeName = (report as any).traineeName || 
+        (report.assignment?.request?.traineeName) || 
+        'Unknown Trainee'
       
       return {
         id: report.id,
