@@ -18,8 +18,10 @@ export const config = {
     "/mentors/:path*",
     "/reports/:path*",
     "/admin/:path*",
+    "/trainee/:path*",
     "/api/internships/:path*",
     "/api/mentors/:path*",
     "/api/dashboard/:path*",
+    "/api/trainee/:path*",
   ],
 }

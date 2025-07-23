@@ -28,6 +28,11 @@ import {
   Menu,
   X,
   ChevronDown,
+  Target,
+  MessageSquare,
+  BookOpen,
+  Award,
+  Upload
 } from "lucide-react"
 
 interface DashboardLayoutProps {
@@ -44,13 +49,33 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
     router.push("/login")
   }
 
-  const navigation = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, current: true },
-    { name: "Requests", href: "/requests", icon: FileText, current: false },
-    { name: "Mentors", href: "/mentors", icon: Users, current: false },
-    { name: "Reports", href: "/reports", icon: TrendingUp, current: false },
-    { name: "Settings", href: "/settings", icon: Settings, current: false },
-  ]
+  // Role-based navigation
+  const getNavigationItems = () => {
+    const baseItems = [
+      { name: "Dashboard", href: user.role === "Trainee" ? "/trainee" : "/dashboard", icon: LayoutDashboard, current: true },
+    ]
+
+    if (user.role === "Trainee") {
+      return [
+        ...baseItems,
+        { name: "My Goals", href: "/trainee/goals", icon: Target, current: false },
+        { name: "Submissions", href: "/trainee/submissions", icon: Upload, current: false },
+        { name: "Messages", href: "/trainee/messages", icon: MessageSquare, current: false },
+        { name: "Resources", href: "/trainee/resources", icon: BookOpen, current: false },
+        { name: "Certificates", href: "/trainee/certificates", icon: Award, current: false },
+      ]
+    } else {
+      return [
+        ...baseItems,
+        { name: "Requests", href: "/requests", icon: FileText, current: false },
+        { name: "Mentors", href: "/mentors", icon: Users, current: false },
+        { name: "Reports", href: "/reports", icon: TrendingUp, current: false },
+        { name: "Settings", href: "/settings", icon: Settings, current: false },
+      ]
+    }
+  }
+
+  const navigation = getNavigationItems()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -110,16 +135,18 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
           <div className="flex-shrink-0 border-t border-gray-200 p-4">
             <div className="flex items-center">
               <Avatar className="h-8 w-8">
-                <AvatarImage src={`/placeholder.svg?height=32&width=32&query=${user.name}`} />
+                <AvatarImage src={`/placeholder.svg?height=32&width=32&query=${user.name || user.firstName + ' ' + user.lastName}`} />
                 <AvatarFallback>
-                  {user.name
-                    .split(" ")
-                    .map((n: string) => n[0])
-                    .join("")}
+                  {user.name 
+                    ? user.name.split(" ").map((n: string) => n[0]).join("")
+                    : (user.firstName?.[0] || '') + (user.lastName?.[0] || '')
+                  }
                 </AvatarFallback>
               </Avatar>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-700">{user.name}</p>
+                <p className="text-sm font-medium text-gray-700">
+                  {user.name || `${user.firstName} ${user.lastName}`}
+                </p>
                 <p className="text-xs text-gray-500">{user.role}</p>
               </div>
             </div>
@@ -138,14 +165,39 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex flex-1 items-center">
               <div className="text-sm text-gray-500">
-                Welcome back, <span className="font-medium text-gray-900">{user.name}</span>
+                Welcome back, <span className="font-medium text-gray-900">
+                  {user.name || `${user.firstName} ${user.lastName}`}
+                </span>
+                {user.role === "Trainee" && user.institutionName && (
+                  <span className="text-xs text-gray-400 ml-2">from {user.institutionName}</span>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-x-4 lg:gap-x-6">
+              {/* Role-specific quick actions */}
+              {user.role === "Trainee" && (
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/trainee/submissions">
+                      <Upload className="h-4 w-4 mr-1" />
+                      Submit
+                    </Link>
+                  </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/trainee/messages">
+                      <MessageSquare className="h-4 w-4 mr-1" />
+                      Message
+                    </Link>
+                  </Button>
+                </div>
+              )}
+
               {/* Notifications */}
               <Button variant="ghost" size="sm" className="relative">
                 <Bell className="h-5 w-5" />
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs">3</Badge>
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs">
+                  {user.role === "Trainee" ? "2" : "3"}
+                </Badge>
               </Button>
 
               {/* User menu */}
@@ -153,16 +205,18 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={`/placeholder.svg?height=32&width=32&query=${user.name}`} />
+                      <AvatarImage src={`/placeholder.svg?height=32&width=32&query=${user.name || user.firstName + ' ' + user.lastName}`} />
                       <AvatarFallback>
-                        {user.name
-                          .split(" ")
-                          .map((n: string) => n[0])
-                          .join("")}
+                        {user.name 
+                          ? user.name.split(" ").map((n: string) => n[0]).join("")
+                          : (user.firstName?.[0] || '') + (user.lastName?.[0] || '')
+                        }
                       </AvatarFallback>
                     </Avatar>
                     <div className="hidden lg:block text-left">
-                      <div className="text-sm font-medium text-gray-700">{user.name}</div>
+                      <div className="text-sm font-medium text-gray-700">
+                        {user.name || `${user.firstName} ${user.lastName}`}
+                      </div>
                       <div className="text-xs text-gray-500">{user.role}</div>
                     </div>
                     <ChevronDown className="h-4 w-4 text-gray-400" />
@@ -173,6 +227,17 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>Profile Settings</DropdownMenuItem>
                   <DropdownMenuItem>Preferences</DropdownMenuItem>
+                  {user.role === "Trainee" && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/trainee/certificates">View Certificates</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/trainee/progress">Progress Report</Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="text-red-600">
                     <LogOut className="mr-2 h-4 w-4" />

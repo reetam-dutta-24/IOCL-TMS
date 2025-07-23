@@ -22,10 +22,19 @@ model User {
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
   
+  // Trainee-specific fields
+  institutionName       String?
+  courseDetails         String?
+  expectedGraduation    DateTime?
+  currentSemester       String?
+  cgpa                  Float?
+  skills                String[]               @default([])
+  
   role                  Role                   @relation(fields: [roleId], references: [id])
   department            Department?            @relation(fields: [departmentId], references: [id])
   
   submittedRequests     InternshipRequest[]    @relation("RequestSubmitter")
+  traineeRequests       InternshipRequest[]    @relation("TraineeUser")
   mentorAssignments     MentorAssignment[]     @relation("MentorUser")
   assignedMentorships   MentorAssignment[]     @relation("AssignedBy")
   approvals             Approval[]
@@ -33,6 +42,13 @@ model User {
   auditTrails           AuditTrail[]
   notifications         Notification[]
   uploadedAttachments   DocumentAttachment[]   @relation("AttachmentUploader")
+  
+  // Trainee-specific relations
+  traineeProgress       TraineeProgress[]
+  traineeGoals          TraineeGoal[]
+  traineeSubmissions    TraineeSubmission[]
+  sentMessages          TraineeMessage[]       @relation("MessageSender")
+  receivedMessages      TraineeMessage[]       @relation("MessageReceiver")
   
   @@map("users")
 }
@@ -62,6 +78,7 @@ model Department {
   
   users             User[]
   internshipRequests InternshipRequest[]
+  learningResources LearningResource[]
   
   @@map("departments")
 }
@@ -72,6 +89,7 @@ model InternshipRequest {
   traineeName         String
   traineeEmail        String?
   traineePhone        String?
+  traineeId           Int?                // Link to actual trainee user
   institutionName     String
   courseDetails       String?
   internshipDuration  Int
@@ -80,10 +98,13 @@ model InternshipRequest {
   priority            Priority            @default(MEDIUM)
   status              RequestStatus       @default(SUBMITTED)
   requestedBy         Int
+  startDate           DateTime?
+  endDate             DateTime?
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
   
   submitter           User                @relation("RequestSubmitter", fields: [requestedBy], references: [id])
+  trainee             User?               @relation("TraineeUser", fields: [traineeId], references: [id])
   department          Department?         @relation(fields: [preferredDepartment], references: [id])
   
   mentorAssignments   MentorAssignment[]
@@ -152,6 +173,104 @@ model ProjectReport {
   attachments         DocumentAttachment[]
   
   @@map("project_reports")
+}
+
+// New Trainee-specific models
+model TraineeProgress {
+  id                    Int                 @id @default(autoincrement())
+  traineeId             Int
+  weekNumber            Int
+  overallProgress       Float               @default(0)
+  technicalSkillRating  Float?
+  behavioralRating      Float?
+  attendancePercentage  Float               @default(100)
+  goalsAchieved         String[]            @default([])
+  challengesFaced       String?
+  learningHighlights    String?
+  mentorFeedback        String?
+  selfAssessmentScore   Float?
+  nextWeekGoals         String[]            @default([])
+  submittedAt           DateTime            @default(now())
+  mentorReviewedAt      DateTime?
+  
+  trainee               User                @relation(fields: [traineeId], references: [id])
+  
+  @@unique([traineeId, weekNumber])
+  @@map("trainee_progress")
+}
+
+model TraineeGoal {
+  id              Int           @id @default(autoincrement())
+  traineeId       Int
+  goalTitle       String
+  goalDescription String?
+  goalType        GoalType      @default(LEARNING)
+  priority        Priority      @default(MEDIUM)
+  targetDate      DateTime
+  status          GoalStatus    @default(ACTIVE)
+  progressPercent Float         @default(0)
+  achievedAt      DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  trainee         User          @relation(fields: [traineeId], references: [id])
+  
+  @@map("trainee_goals")
+}
+
+model TraineeSubmission {
+  id              Int               @id @default(autoincrement())
+  traineeId       Int
+  submissionType  SubmissionType
+  title           String
+  description     String?
+  content         String?
+  filePath        String?
+  fileName        String?
+  fileSize        Int?
+  submittedAt     DateTime          @default(now())
+  reviewedAt      DateTime?
+  status          SubmissionStatus  @default(SUBMITTED)
+  mentorFeedback  String?
+  grade           String?
+  
+  trainee         User              @relation(fields: [traineeId], references: [id])
+  
+  @@map("trainee_submissions")
+}
+
+model TraineeMessage {
+  id          Int         @id @default(autoincrement())
+  senderId    Int
+  receiverId  Int
+  subject     String?
+  message     String
+  isRead      Boolean     @default(false)
+  sentAt      DateTime    @default(now())
+  readAt      DateTime?
+  
+  sender      User        @relation("MessageSender", fields: [senderId], references: [id])
+  receiver    User        @relation("MessageReceiver", fields: [receiverId], references: [id])
+  
+  @@map("trainee_messages")
+}
+
+model LearningResource {
+  id            Int           @id @default(autoincrement())
+  title         String
+  description   String?
+  resourceType  ResourceType
+  content       String?
+  filePath      String?
+  fileName      String?
+  departmentId  Int?
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  department    Department?   @relation(fields: [departmentId], references: [id])
+  
+  @@map("learning_resources")
 }
 
 model Letter {
@@ -284,4 +403,44 @@ enum NotificationType {
   SMS
   IN_APP
   PUSH
+}
+
+enum GoalType {
+  LEARNING
+  TECHNICAL
+  BEHAVIORAL
+  PROJECT
+  PERSONAL
+}
+
+enum GoalStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+  CANCELLED
+}
+
+enum SubmissionType {
+  WEEKLY_REPORT
+  PROJECT_DELIVERABLE
+  ASSIGNMENT
+  PRESENTATION
+  FINAL_REPORT
+  OTHER
+}
+
+enum SubmissionStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  NEEDS_REVISION
+  REJECTED
+}
+
+enum ResourceType {
+  DOCUMENT
+  VIDEO
+  LINK
+  PRESENTATION
+  TUTORIAL
 }
