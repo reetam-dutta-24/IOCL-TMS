@@ -281,7 +281,7 @@ export default function RegisterPage() {
                         <SelectContent className="max-h-60">
                           {roles.length > 0 ? (
                             roles
-                              .filter((role) => !role.name.toLowerCase().includes('admin') && !role.name.toLowerCase().includes('hod'))
+                              .filter((role) => role.name !== 'System Administrator' && role.name !== 'Admin')
                               .map((role) => (
                                 <SelectItem key={role.id} value={role.id.toString()}>
                                   <div className="flex flex-col">
