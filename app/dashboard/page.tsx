@@ -3,27 +3,16 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-// Import role-specific dashboard components
+// Direct imports to avoid module resolution issues
 import { AdminDashboard } from "../../components/dashboards/admin-dashboard";
 import { CoordinatorDashboard } from "../../components/dashboards/coordinator-dashboard";
-import { HodDashboard, type HodDashboardProps } from "../../components/dashboards/hod-dashboard";
+import { HodDashboard } from "../../components/dashboards/hod-dashboard";
 import { MentorDashboard } from "../../components/dashboards/mentor-dashboard";
 import { PageLoading } from "../../components/ui/loading";
 
-interface User {
-  id: number;
-  employeeId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: string;
-  department: string;
-  isActive: boolean;
-}
-
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -60,15 +49,11 @@ export default function DashboardPage() {
       case "System Administrator":
         return <AdminDashboard user={user} />;
       
-      case "L&D HoD": {
-        const props: HodDashboardProps = { user, roleType: "LD_HOD" };
-        return <HodDashboard {...props} />;
-      }
+      case "L&D HoD":
+        return <HodDashboard user={user} roleType="LD_HOD" />;
       
-      case "Department HoD": {
-        const props: HodDashboardProps = { user, roleType: "DEPT_HOD" };
-        return <HodDashboard {...props} />;
-      }
+      case "Department HoD":
+        return <HodDashboard user={user} roleType="DEPT_HOD" />;
       
       case "L&D Coordinator":
         return <CoordinatorDashboard user={user} />;
