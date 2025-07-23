@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 // Import role-specific dashboard components
-import { AdminDashboard } from "@/components/dashboards/admin-dashboard";
-import { CoordinatorDashboard } from "@/components/dashboards/coordinator-dashboard";
-import { HodDashboard } from "@/components/dashboards/hod-dashboard";
-import { MentorDashboard } from "@/components/dashboards/mentor-dashboard";
+import { 
+  AdminDashboard,
+  CoordinatorDashboard,
+  HodDashboard,
+  MentorDashboard
+} from "@/components/dashboards";
 import { PageLoading } from "@/components/ui/loading";
 
 interface User {
