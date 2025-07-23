@@ -136,7 +136,7 @@ export function CoordinatorDashboard({ user }: { user: any }) {
   }
 
   const getStatusBadge = (status: string) => {
-    const statusConfig = {
+    const statusConfig: Record<string, { color: string; icon: any }> = {
       "Pending Review": { color: "bg-yellow-100 text-yellow-800", icon: Clock },
       "Under Processing": { color: "bg-blue-100 text-blue-800", icon: Activity },
       "Awaiting HoD Approval": { color: "bg-purple-100 text-purple-800", icon: Users },
