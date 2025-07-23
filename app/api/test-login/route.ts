@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 
     // Test with common passwords
     const testPasswords = ['Welcome@123', 'welcome123', 'admin123', '123456']
-    const passwordTests = {}
+    const passwordTests: Record<string, boolean> = {}
     
     for (const testPwd of testPasswords) {
       if (user.password) {
