@@ -4,14 +4,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 // Import role-specific dashboard components
-import { 
-  AdminDashboard,
-  CoordinatorDashboard,
-  HodDashboard,
-  MentorDashboard,
-  type HodDashboardProps
-} from "@/components/dashboards";
-import { PageLoading } from "@/components/ui/loading";
+import { AdminDashboard } from "../../components/dashboards/admin-dashboard";
+import { CoordinatorDashboard } from "../../components/dashboards/coordinator-dashboard";
+import { HodDashboard, type HodDashboardProps } from "../../components/dashboards/hod-dashboard";
+import { MentorDashboard } from "../../components/dashboards/mentor-dashboard";
+import { PageLoading } from "../../components/ui/loading";
 
 interface User {
   id: number;
