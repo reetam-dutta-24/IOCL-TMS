@@ -5,7 +5,10 @@ export async function POST(request: NextRequest) {
   try {
     const { employeeId, password } = await request.json()
 
+    console.log(`🚀 Login attempt - Employee ID: ${employeeId}, Password provided: ${!!password}`)
+
     if (!employeeId || !password) {
+      console.log(`❌ Missing credentials - Employee ID: ${!!employeeId}, Password: ${!!password}`)
       return NextResponse.json({ error: "Employee ID and password are required" }, { status: 400 })
     }
 
@@ -13,8 +16,11 @@ export async function POST(request: NextRequest) {
     const user = await authenticateUser(employeeId, password)
 
     if (!user) {
+      console.log(`❌ Authentication failed for Employee ID: ${employeeId}`)
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
     }
+
+    console.log(`✅ Authentication successful for: ${user.employeeId} - ${user.firstName} ${user.lastName}`)
 
     // Generate JWT token
     const token = generateToken(user)
