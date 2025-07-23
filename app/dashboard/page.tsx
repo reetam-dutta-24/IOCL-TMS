@@ -9,6 +9,7 @@ import { AdminDashboard } from "../../components/dashboards/admin-dashboard";
 import { CoordinatorDashboard } from "../../components/dashboards/coordinator-dashboard";
 import { LndHodDashboard } from "../../components/dashboards/lnd-hod-dashboard";
 import { HodDashboard } from "../../components/dashboards/hod-dashboard";
+import { DepartmentHoDDashboard } from "../../components/dashboards/department-hod-dashboard";
 import { MentorDashboard } from "../../components/dashboards/mentor-dashboard";
 
 export default function DashboardPage() {
@@ -52,7 +53,7 @@ export default function DashboardPage() {
           break;
           
         case "Department HoD":
-          component = React.createElement(HodDashboard, { user: userData, roleType: "DEPT_HOD" });
+          component = React.createElement(DepartmentHoDDashboard, { user: userData });
           break;
           
         case "L&D Coordinator":
