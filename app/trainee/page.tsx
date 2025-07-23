@@ -25,7 +25,9 @@ import {
   Mail,
   Phone,
   MapPin,
-  GraduationCap
+  GraduationCap,
+  BarChart3,
+  Users
 } from "lucide-react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { TraineeStatsCard } from "@/components/trainee/trainee-stats-card"
@@ -34,6 +36,8 @@ import { GoalsSection } from "@/components/trainee/goals-section"
 import { SubmissionsSection } from "@/components/trainee/submissions-section"
 import { MessagesSection } from "@/components/trainee/messages-section"
 import { ResourcesSection } from "@/components/trainee/resources-section"
+import { WeeklyProgressForm } from "@/components/trainee/weekly-progress-form"
+import { PerformanceAnalytics } from "@/components/trainee/performance-analytics"
 
 export default function TraineeDashboard() {
   const router = useRouter()
@@ -55,7 +59,7 @@ export default function TraineeDashboard() {
     }
     
     setUser(parsedUser)
-    loadDashboardData(parsedUser.id)
+    loadDashboardData(parsedUser.employeeId)
     setLoading(false)
   }, [router])
 
@@ -64,11 +68,18 @@ export default function TraineeDashboard() {
       const response = await fetch(`/api/trainee/dashboard/${userId}`)
       if (response.ok) {
         const data = await response.json()
-        setDashboardStats(data)
+        setDashboardStats(data.data)
       }
     } catch (error) {
       console.error("Failed to load dashboard data:", error)
     }
+  }
+
+  const handleProgressSubmit = (progressData: any) => {
+    // Handle progress submission
+    console.log("Progress submitted:", progressData)
+    // In real implementation, this would update the dashboard stats
+    loadDashboardData(user.employeeId)
   }
 
   if (loading) {
@@ -89,7 +100,8 @@ export default function TraineeDashboard() {
     pendingSubmissions: 2,
     unreadMessages: 4,
     daysRemaining: 45,
-    weeksCompleted: 8
+    weeksCompleted: 8,
+    currentWeek: 9
   }
 
   const progressData = [
@@ -103,21 +115,24 @@ export default function TraineeDashboard() {
   return (
     <DashboardLayout user={user}>
       <div className="space-y-6">
-        {/* Header Section */}
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">My Internship Journey</h1>
-            <p className="text-gray-600">Track your progress, goals, and achievements</p>
+            <p className="text-gray-600">
+              Welcome back, {user.firstName}! Track your progress and achievements.
+            </p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm">
               <Download className="h-4 w-4 mr-2" />
               Export Progress
             </Button>
-            <Button size="sm">
-              <Upload className="h-4 w-4 mr-2" />
-              Submit Report
-            </Button>
+            <WeeklyProgressForm 
+              traineeId={user.employeeId} 
+              currentWeek={stats.currentWeek}
+              onSubmit={handleProgressSubmit}
+            />
           </div>
         </div>
 
@@ -168,7 +183,7 @@ export default function TraineeDashboard() {
             {/* Progress Chart */}
             <Card>
               <CardHeader>
-                <CardTitle>Progress Tracking</CardTitle>
+                <CardTitle>Weekly Progress Tracking</CardTitle>
                 <CardDescription>Your week-by-week performance metrics</CardDescription>
               </CardHeader>
               <CardContent>
@@ -207,6 +222,14 @@ export default function TraineeDashboard() {
                       <p className="text-xs text-gray-500">3 days ago</p>
                     </div>
                     <Badge variant="secondary">75%</Badge>
+                  </div>
+                  <div className="flex items-center space-x-4 p-3 bg-purple-50 rounded-lg">
+                    <Award className="h-5 w-5 text-purple-600" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Achievement Unlocked: Fast Learner</p>
+                      <p className="text-xs text-gray-500">5 days ago</p>
+                    </div>
+                    <Badge variant="secondary">+120 pts</Badge>
                   </div>
                 </div>
               </CardContent>
@@ -319,6 +342,32 @@ export default function TraineeDashboard() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Current Mentor */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  My Mentor
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center space-x-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback>SP</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="font-medium">Sunita Patel</p>
+                    <p className="text-sm text-gray-500">Senior Developer</p>
+                    <p className="text-xs text-gray-400">Information Technology</p>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" className="w-full mt-3">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Send Message
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
@@ -330,28 +379,33 @@ export default function TraineeDashboard() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="goals" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="goals">Goals</TabsTrigger>
                 <TabsTrigger value="submissions">Submissions</TabsTrigger>
                 <TabsTrigger value="messages">Messages</TabsTrigger>
                 <TabsTrigger value="resources">Resources</TabsTrigger>
+                <TabsTrigger value="analytics">Analytics</TabsTrigger>
                 <TabsTrigger value="certificates">Certificates</TabsTrigger>
               </TabsList>
 
               <TabsContent value="goals" className="space-y-4">
-                <GoalsSection userId={user.id} />
+                <GoalsSection userId={user.employeeId} />
               </TabsContent>
 
               <TabsContent value="submissions" className="space-y-4">
-                <SubmissionsSection userId={user.id} />
+                <SubmissionsSection userId={user.employeeId} />
               </TabsContent>
 
               <TabsContent value="messages" className="space-y-4">
-                <MessagesSection userId={user.id} />
+                <MessagesSection userId={user.employeeId} />
               </TabsContent>
 
               <TabsContent value="resources" className="space-y-4">
                 <ResourcesSection departmentId={user.departmentId} />
+              </TabsContent>
+
+              <TabsContent value="analytics" className="space-y-4">
+                <PerformanceAnalytics traineeId={user.employeeId} />
               </TabsContent>
 
               <TabsContent value="certificates" className="space-y-4">
