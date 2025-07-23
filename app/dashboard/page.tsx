@@ -8,7 +8,7 @@ import { AdminDashboard } from "@/components/dashboards/admin-dashboard";
 import { CoordinatorDashboard } from "@/components/dashboards/coordinator-dashboard";
 import { HodDashboard } from "@/components/dashboards/hod-dashboard";
 import { MentorDashboard } from "@/components/dashboards/mentor-dashboard";
-import { PageLoading } from "@/components/ui/page-loading";
+import { PageLoading } from "@/components/ui/loading";
 
 export default function DashboardPage() {
   const router = useRouter();
