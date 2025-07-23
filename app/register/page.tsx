@@ -19,12 +19,6 @@ interface Role {
   description: string
 }
 
-interface Department {
-  id: number
-  name: string
-  code: string
-}
-
 export default function RegisterPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
@@ -32,7 +26,6 @@ export default function RegisterPage() {
   const [error, setError] = useState("")
   const [isSuccess, setIsSuccess] = useState(false)
   const [roles, setRoles] = useState<Role[]>([])
-  const [departments, setDepartments] = useState<Department[]>([])
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -48,27 +41,17 @@ export default function RegisterPage() {
   })
 
   useEffect(() => {
-    // Fetch roles and departments
+    // Fetch roles only (departments are now static)
     const fetchData = async () => {
       setIsDataLoading(true)
       try {
-        const [rolesRes, deptRes] = await Promise.all([
-          fetch("/api/roles"),
-          fetch("/api/departments")
-        ])
+        const rolesRes = await fetch("/api/roles")
 
         if (rolesRes.ok) {
           const rolesData = await rolesRes.json()
           setRoles(rolesData)
         } else {
           console.error("Failed to fetch roles:", await rolesRes.text())
-        }
-
-        if (deptRes.ok) {
-          const deptData = await deptRes.json()
-          setDepartments(deptData)
-        } else {
-          console.error("Failed to fetch departments:", await deptRes.text())
         }
       } catch (error) {
         console.error("Failed to fetch data:", error)
@@ -154,21 +137,15 @@ export default function RegisterPage() {
 
         {/* Logo and Title */}
         <div className="text-center animate-scale-in animate-delay-200">
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-4">
             <IndianOilLogo width={60} height={60} className="animate-float" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Request System Access</h1>
-          <p className="text-gray-600">Submit your details for admin approval</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
+          <p className="text-gray-600">Register for IOCL Training & Assessment Management System</p>
         </div>
 
         {/* Registration Form */}
         <Card className="animate-slide-in-up animate-delay-400 hover-lift border-red-100">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-semibold text-center">Access Request Form</CardTitle>
-            <CardDescription className="text-center">
-              Fill in your details to request access to IOCL TAMS
-            </CardDescription>
-          </CardHeader>
           <CardContent>
             {!isSuccess ? (
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -298,16 +275,18 @@ export default function RegisterPage() {
                       </SelectTrigger>
                       <SelectContent className="max-h-60">
                         {roles.length > 0 ? (
-                          roles.map((role) => (
-                            <SelectItem key={role.id} value={role.id.toString()}>
-                              <div className="flex flex-col">
-                                <span className="font-medium">{role.name}</span>
-                                {role.description && (
-                                  <span className="text-xs text-gray-500">{role.description}</span>
-                                )}
-                              </div>
-                            </SelectItem>
-                          ))
+                          roles
+                            .filter((role) => !role.name.toLowerCase().includes('admin') && !role.name.toLowerCase().includes('hod'))
+                            .map((role) => (
+                              <SelectItem key={role.id} value={role.id.toString()}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{role.name}</span>
+                                  {role.description && (
+                                    <span className="text-xs text-gray-500">{role.description}</span>
+                                  )}
+                                </div>
+                              </SelectItem>
+                            ))
                         ) : (
                           <SelectItem value="loading" disabled>
                             {isDataLoading ? "Loading..." : "No roles available"}
@@ -322,26 +301,48 @@ export default function RegisterPage() {
                     <Select
                       value={formData.departmentId}
                       onValueChange={(value) => handleChange("departmentId", value)}
-                      disabled={isLoading || isDataLoading}
+                      disabled={isLoading}
                     >
                       <SelectTrigger className="transition-all duration-300 hover:border-red-300">
-                        <SelectValue placeholder={isDataLoading ? "Loading departments..." : "Select department"} />
+                        <SelectValue placeholder="Select department (optional)" />
                       </SelectTrigger>
                       <SelectContent className="max-h-60">
-                        {departments.length > 0 ? (
-                          departments.map((dept) => (
-                            <SelectItem key={dept.id} value={dept.id.toString()}>
-                              <div className="flex flex-col">
-                                <span className="font-medium">{dept.name}</span>
-                                <span className="text-xs text-gray-500">Code: {dept.code}</span>
-                              </div>
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="loading" disabled>
-                            {isDataLoading ? "Loading..." : "No departments available"}
-                          </SelectItem>
-                        )}
+                        <SelectItem value="1">
+                          <div className="flex flex-col">
+                            <span className="font-medium">Learning & Development</span>
+                            <span className="text-xs text-gray-500">Code: LD</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="2">
+                          <div className="flex flex-col">
+                            <span className="font-medium">Information Technology</span>
+                            <span className="text-xs text-gray-500">Code: IT</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="3">
+                          <div className="flex flex-col">
+                            <span className="font-medium">Operations</span>
+                            <span className="text-xs text-gray-500">Code: OPS</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="4">
+                          <div className="flex flex-col">
+                            <span className="font-medium">Engineering</span>
+                            <span className="text-xs text-gray-500">Code: ENG</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="5">
+                          <div className="flex flex-col">
+                            <span className="font-medium">Finance</span>
+                            <span className="text-xs text-gray-500">Code: FIN</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="6">
+                          <div className="flex flex-col">
+                            <span className="font-medium">Human Resources</span>
+                            <span className="text-xs text-gray-500">Code: HR</span>
+                          </div>
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
