@@ -11,48 +11,61 @@ export async function GET(request: NextRequest) {
     const allRequests = await prisma.accessRequest.findMany({
       include: {
         requestedRole: true,
-        department: true,
-        user: true
+        department: true
       },
       orderBy: {
-        createdAt: 'desc'
+        requestedAt: 'desc'
       }
     })
 
     console.log(`📊 Found ${allRequests.length} total requests`)
 
+    // Fetch all users to check which approved requests have corresponding user accounts
+    const allUsers = await prisma.user.findMany({
+      select: {
+        employeeId: true,
+        isActive: true
+      }
+    })
+
+    // Create a map for quick lookup of user existence by employeeId
+    const usersByEmployeeId = new Map()
+    allUsers.forEach(user => {
+      usersByEmployeeId.set(user.employeeId, user.isActive)
+    })
+
     // Calculate real-time statistics
     const totalRequests = allRequests.length
-    const pendingRequests = allRequests.filter(req => req.status === 'pending').length
-    const approvedRequests = allRequests.filter(req => req.status === 'approved').length
-    const rejectedRequests = allRequests.filter(req => req.status === 'rejected').length
+    const pendingRequests = allRequests.filter(req => req.status === 'PENDING').length
+    const approvedRequests = allRequests.filter(req => req.status === 'APPROVED').length
+    const rejectedRequests = allRequests.filter(req => req.status === 'REJECTED').length
     
-    // Active requests are approved requests that have associated users
+    // Active requests are approved requests that have associated active users
     const activeRequests = allRequests.filter(req => 
-      req.status === 'approved' && req.user
+      req.status === 'APPROVED' && usersByEmployeeId.has(req.employeeId) && usersByEmployeeId.get(req.employeeId)
     ).length
 
     // Calculate monthly processed (current month)
     const currentMonth = new Date().getMonth()
     const currentYear = new Date().getFullYear()
     const monthlyProcessed = allRequests.filter(req => {
-      const reqDate = new Date(req.createdAt)
+      const reqDate = new Date(req.requestedAt)
       return reqDate.getMonth() === currentMonth && 
              reqDate.getFullYear() === currentYear &&
-             (req.status === 'approved' || req.status === 'rejected')
+             (req.status === 'APPROVED' || req.status === 'REJECTED')
     }).length
 
     // Calculate average processing time for approved/rejected requests
     const processedRequests = allRequests.filter(req => 
-      req.status === 'approved' || req.status === 'rejected'
+      req.status === 'APPROVED' || req.status === 'REJECTED'
     )
     
     let avgProcessingDays = 0
     if (processedRequests.length > 0) {
       const totalDays = processedRequests.reduce((sum, req) => {
-        const created = new Date(req.createdAt)
-        const updated = new Date(req.updatedAt)
-        const diffTime = Math.abs(updated.getTime() - created.getTime())
+        const created = new Date(req.requestedAt)
+        const reviewed = req.reviewedAt ? new Date(req.reviewedAt) : new Date()
+        const diffTime = Math.abs(reviewed.getTime() - created.getTime())
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
         return sum + diffDays
       }, 0)
@@ -63,7 +76,7 @@ export async function GET(request: NextRequest) {
     const yesterday = new Date()
     yesterday.setDate(yesterday.getDate() - 1)
     const urgentRequests = allRequests.filter(req => 
-      req.status === 'pending' && new Date(req.createdAt) <= yesterday
+      req.status === 'PENDING' && new Date(req.requestedAt) <= yesterday
     ).length
 
     // Status distribution for pie chart
@@ -84,15 +97,15 @@ export async function GET(request: NextRequest) {
       const monthIndex = date.getMonth()
 
       const monthRequests = allRequests.filter(req => {
-        const reqDate = new Date(req.createdAt)
+        const reqDate = new Date(req.requestedAt)
         return reqDate.getMonth() === monthIndex && reqDate.getFullYear() === year
       })
 
       const submitted = monthRequests.length
       const processed = monthRequests.filter(req => 
-        req.status === 'approved' || req.status === 'rejected'
+        req.status === 'APPROVED' || req.status === 'REJECTED'
       ).length
-      const routed = monthRequests.filter(req => req.status === 'approved').length
+      const routed = monthRequests.filter(req => req.status === 'APPROVED').length
 
       monthlyTrends.push({ month, submitted, processed, routed })
     }
@@ -103,28 +116,33 @@ export async function GET(request: NextRequest) {
       const deptRequests = allRequests.filter(req => req.departmentId === dept.id)
       return {
         department: dept.name,
-        pending: deptRequests.filter(req => req.status === 'pending').length,
-        active: deptRequests.filter(req => req.status === 'approved' && req.user).length,
-        completed: deptRequests.filter(req => req.status === 'approved').length
+        pending: deptRequests.filter(req => req.status === 'PENDING').length,
+        active: deptRequests.filter(req => req.status === 'APPROVED' && usersByEmployeeId.has(req.employeeId) && usersByEmployeeId.get(req.employeeId)).length,
+        completed: deptRequests.filter(req => req.status === 'APPROVED').length
       }
     })
 
     // Recent requests (last 10)
-    const recentRequests = allRequests.slice(0, 10).map(req => ({
-      id: req.id,
-      employeeId: req.employeeId || `REQ${req.id.toString().padStart(3, '0')}`,
-      applicantName: `${req.firstName} ${req.lastName}`,
-      department: req.department?.name || 'N/A',
-      requestType: req.requestedRole?.name || 'Unknown Role',
-      status: req.status === 'pending' ? 'Pending Review' : 
-               req.status === 'approved' ? (req.user ? 'Active User' : 'Approved') :
-               'Rejected',
-      submittedDate: req.createdAt.toISOString().split('T')[0],
-      urgency: new Date(req.createdAt) <= yesterday ? 'High' : 'Normal',
-      nextAction: req.status === 'pending' ? 'Initial Review Required' :
-                  req.status === 'approved' ? 'Monitor Progress' :
-                  'Request Completed'
-    }))
+    const recentRequests = allRequests.slice(0, 10).map(req => {
+      const hasUser = usersByEmployeeId.has(req.employeeId)
+      const isActiveUser = hasUser && usersByEmployeeId.get(req.employeeId)
+      
+      return {
+        id: req.id,
+        employeeId: req.employeeId || `REQ${req.id.toString().padStart(3, '0')}`,
+        applicantName: `${req.firstName} ${req.lastName}`,
+        department: req.department?.name || 'N/A',
+        requestType: req.requestedRole?.name || 'Unknown Role',
+        status: req.status === 'PENDING' ? 'Pending Review' : 
+                 req.status === 'APPROVED' ? (isActiveUser ? 'Active User' : 'Approved') :
+                 'Rejected',
+        submittedDate: req.requestedAt.toISOString().split('T')[0],
+        urgency: new Date(req.requestedAt) <= yesterday ? 'High' : 'Normal',
+        nextAction: req.status === 'PENDING' ? 'Initial Review Required' :
+                    req.status === 'APPROVED' ? (isActiveUser ? 'Monitor Progress' : 'User Account Pending') :
+                    'Request Completed'
+      }
+    })
 
     const stats = {
       totalRequests,
@@ -147,7 +165,8 @@ export async function GET(request: NextRequest) {
       totalRequests,
       pendingRequests,
       activeRequests,
-      monthlyProcessed
+      monthlyProcessed,
+      avgProcessingDays
     })
 
     return NextResponse.json({
