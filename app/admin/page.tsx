@@ -153,8 +153,8 @@ export default function AdminPage() {
         throw new Error(data.error || `Failed to ${action} request`)
       }
 
-      // Send email notification
-      await sendEmailNotification(selectedRequest!, action, reviewComment)
+      // Send email notification with correct format
+      await sendEmailNotification(selectedRequest!, action, reviewComment, data.defaultPassword)
 
       // Refresh the requests list
       await loadAccessRequests()
@@ -166,7 +166,7 @@ export default function AdminPage() {
       
       // Show default password for approved requests
       if (action === 'approve' && data.defaultPassword) {
-        setMessage(`Request approved successfully! User account created with default password: ${data.defaultPassword}. User has been notified via email.`)
+        setMessage(`Request approved successfully! User account created with Employee ID: ${selectedRequest!.employeeId} and password: ${data.defaultPassword}. User has been notified via email.`)
       }
       
       setTimeout(() => setMessage(""), 10000)
@@ -181,7 +181,7 @@ export default function AdminPage() {
     }
   }
 
-  const sendEmailNotification = async (request: AccessRequest, action: 'approve' | 'reject', comment: string) => {
+  const sendEmailNotification = async (request: AccessRequest, action: 'approve' | 'reject', comment: string, defaultPassword?: string) => {
     try {
       await fetch('/api/notifications/email', {
         method: 'POST',
@@ -189,17 +189,12 @@ export default function AdminPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          type: action === 'approve' ? 'access_approved' : 'access_rejected',
           to: request.email,
-          type: action === 'approve' ? 'ACCESS_APPROVED' : 'ACCESS_REJECTED',
-          data: {
-            firstName: request.firstName,
-            lastName: request.lastName,
-            employeeId: request.employeeId,
-            role: request.requestedRole.name,
-            department: request.department?.name || 'Not specified',
-            comment: comment,
-            defaultPassword: action === 'approve' ? 'Welcome@123' : null
-          }
+          userName: `${request.firstName} ${request.lastName}`,
+          employeeId: request.employeeId,
+          password: defaultPassword || 'Welcome@123',
+          reason: comment || null
         })
       })
     } catch (error) {
