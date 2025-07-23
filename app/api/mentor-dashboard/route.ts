@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
               department: true
             }
           },
-          trainee: {
+          request: {
             include: {
               role: true,
               department: true
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
           }
         },
         orderBy: {
-          createdAt: 'desc'
+          assignmentDate: 'desc'
         }
       })
     } catch (error) {
@@ -59,8 +59,8 @@ export async function GET(request: NextRequest) {
       // Create mock mentor assignments
       mentorAssignments = accessRequests.slice(0, 10).map((req, index) => ({
         id: index + 1,
-        status: 'active',
-        createdAt: req.requestedAt,
+        assignmentStatus: 'ACTIVE',
+        assignmentDate: req.requestedAt,
         mentor: {
           id: 1,
           firstName: 'Current',
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
           role: { name: 'Mentor' },
           department: { name: 'Learning & Development' }
         },
-        trainee: {
+        request: {
           id: req.id,
           firstName: req.firstName,
           lastName: req.lastName,
@@ -89,10 +89,15 @@ export async function GET(request: NextRequest) {
               role: true,
               department: true
             }
+          },
+          assignment: {
+            include: {
+              request: true
+            }
           }
         },
         orderBy: {
-          createdAt: 'desc'
+          submissionDate: 'desc'
         }
       })
     } catch (error) {
@@ -100,12 +105,14 @@ export async function GET(request: NextRequest) {
       // Simulate project reports
       projectReports = mentorAssignments.slice(0, 5).map((assignment, index) => ({
         id: index + 1,
-        title: `Weekly Progress Report - ${assignment.trainee.firstName}`,
-        status: index % 3 === 0 ? 'submitted' : index % 3 === 1 ? 'draft' : 'overdue',
-        createdAt: new Date(Date.now() - (index * 7 * 24 * 60 * 60 * 1000)),
+        reportTitle: `Weekly Progress Report - ${assignment.request.firstName}`,
+        status: index % 3 === 0 ? 'SUBMITTED' : index % 3 === 1 ? 'DRAFT' : 'OVERDUE',
+        submissionDate: new Date(Date.now() - (index * 7 * 24 * 60 * 60 * 1000)),
         submitter: assignment.mentor,
-        traineeId: assignment.trainee.id,
-        traineeName: `${assignment.trainee.firstName} ${assignment.trainee.lastName}`
+        assignment: {
+          request: assignment.request
+        },
+        traineeName: `${assignment.request.firstName} ${assignment.request.lastName}`
       }))
     }
 
@@ -113,20 +120,20 @@ export async function GET(request: NextRequest) {
 
     // Calculate Mentor specific statistics
     const totalTrainees = mentorAssignments.length
-    const activeTrainees = mentorAssignments.filter(assignment => assignment.status === 'active' || !assignment.status).length
-    const completedAssignments = mentorAssignments.filter(assignment => assignment.status === 'completed').length
-    const pendingReports = projectReports.filter(report => report.status === 'draft' || report.status === 'overdue').length
+    const activeTrainees = mentorAssignments.filter(assignment => assignment.assignmentStatus === 'ACTIVE').length
+    const completedAssignments = mentorAssignments.filter(assignment => assignment.assignmentStatus === 'COMPLETED').length
+    const pendingReports = projectReports.filter(report => report.status === 'DRAFT' || report.status === 'OVERDUE').length
     
     // Performance metrics
-    const submittedReports = projectReports.filter(report => report.status === 'submitted').length
-    const overdueReports = projectReports.filter(report => report.status === 'overdue').length
+    const submittedReports = projectReports.filter(report => report.status === 'SUBMITTED').length
+    const overdueReports = projectReports.filter(report => report.status === 'OVERDUE').length
     const reportSubmissionRate = projectReports.length > 0 ? Math.round((submittedReports / projectReports.length) * 100) : 0
     
     // Monthly metrics
     const currentMonth = new Date().getMonth()
     const currentYear = new Date().getFullYear()
     const monthlyReports = projectReports.filter(report => {
-      const reportDate = new Date(report.createdAt)
+      const reportDate = new Date(report.submissionDate)
       return reportDate.getMonth() === currentMonth && reportDate.getFullYear() === currentYear
     }).length
 
@@ -140,12 +147,12 @@ export async function GET(request: NextRequest) {
       const year = date.getFullYear()
 
       const monthReports = projectReports.filter(report => {
-        const reportDate = new Date(report.createdAt)
+        const reportDate = new Date(report.submissionDate)
         return reportDate.getMonth() === monthIndex && reportDate.getFullYear() === year
       })
 
-      const submitted = monthReports.filter(report => report.status === 'submitted').length
-      const overdue = monthReports.filter(report => report.status === 'overdue').length
+      const submitted = monthReports.filter(report => report.status === 'SUBMITTED').length
+      const overdue = monthReports.filter(report => report.status === 'OVERDUE').length
       const total = monthReports.length
 
       progressTrends.push({ month, submitted, overdue, total })
@@ -153,33 +160,40 @@ export async function GET(request: NextRequest) {
 
     // Trainee performance breakdown
     const traineePerformance = mentorAssignments.map(assignment => {
-      const traineeReports = projectReports.filter(report => report.traineeId === assignment.trainee.id)
-      const submittedCount = traineeReports.filter(report => report.status === 'submitted').length
-      const overdueCount = traineeReports.filter(report => report.status === 'overdue').length
+      const traineeReports = projectReports.filter(report => 
+        report.assignment?.request?.id === assignment.request.id
+      )
+      const submittedCount = traineeReports.filter(report => report.status === 'SUBMITTED').length
+      const overdueCount = traineeReports.filter(report => report.status === 'OVERDUE').length
       
       return {
-        trainee: `${assignment.trainee.firstName} ${assignment.trainee.lastName}`,
-        department: assignment.trainee.department?.name || 'N/A',
+        trainee: `${assignment.request.firstName} ${assignment.request.lastName}`,
+        department: assignment.request.department?.name || 'N/A',
         totalReports: traineeReports.length,
         submittedReports: submittedCount,
         overdueReports: overdueCount,
         performanceScore: traineeReports.length > 0 ? Math.round((submittedCount / traineeReports.length) * 100) : 0,
-        status: assignment.status || 'active'
+        status: assignment.assignmentStatus?.toLowerCase() || 'active'
       }
     })
 
     // Recent activities and upcoming tasks
-    const recentActivities = projectReports.slice(0, 8).map(report => ({
-      id: report.id,
-      activity: `Progress report for ${report.traineeName}`,
-      type: report.status === 'submitted' ? 'Report Submitted' : 
-            report.status === 'overdue' ? 'Report Overdue' : 'Report Draft',
-      date: report.createdAt.toISOString().split('T')[0],
-      status: report.status,
-      priority: report.status === 'overdue' ? 'High' : 'Normal',
-      action: report.status === 'submitted' ? 'Review Complete' :
-              report.status === 'overdue' ? 'Submit Report' : 'Complete Draft'
-    }))
+    const recentActivities = projectReports.slice(0, 8).map(report => {
+      const traineeName = report.traineeName || 
+        (report.assignment?.request ? `${report.assignment.request.firstName} ${report.assignment.request.lastName}` : 'Unknown Trainee')
+      
+      return {
+        id: report.id,
+        activity: `Progress report for ${traineeName}`,
+        type: report.status === 'SUBMITTED' ? 'Report Submitted' : 
+              report.status === 'OVERDUE' ? 'Report Overdue' : 'Report Draft',
+        date: report.submissionDate.toISOString().split('T')[0],
+        status: report.status.toLowerCase(),
+        priority: report.status === 'OVERDUE' ? 'High' : 'Normal',
+        action: report.status === 'SUBMITTED' ? 'Review Complete' :
+                report.status === 'OVERDUE' ? 'Submit Report' : 'Complete Draft'
+      }
+    })
 
     // Performance distribution for charts
     const performanceDistribution = [
