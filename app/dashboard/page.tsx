@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 // Static imports to ensure modules are found
 import { AdminDashboard } from "../../components/dashboards/admin-dashboard";
 import { CoordinatorDashboard } from "../../components/dashboards/coordinator-dashboard";
+import { LndHodDashboard } from "../../components/dashboards/lnd-hod-dashboard";
 import { HodDashboard } from "../../components/dashboards/hod-dashboard";
 import { MentorDashboard } from "../../components/dashboards/mentor-dashboard";
 
@@ -47,7 +48,7 @@ export default function DashboardPage() {
           break;
           
         case "L&D HoD":
-          component = React.createElement(HodDashboard, { user: userData, roleType: "LD_HOD" });
+          component = React.createElement(LndHodDashboard, { user: userData });
           break;
           
         case "Department HoD":
