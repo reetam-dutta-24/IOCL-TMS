@@ -34,7 +34,6 @@ export async function GET(request: NextRequest) {
           },
           request: {
             include: {
-              role: true,
               department: true
             }
           }
@@ -70,10 +69,9 @@ export async function GET(request: NextRequest) {
         },
         request: {
           id: req.id,
-          firstName: req.firstName,
-          lastName: req.lastName,
-          email: req.email,
-          role: req.requestedRole,
+          traineeName: `${req.firstName} ${req.lastName}`,
+          traineeEmail: req.email,
+          institutionName: 'Mock Institution',
           department: req.department
         }
       }))
@@ -92,7 +90,11 @@ export async function GET(request: NextRequest) {
           },
           assignment: {
             include: {
-              request: true
+              request: {
+                include: {
+                  department: true
+                }
+              }
             }
           }
         },
@@ -105,14 +107,14 @@ export async function GET(request: NextRequest) {
       // Simulate project reports
       projectReports = mentorAssignments.slice(0, 5).map((assignment, index) => ({
         id: index + 1,
-        reportTitle: `Weekly Progress Report - ${assignment.request.firstName}`,
+        reportTitle: `Weekly Progress Report - ${assignment.request.traineeName}`,
         status: index % 3 === 0 ? 'SUBMITTED' : index % 3 === 1 ? 'DRAFT' : 'OVERDUE',
         submissionDate: new Date(Date.now() - (index * 7 * 24 * 60 * 60 * 1000)),
         submitter: assignment.mentor,
         assignment: {
           request: assignment.request
         },
-        traineeName: `${assignment.request.firstName} ${assignment.request.lastName}`
+        traineeName: assignment.request.traineeName
       }))
     }
 
@@ -167,7 +169,7 @@ export async function GET(request: NextRequest) {
       const overdueCount = traineeReports.filter(report => report.status === 'OVERDUE').length
       
       return {
-        trainee: `${assignment.request.firstName} ${assignment.request.lastName}`,
+        trainee: assignment.request.traineeName,
         department: assignment.request.department?.name || 'N/A',
         totalReports: traineeReports.length,
         submittedReports: submittedCount,
@@ -180,7 +182,7 @@ export async function GET(request: NextRequest) {
     // Recent activities and upcoming tasks
     const recentActivities = projectReports.slice(0, 8).map(report => {
       const traineeName = report.traineeName || 
-        (report.assignment?.request ? `${report.assignment.request.firstName} ${report.assignment.request.lastName}` : 'Unknown Trainee')
+        (report.assignment?.request ? report.assignment.request.traineeName : 'Unknown Trainee')
       
       return {
         id: report.id,
