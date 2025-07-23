@@ -37,33 +37,33 @@ export default function DashboardPage() {
       switch (role) {
         case "Admin":
         case "System Administrator":
-          const adminModule = await import("../../components/dashboards/admin-dashboard");
+          const adminModule = await import("@/components/dashboards/admin-dashboard");
           component = React.createElement(adminModule.AdminDashboard, { user });
           break;
           
         case "L&D HoD":
-          const ldHodModule = await import("../../components/dashboards/hod-dashboard");
+          const ldHodModule = await import("@/components/dashboards/hod-dashboard");
           component = React.createElement(ldHodModule.HodDashboard, { user, roleType: "LD_HOD" });
           break;
           
         case "Department HoD":
-          const deptHodModule = await import("../../components/dashboards/hod-dashboard");
+          const deptHodModule = await import("@/components/dashboards/hod-dashboard");
           component = React.createElement(deptHodModule.HodDashboard, { user, roleType: "DEPT_HOD" });
           break;
           
         case "L&D Coordinator":
-          const coordinatorModule = await import("../../components/dashboards/coordinator-dashboard");
+          const coordinatorModule = await import("@/components/dashboards/coordinator-dashboard");
           component = React.createElement(coordinatorModule.CoordinatorDashboard, { user });
           break;
           
         case "Mentor":
-          const mentorModule = await import("../../components/dashboards/mentor-dashboard");
+          const mentorModule = await import("@/components/dashboards/mentor-dashboard");
           component = React.createElement(mentorModule.MentorDashboard, { user });
           break;
           
         default:
           console.warn(`Unknown role: ${role}, falling back to coordinator dashboard`);
-          const fallbackModule = await import("../../components/dashboards/coordinator-dashboard");
+          const fallbackModule = await import("@/components/dashboards/coordinator-dashboard");
           component = React.createElement(fallbackModule.CoordinatorDashboard, { user });
           break;
       }
