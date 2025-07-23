@@ -4,6 +4,12 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
+// Static imports to ensure modules are found
+import { AdminDashboard } from "../../components/dashboards/admin-dashboard";
+import { CoordinatorDashboard } from "../../components/dashboards/coordinator-dashboard";
+import { HodDashboard } from "../../components/dashboards/hod-dashboard";
+import { MentorDashboard } from "../../components/dashboards/mentor-dashboard";
+
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
@@ -20,7 +26,7 @@ export default function DashboardPage() {
     try {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
-      loadDashboardComponent(parsedUser.role);
+      loadDashboardComponent(parsedUser.role, parsedUser);
     } catch (error) {
       console.error("Error parsing user data:", error);
       router.push("/login");
@@ -30,48 +36,42 @@ export default function DashboardPage() {
     setLoading(false);
   }, [router]);
 
-  const loadDashboardComponent = async (role) => {
+  const loadDashboardComponent = (role, userData) => {
     try {
       let component;
       
       switch (role) {
         case "Admin":
         case "System Administrator":
-          const adminModule = await import("@/components/dashboards/admin-dashboard");
-          component = React.createElement(adminModule.AdminDashboard, { user });
+          component = React.createElement(AdminDashboard, { user: userData });
           break;
           
         case "L&D HoD":
-          const ldHodModule = await import("@/components/dashboards/hod-dashboard");
-          component = React.createElement(ldHodModule.HodDashboard, { user, roleType: "LD_HOD" });
+          component = React.createElement(HodDashboard, { user: userData, roleType: "LD_HOD" });
           break;
           
         case "Department HoD":
-          const deptHodModule = await import("@/components/dashboards/hod-dashboard");
-          component = React.createElement(deptHodModule.HodDashboard, { user, roleType: "DEPT_HOD" });
+          component = React.createElement(HodDashboard, { user: userData, roleType: "DEPT_HOD" });
           break;
           
         case "L&D Coordinator":
-          const coordinatorModule = await import("@/components/dashboards/coordinator-dashboard");
-          component = React.createElement(coordinatorModule.CoordinatorDashboard, { user });
+          component = React.createElement(CoordinatorDashboard, { user: userData });
           break;
           
         case "Mentor":
-          const mentorModule = await import("@/components/dashboards/mentor-dashboard");
-          component = React.createElement(mentorModule.MentorDashboard, { user });
+          component = React.createElement(MentorDashboard, { user: userData });
           break;
           
         default:
           console.warn(`Unknown role: ${role}, falling back to coordinator dashboard`);
-          const fallbackModule = await import("@/components/dashboards/coordinator-dashboard");
-          component = React.createElement(fallbackModule.CoordinatorDashboard, { user });
+          component = React.createElement(CoordinatorDashboard, { user: userData });
           break;
       }
       
-      setDashboardComponent(() => component);
+      setDashboardComponent(component);
     } catch (error) {
       console.error("Error loading dashboard component:", error);
-      setDashboardComponent(() => React.createElement("div", { className: "p-8 text-center text-red-600" }, "Error loading dashboard"));
+      setDashboardComponent(React.createElement("div", { className: "p-8 text-center text-red-600" }, "Error loading dashboard"));
     }
   };
 
