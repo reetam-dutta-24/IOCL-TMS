@@ -28,6 +28,9 @@ import {
   Menu,
   X,
   ChevronDown,
+  Shield,
+  Award,
+  Target,
   Home,
   User,
   Shield,
@@ -99,10 +102,13 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
       case "L&D HoD":
         return [
           ...baseNavigation,
+          { name: "L&D Overview", href: "/lnd-hod", icon: Shield },
+          { name: "Quality Assurance", href: "/lnd-hod/quality", icon: Award },
+          { name: "Resource Allocation", href: "/lnd-hod/resources", icon: Target },
           { name: "All Requests", href: "/requests", icon: FileText },
           { name: "All Mentors", href: "/mentors", icon: Users },
           { name: "Executive Reports", href: "/reports", icon: TrendingUp },
-          { name: "Settings", href: "/settings", icon: Settings }
+          { name: "L&D Configuration", href: "/lnd-hod/settings", icon: Settings }
         ]
 
       case "L&D Coordinator":
