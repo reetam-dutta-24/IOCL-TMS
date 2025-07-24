@@ -64,9 +64,30 @@ export async function POST(request: NextRequest) {
         profileColor: `#${Math.floor(Math.random()*16777215).toString(16)}`,
         profileInitials: `${firstName[0]}${lastName[0]}`.toUpperCase()
       },
-      include: {
-        role: true,
-        department: true
+      select: {
+        id: true,
+        employeeId: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        isActive: true,
+        profileColor: true,
+        profileInitials: true,
+        role: {
+          select: {
+            id: true,
+            name: true,
+            description: true
+          }
+        },
+        department: {
+          select: {
+            id: true,
+            name: true,
+            code: true
+          }
+        }
       }
     })
 
