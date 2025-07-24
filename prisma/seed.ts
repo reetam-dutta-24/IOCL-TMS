@@ -13,13 +13,13 @@ async function main() {
     create: {
       name: "L&D Coordinator",
       description: "Learning & Development Coordinator - Initial processing and coordination",
-      permissions: {
+      permissions: JSON.stringify({
         requests: ["create", "read", "update"],
         mentors: ["read"],
         reports: ["create", "read"],
         users: ["read"],
         dashboard: ["read"],
-      },
+      }),
     },
   })
 
@@ -29,14 +29,14 @@ async function main() {
     create: {
       name: "L&D HoD",
       description: "Learning & Development Head of Department - Final approval and policy oversight",
-      permissions: {
+      permissions: JSON.stringify({
         requests: ["create", "read", "update", "approve", "reject"],
         mentors: ["create", "read", "update"],
         reports: ["create", "read", "update"],
         users: ["read", "update"],
         dashboard: ["read", "admin"],
         closure: ["approve"],
-      },
+      }),
     },
   })
 
@@ -46,14 +46,14 @@ async function main() {
     create: {
       name: "Department HoD",
       description: "Department Head of Department - Mentor assignment and departmental coordination",
-      permissions: {
+      permissions: JSON.stringify({
         requests: ["read", "update"],
         mentors: ["assign", "read", "update"],
         reports: ["read"],
         users: ["read"],
         dashboard: ["read"],
         departmental: ["manage"],
-      },
+      }),
     },
   })
 
@@ -63,14 +63,14 @@ async function main() {
     create: {
       name: "Mentor",
       description: "Trainee Mentor - Direct supervision and guidance",
-      permissions: {
+      permissions: JSON.stringify({
         requests: ["read"],
         mentors: ["read"],
         reports: ["create", "read", "update"],
         trainees: ["manage"],
         progress: ["update"],
         evaluation: ["create", "update"],
-      },
+      }),
     },
   })
 
@@ -81,13 +81,13 @@ async function main() {
     create: {
       name: "Admin",
       description: "System Administrator with full access",
-      permissions: {
+      permissions: JSON.stringify({
         users: ["create", "read", "update", "delete"],
         requests: ["create", "read", "update", "delete"],
         mentors: ["create", "read", "update", "delete"],
         reports: ["create", "read", "update", "delete"],
         system: ["manage"],
-      },
+      }),
     },
   })
 
