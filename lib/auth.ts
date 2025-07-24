@@ -56,9 +56,25 @@ export const authenticateUser = async (employeeId: string, password: string) => 
     
     const user = await prisma.user.findUnique({
       where: { employeeId },
-      include: {
-        role: true,
-        department: true
+      select: {
+        id: true,
+        employeeId: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        password: true,
+        isActive: true,
+        profileColor: true,
+        role: {
+          select: {
+            name: true
+          }
+        },
+        department: {
+          select: {
+            name: true
+          }
+        }
       }
     })
 
@@ -115,9 +131,24 @@ export const getUserFromToken = async (token: string) => {
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
-      include: {
-        role: true,
-        department: true
+      select: {
+        id: true,
+        employeeId: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        isActive: true,
+        profileColor: true,
+        role: {
+          select: {
+            name: true
+          }
+        },
+        department: {
+          select: {
+            name: true
+          }
+        }
       }
     })
 
