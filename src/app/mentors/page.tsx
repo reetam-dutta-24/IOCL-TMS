@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { Select, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Search, Users, Award, Plus } from "lucide-react"
 
 export default function MentorsPage() {
@@ -227,4 +227,109 @@ export default function MentorsPage() {
               <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
                 <SelectTrigger className="w-full sm:w-48 border-orange-200">
                   <SelectValue placeholder="Filter by department" />
-                </SelectTrigger>\
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Departments</SelectItem>
+                  <SelectItem value="Information Technology">Information Technology</SelectItem>
+                  <SelectItem value="Engineering">Engineering</SelectItem>
+                  <SelectItem value="Research & Development">Research & Development</SelectItem>
+                  <SelectItem value="Operations">Operations</SelectItem>
+                  <SelectItem value="Human Resources">Human Resources</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
+                <SelectTrigger className="w-full sm:w-48 border-orange-200">
+                  <SelectValue placeholder="Filter by availability" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Mentors</SelectItem>
+                  <SelectItem value="available">Available</SelectItem>
+                  <SelectItem value="full">Full Capacity</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Mentors Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {filteredMentors.map((mentor) => (
+            <Card key={mentor.id} className="border-orange-200 hover:shadow-lg transition-shadow">
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                      {mentor.name.split(' ').map(n => n[0]).join('')}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-red-700">{mentor.name}</h3>
+                      <p className="text-sm text-gray-600">{mentor.designation}</p>
+                      <p className="text-sm text-gray-500">{mentor.department}</p>
+                    </div>
+                  </div>
+                  {getAvailabilityBadge(mentor.currentInterns, mentor.maxInterns)}
+                </div>
+                
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Experience:</span>
+                    <span className="font-medium">{mentor.experience}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Location:</span>
+                    <span className="font-medium">{mentor.location}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Rating:</span>
+                    <span className="font-medium text-yellow-600">★ {mentor.rating}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Completed:</span>
+                    <span className="font-medium">{mentor.completedInternships} internships</span>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <p className="text-sm text-gray-600 mb-2">Specialization:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {mentor.specialization.map((skill, index) => (
+                      <Badge key={index} variant="outline" className="text-xs border-red-200 text-red-700">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center justify-between">
+                  <div className="text-sm text-gray-600">
+                    {mentor.currentInterns}/{mentor.maxInterns} interns
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button variant="outline" size="sm" className="border-red-200 text-red-700 hover:bg-red-50">
+                      View Profile
+                    </Button>
+                    <Button size="sm" className="bg-red-600 hover:bg-red-700">
+                      Assign Intern
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {filteredMentors.length === 0 && (
+          <Card className="border-orange-200">
+            <CardContent className="pt-6">
+              <div className="text-center py-8">
+                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No mentors found</h3>
+                <p className="text-gray-600">Try adjusting your search or filter criteria.</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </DashboardLayout>
+  )
+}
