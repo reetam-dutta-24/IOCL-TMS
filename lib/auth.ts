@@ -12,6 +12,7 @@ export interface AuthUser {
   email: string
   role: string
   department: string
+  profileColor?: string
 }
 
 export const hashPassword = async (password: string): Promise<string> => {
@@ -33,7 +34,8 @@ export const generateToken = (user: AuthUser): string => {
       lastName: user.lastName,
       email: user.email,
       role: user.role,
-      department: user.department
+      department: user.department,
+      profileColor: user.profileColor
     },
     secret,
     { expiresIn: '7d' }
@@ -98,7 +100,8 @@ export const authenticateUser = async (employeeId: string, password: string) => 
       email: user.email,
       role: user.role.name,
       department: user.department?.name || 'Unknown',
-      isActive: user.isActive
+      isActive: user.isActive,
+      profileColor: user.profileColor || '#ef4444'
     }
   } catch (error) {
     console.error('Authentication error:', error)
