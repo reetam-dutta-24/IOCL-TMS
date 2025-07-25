@@ -1,61 +1,44 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { prisma } from "@/lib/prisma"
 
-// Mock mentor data
-const mentors = [
-  {
-    id: "M001",
-    name: "Vikram Gupta",
-    employeeId: "EMP005",
-    department: "Information Technology",
-    email: "vikram.gupta@iocl.co.in",
-    phone: "+91-9876543214",
-    expertise: ["Software Development", "Data Analytics", "AI/ML"],
-    currentTrainees: 2,
-    maxCapacity: 3,
-    totalMentored: 15,
-    rating: 4.8,
-    status: "ACTIVE",
-  },
-  {
-    id: "M002",
-    name: "Meera Joshi",
-    employeeId: "EMP006",
-    department: "Operations",
-    email: "meera.joshi@iocl.co.in",
-    phone: "+91-9876543215",
-    expertise: ["Process Engineering", "Quality Control", "Safety Management"],
-    currentTrainees: 1,
-    maxCapacity: 3,
-    totalMentored: 12,
-    rating: 4.6,
-    status: "ACTIVE",
-  },
-]
+// Force dynamic behavior
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const department = searchParams.get("department")
+    const searchParams = request.nextUrl.searchParams
+    const departmentName = searchParams.get("department")
     const status = searchParams.get("status")
 
-    let filteredMentors = mentors
-
-    if (department) {
-      filteredMentors = filteredMentors.filter((mentor) =>
-        mentor.department.toLowerCase().includes(department.toLowerCase()),
-      )
+    // Build where clause for filtering
+    const where: any = {
+      role: {
+        name: "Mentor"
+      },
+      isActive: true
     }
 
-    if (status) {
-      filteredMentors = filteredMentors.filter((mentor) => mentor.status === status)
+    if (departmentName && departmentName !== "all") {
+      where.department = {
+        name: departmentName
+      }
     }
 
-    return NextResponse.json({
-      success: true,
-      data: filteredMentors,
-      total: filteredMentors.length,
+    // Fetch mentors from database (simplified)
+    const mentors = await prisma.user.findMany({
+      where,
+      include: {
+        department: true,
+        role: true,
+      },
+      orderBy: {
+        firstName: "asc"
+      }
     })
+
+    return NextResponse.json({ success: true, data: mentors }, { status: 200 })
   } catch (error) {
+    console.error("Mentors API error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

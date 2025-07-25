@@ -1,52 +1,58 @@
 import { type NextRequest, NextResponse } from "next/server"
-
-// Mock user data - in production, this would come from your database
-const users = [
-  {
-    employeeId: "EMP001",
-    password: "demo123",
-    name: "Rajesh Kumar",
-    role: "L&D HoD",
-    department: "Learning & Development",
-    email: "rajesh.kumar@iocl.co.in",
-  },
-  {
-    employeeId: "EMP002",
-    password: "demo123",
-    name: "Priya Sharma",
-    role: "L&D Coordinator",
-    department: "Learning & Development",
-    email: "priya.sharma@iocl.co.in",
-  },
-  {
-    employeeId: "EMP003",
-    password: "demo123",
-    name: "Amit Singh",
-    role: "Department HoD",
-    department: "Information Technology",
-    email: "amit.singh@iocl.co.in",
-  },
-]
+import { authenticateUser, generateToken } from "@/lib/auth"
 
 export async function POST(request: NextRequest) {
   try {
     const { employeeId, password } = await request.json()
 
-    // Find user
-    const user = users.find((u) => u.employeeId === employeeId && u.password === password)
+    console.log(`🚀 Login attempt - Employee ID: ${employeeId}, Password provided: ${!!password}`)
+
+    if (!employeeId || !password) {
+      console.log(`❌ Missing credentials - Employee ID: ${!!employeeId}, Password: ${!!password}`)
+      return NextResponse.json({ error: "Employee ID and password are required" }, { status: 400 })
+    }
+
+    // Authenticate user against database
+    const user = await authenticateUser(employeeId, password)
 
     if (!user) {
+      console.log(`❌ Authentication failed for Employee ID: ${employeeId}`)
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
     }
 
-    // Remove password from response
-    const { password: _, ...userWithoutPassword } = user
+    console.log(`✅ Authentication successful for: ${user.employeeId} - ${user.firstName} ${user.lastName}`)
 
-    return NextResponse.json({
+    // Generate JWT token
+    const token = generateToken(user)
+
+    // Create response with user data (fixed the role and department access)
+    const response = NextResponse.json({
       success: true,
-      user: userWithoutPassword,
+      user: {
+        id: user.id,
+        employeeId: user.employeeId,
+        name: `${user.firstName} ${user.lastName}`,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role, // This is already a string from authenticateUser
+        department: user.department, // This is already a string from authenticateUser
+        isActive: true,
+      },
+      token,
     })
+
+    // Set HTTP-only cookie for token
+    response.cookies.set("auth-token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    })
+
+    return response
   } catch (error) {
+    console.error("Authentication error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
