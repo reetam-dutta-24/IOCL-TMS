@@ -347,6 +347,14 @@ export default function LoginPage() {
                 <span className="text-blue-700">Mentor:</span>
                 <span className="font-mono text-blue-800">EMP004 / demo123</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-blue-700">Trainee:</span>
+                <span className="font-mono text-blue-800">EMP010 / demo123</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-blue-700">Admin:</span>
+                <span className="font-mono text-blue-800">ADMIN001 / admin123</span>
+              </div>
             </div>
           </CardContent>
         </Card>

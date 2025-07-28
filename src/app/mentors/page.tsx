@@ -5,9 +5,10 @@ import { DashboardLayout } from "@/src/components/dashboard/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Select, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Users, Award, Plus } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Search, Users, Award, Plus, RefreshCw, UserCheck, Target, Star, Building, Clock, AlertCircle } from "lucide-react"
 
 export default function MentorsPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -100,27 +101,27 @@ export default function MentorsPage() {
       name: "Ms. Kavya Nair",
       email: "kavya.nair@iocl.com",
       phone: "+91-98765-43215",
-      department: "Human Resources",
-      designation: "Assistant Manager",
-      experience: "8 years",
-      specialization: ["Talent Management", "Training & Development", "Employee Relations"],
+      department: "Finance",
+      designation: "Senior Manager",
+      experience: "13 years",
+      specialization: ["Financial Analysis", "Risk Management", "Budget Planning"],
       currentInterns: 2,
-      maxInterns: 4,
-      location: "Kochi",
-      rating: 4.8,
-      completedInternships: 12,
+      maxInterns: 3,
+      location: "Hyderabad",
+      rating: 4.4,
+      completedInternships: 19,
       avatar: "/placeholder.svg?height=64&width=64",
     },
   ]
 
   const getAvailabilityBadge = (current: number, max: number) => {
-    const available = max - current
-    if (available === 0) {
-      return <Badge variant="destructive" className="bg-red-100 text-red-800">Full</Badge>
-    } else if (available === 1) {
-      return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">1 Slot</Badge>
+    const percentage = (current / max) * 100
+    if (percentage >= 100) {
+      return <Badge className="bg-red-100 text-red-800 px-3 py-1">Full</Badge>
+    } else if (percentage >= 75) {
+      return <Badge className="bg-yellow-100 text-yellow-800 px-3 py-1">Limited</Badge>
     } else {
-      return <Badge variant="default" className="bg-green-100 text-green-800">{available} Slots</Badge>
+      return <Badge className="bg-green-100 text-green-800 px-3 py-1">Available</Badge>
     }
   }
 
@@ -138,93 +139,222 @@ export default function MentorsPage() {
     return matchesSearch && matchesDepartment && matchesAvailability
   })
 
+  // Calculate dynamic stats
+  const totalMentors = mentors.length
+  const availableMentors = mentors.filter(m => m.currentInterns < m.maxInterns).length
+  const activeTrainees = mentors.reduce((sum, m) => sum + m.currentInterns, 0)
+  const avgRating = mentors.length > 0 ? (mentors.reduce((sum, m) => sum + m.rating, 0) / mentors.length).toFixed(1) : "0"
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        {/* Header and Stats Section (L&D HoD style) */}
+        <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-red-700">Mentors</h1>
-            <p className="text-gray-600 mt-1">
-              Manage and assign mentors to internship programs
-            </p>
+            <h1 className="text-3xl font-bold text-gray-900">Mentor Dashboard</h1>
+            <p className="text-gray-600">Manage and assign mentors to internship programs</p>
           </div>
-          <Button className="bg-red-600 hover:bg-red-700">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Mentor
-          </Button>
+          <div className="flex items-center gap-3">
+            <Badge className="bg-orange-100 text-orange-800 px-3 py-1">
+              <Users className="h-4 w-4 mr-2" />
+              Mentor Management
+            </Badge>
+            <Button 
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Refresh
+            </Button>
+          </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="border-orange-200">
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <Users className="h-8 w-8 text-red-600" />
-                <div className="ml-4">
+        {/* Stats Grid (L&D HoD style, dynamic mentor stats) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
                   <p className="text-sm font-medium text-gray-600">Total Mentors</p>
-                  <p className="text-2xl font-bold text-red-700">{mentors.length}</p>
+                  <p className="text-2xl font-bold text-gray-900">{totalMentors}</p>
+                  <p className="text-xs text-blue-600 mt-1">All time</p>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-orange-200">
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <Award className="h-8 w-8 text-green-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Available Slots</p>
-                  <p className="text-2xl font-bold text-green-700">
-                    {mentors.reduce((acc, mentor) => acc + (mentor.maxInterns - mentor.currentInterns), 0)}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-orange-200">
-            <CardContent className="pt-6">
-              <div className="flex items-center">
                 <Users className="h-8 w-8 text-blue-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Active Interns</p>
-                  <p className="text-2xl font-bold text-blue-700">
-                    {mentors.reduce((acc, mentor) => acc + mentor.currentInterns, 0)}
-                  </p>
-                </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="border-orange-200">
-            <CardContent className="pt-6">
-              <div className="flex items-center">
-                <Award className="h-8 w-8 text-purple-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Avg Rating</p>
-                  <p className="text-2xl font-bold text-purple-700">
-                    {(mentors.reduce((acc, mentor) => acc + mentor.rating, 0) / mentors.length).toFixed(1)}
-                  </p>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Available</p>
+                  <p className="text-2xl font-bold text-green-600">{availableMentors}</p>
+                  <p className="text-xs text-green-600 mt-1">Ready to mentor</p>
                 </div>
+                <UserCheck className="h-8 w-8 text-green-600" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Active Trainees</p>
+                  <p className="text-2xl font-bold text-purple-600">{activeTrainees}</p>
+                  <p className="text-xs text-purple-600 mt-1">Currently assigned</p>
+                </div>
+                <Target className="h-8 w-8 text-purple-600" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Avg Rating</p>
+                  <p className="text-2xl font-bold text-yellow-600">{avgRating}</p>
+                  <p className="text-xs text-yellow-600 mt-1">Mentor feedback</p>
+                </div>
+                <Star className="h-8 w-8 text-yellow-600" />
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Filters */}
-        <Card className="border-orange-200">
-          <CardContent className="pt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Filter Mentors</CardTitle>
+          </CardHeader>
+          <CardContent>
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Search by name, department, or skills..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 border-orange-200 focus:border-red-500"
-                  />
-                </div>
+                <Input
+                  placeholder="Search by name, department, or specialization..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full"
+                />
               </div>
               <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-                <SelectTrigger className="w-full sm:w-48 border-orange-200">
+                <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="Filter by department" />
-                </SelectTrigger>\
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Departments</SelectItem>
+                  <SelectItem value="Information Technology">Information Technology</SelectItem>
+                  <SelectItem value="Engineering">Engineering</SelectItem>
+                  <SelectItem value="Research & Development">Research & Development</SelectItem>
+                  <SelectItem value="Operations">Operations</SelectItem>
+                  <SelectItem value="Finance">Finance</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Filter by availability" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Availability</SelectItem>
+                  <SelectItem value="available">Available</SelectItem>
+                  <SelectItem value="full">Full Capacity</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Mentors Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredMentors.map((mentor) => (
+            <Card key={mentor.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader className="pb-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Users className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{mentor.name}</h3>
+                      <p className="text-sm text-gray-500">{mentor.designation}</p>
+                      <div className="flex items-center mt-1">
+                        <Star className="h-4 w-4 text-yellow-500 fill-current mr-1" />
+                        <span className="text-sm font-medium">{mentor.rating}</span>
+                      </div>
+                    </div>
+                  </div>
+                  {getAvailabilityBadge(mentor.currentInterns, mentor.maxInterns)}
+                </div>
+              </CardHeader>
+              
+              <CardContent className="space-y-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Department</p>
+                  <p className="text-sm text-gray-900">{mentor.department}</p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Experience</p>
+                  <p className="text-sm text-gray-900">{mentor.experience}</p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-2">Specialization</p>
+                  <div className="flex flex-wrap gap-1">
+                    {mentor.specialization.slice(0, 2).map((skill, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {skill}
+                      </Badge>
+                    ))}
+                    {mentor.specialization.length > 2 && (
+                      <Badge variant="outline" className="text-xs">
+                        +{mentor.specialization.length - 2} more
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-gray-600">Capacity</span>
+                    <span className="font-medium">{mentor.currentInterns}/{mentor.maxInterns}</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full" 
+                      style={{ width: `${(mentor.currentInterns / mentor.maxInterns) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-xs text-gray-600">
+                  <div>
+                    <span className="block">Completed</span>
+                    <span className="font-medium text-gray-900">{mentor.completedInternships}</span>
+                  </div>
+                  <div>
+                    <span className="block">Location</span>
+                    <span className="font-medium text-gray-900">{mentor.location}</span>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <Button variant="outline" size="sm" className="w-full">
+                    <Users className="h-3 w-3 mr-1" />
+                    View Details
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {filteredMentors.length === 0 && (
+          <div className="text-center py-12">
+            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500">No mentors found matching your criteria</p>
+          </div>
+        )}
+      </div>
+    </DashboardLayout>
+  )
+}

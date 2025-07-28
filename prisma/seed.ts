@@ -13,13 +13,13 @@ async function main() {
     create: {
       name: "L&D Coordinator",
       description: "Learning & Development Coordinator - Initial processing and coordination",
-      permissions: {
+      permissions: JSON.stringify({
         requests: ["create", "read", "update"],
         mentors: ["read"],
         reports: ["create", "read"],
         users: ["read"],
         dashboard: ["read"],
-      },
+      }),
     },
   })
 
@@ -29,14 +29,14 @@ async function main() {
     create: {
       name: "L&D HoD",
       description: "Learning & Development Head of Department - Final approval and policy oversight",
-      permissions: {
+      permissions: JSON.stringify({
         requests: ["create", "read", "update", "approve", "reject"],
         mentors: ["create", "read", "update"],
         reports: ["create", "read", "update"],
         users: ["read", "update"],
         dashboard: ["read", "admin"],
         closure: ["approve"],
-      },
+      }),
     },
   })
 
@@ -46,14 +46,14 @@ async function main() {
     create: {
       name: "Department HoD",
       description: "Department Head of Department - Mentor assignment and departmental coordination",
-      permissions: {
+      permissions: JSON.stringify({
         requests: ["read", "update"],
         mentors: ["assign", "read", "update"],
         reports: ["read"],
         users: ["read"],
         dashboard: ["read"],
         departmental: ["manage"],
-      },
+      }),
     },
   })
 
@@ -63,14 +63,31 @@ async function main() {
     create: {
       name: "Mentor",
       description: "Trainee Mentor - Direct supervision and guidance",
-      permissions: {
+      permissions: JSON.stringify({
         requests: ["read"],
         mentors: ["read"],
         reports: ["create", "read", "update"],
         trainees: ["manage"],
         progress: ["update"],
         evaluation: ["create", "update"],
-      },
+      }),
+    },
+  })
+
+  const traineeRole = await prisma.role.upsert({
+    where: { name: "Trainee" },
+    update: {},
+    create: {
+      name: "Trainee",
+      description: "Intern/Trainee - Learning and development participant",
+      permissions: JSON.stringify({
+        progress: ["read", "update"],
+        reports: ["create", "read"],
+        mentor: ["read"],
+        materials: ["read"],
+        assignments: ["read", "update"],
+        evaluations: ["read"],
+      }),
     },
   })
 
@@ -81,13 +98,13 @@ async function main() {
     create: {
       name: "Admin",
       description: "System Administrator with full access",
-      permissions: {
+      permissions: JSON.stringify({
         users: ["create", "read", "update", "delete"],
         requests: ["create", "read", "update", "delete"],
         mentors: ["create", "read", "update", "delete"],
         reports: ["create", "read", "update", "delete"],
         system: ["manage"],
-      },
+      }),
     },
   })
 
@@ -248,6 +265,17 @@ async function main() {
       departmentId: itDept.id,
       isActive: true,
     },
+    {
+      employeeId: "EMP010",
+      firstName: "Arjun",
+      lastName: "Sharma",
+      email: "arjun.sharma@iocl.co.in",
+      password: await hashPassword("demo123"),
+      phone: "+91-9876543220",
+      roleId: traineeRole.id,
+      departmentId: itDept.id,
+      isActive: true,
+    },
   ]
 
   for (const userData of users) {
@@ -346,6 +374,7 @@ async function main() {
   console.log("   - L&D HoD (EMP001 - Rajesh Kumar)")
   console.log("   - Department HoD (EMP003 - Amit Singh, EMP006 - Suresh Patel, EMP007 - Kavita Verma)")
   console.log("   - Mentor (EMP004 - Vikram Gupta, EMP005 - Meera Joshi)")
+  console.log("   - Trainee (EMP010 - Arjun Sharma)")
   console.log("   - Admin (ADMIN001 - System Admin)")
   console.log("🏢 Created departments: L&D, IT, Operations, Engineering, Finance, HR")
   console.log("📝 Created 5 sample internship requests")

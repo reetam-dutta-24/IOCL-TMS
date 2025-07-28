@@ -5,109 +5,106 @@ generator client {
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
-}model User {
-  id                    Int                    @id @default(autoincrement())
-  employeeId            String                 @unique
-  firstName             String
-  lastName              String
-  email                 String                 @unique
-  password              String?
-  phone                 String?
-  roleId                Int
-  departmentId          Int?
-  isActive              Boolean                @default(false)
-  lastLogin             DateTime?
-  profileColor          String?
-  profileInitials       String?
-  googleId              String?               @unique
-  passwordResetToken    String?
-  passwordResetExpires  DateTime?
-  emailVerified         Boolean               @default(false)
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-  
-  role                  Role                   @relation(fields: [roleId], references: [id])
-  department            Department?            @relation(fields: [departmentId], references: [id])
-  
-  submittedRequests     InternshipRequest[]    @relation("RequestSubmitter")
-  mentorAssignments     MentorAssignment[]     @relation("MentorUser")
-  assignedMentorships   MentorAssignment[]     @relation("AssignedBy")
-  approvals             Approval[]
-  projectReports        ProjectReport[]        @relation("ReportSubmitter")
-  auditTrails           AuditTrail[]
-  notifications         Notification[]
-  uploadedAttachments   DocumentAttachment[]   @relation("AttachmentUploader")
-  accessRequests        AccessRequest[]        @relation("RequestUser")
-  reviewedRequests      AccessRequest[]        @relation("ReviewedBy")
-  
+}
+
+model User {
+  id                      Int                       @id @default(autoincrement())
+  employeeId              String                    @unique
+  firstName               String
+  lastName                String
+  email                   String                    @unique
+  password                String?
+  phone                   String?
+  roleId                  Int
+  departmentId            Int?
+  isActive                Boolean                   @default(false)
+  lastLogin               DateTime?
+  profileColor            String?
+  profileInitials         String?
+  googleId                String?                   @unique
+  passwordResetToken      String?
+  passwordResetExpires    DateTime?
+  emailVerified           Boolean                   @default(false)
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  reviewedRequests        AccessRequest[]           @relation("ReviewedBy")
+  accessRequests          AccessRequest[]           @relation("RequestUser")
+  approvals               Approval[]
+  auditTrails             AuditTrail[]
+  uploadedAttachments     DocumentAttachment[]      @relation("AttachmentUploader")
+  receivedStudentDetails  ForwardedStudentDetails[] @relation("ForwardedTo")
+  forwardedStudentDetails ForwardedStudentDetails[] @relation("ForwardedBy")
+  traineeApplications     InternshipApplication[]   @relation("ApplicationTrainee")
+  mentorApplications      InternshipApplication[]   @relation("ApplicationMentor")
+  reviewedApplications    InternshipApplication[]   @relation("ApplicationReviewer")
+  submittedRequests       InternshipRequest[]       @relation("RequestSubmitter")
+  assignedMentorships     MentorAssignment[]        @relation("AssignedBy")
+  mentorAssignments       MentorAssignment[]        @relation("MentorUser")
+  notifications           Notification[]
+  projectReports          ProjectReport[]           @relation("ReportSubmitter")
+  department              Department?               @relation(fields: [departmentId], references: [id])
+  role                    Role                      @relation(fields: [roleId], references: [id])
+
   @@map("users")
 }
 
 model AccessRequest {
-  id                    Int                    @id @default(autoincrement())
-  firstName             String
-  lastName              String
-  email                 String
-  phone                 String?
-  employeeId            String
-  requestedRoleId       Int
-  departmentId          Int?
-  institutionName       String?
-  purpose               String?
-  status                AccessRequestStatus    @default(PENDING)
-  requestedBy           Int?
-  reviewedBy            Int?
-  reviewComment         String?
-  requestedAt           DateTime               @default(now())
-  reviewedAt            DateTime?
-  
-  requestedRole         Role                   @relation(fields: [requestedRoleId], references: [id])
-  department            Department?            @relation(fields: [departmentId], references: [id])
-  requester             User?                  @relation("RequestUser", fields: [requestedBy], references: [id])
-  reviewer              User?                  @relation("ReviewedBy", fields: [reviewedBy], references: [id])
-  
+  id              Int         @id @default(autoincrement())
+  firstName       String
+  lastName        String
+  email           String
+  phone           String?
+  employeeId      String
+  requestedRoleId Int
+  departmentId    Int?
+  institutionName String?
+  purpose         String?
+  status          String      @default("PENDING")
+  requestedBy     Int?
+  reviewedBy      Int?
+  reviewComment   String?
+  requestedAt     DateTime    @default(now())
+  reviewedAt      DateTime?
+  reviewer        User?       @relation("ReviewedBy", fields: [reviewedBy], references: [id])
+  requester       User?       @relation("RequestUser", fields: [requestedBy], references: [id])
+  department      Department? @relation(fields: [departmentId], references: [id])
+  requestedRole   Role        @relation(fields: [requestedRoleId], references: [id])
+
   @@map("access_requests")
 }
 
-enum AccessRequestStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
 model Role {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  description String?
-  permissions Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  users         User[]
+  id             Int             @id @default(autoincrement())
+  name           String          @unique
+  description    String?
+  permissions    Json?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
   accessRequests AccessRequest[]
-  
+  users          User[]
+
   @@map("roles")
 }
 
 model Department {
-  id                Int                 @id @default(autoincrement())
-  name              String
-  code              String              @unique
-  description       String?
-  hodId             Int?
-  isActive          Boolean             @default(true)
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  
-  users             User[]
+  id                 Int                 @id @default(autoincrement())
+  name               String
+  code               String              @unique
+  description        String?
+  hodId              Int?
+  isActive           Boolean             @default(true)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  accessRequests     AccessRequest[]
   internshipRequests InternshipRequest[]
-  accessRequests    AccessRequest[]
-  
+  users              User[]
+
   @@map("departments")
 }
 
 model InternshipRequest {
-  id                  Int                 @id @default(autoincrement())
-  requestNumber       String              @unique
+  id                  Int                  @id @default(autoincrement())
+  requestNumber       String               @unique
   traineeName         String
   traineeEmail        String?
   traineePhone        String?
@@ -116,21 +113,19 @@ model InternshipRequest {
   internshipDuration  Int
   preferredDepartment Int?
   requestDescription  String?
-  priority            Priority            @default(MEDIUM)
-  status              RequestStatus       @default(SUBMITTED)
+  priority            String               @default("MEDIUM")
+  status              String               @default("SUBMITTED")
   requestedBy         Int
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
-  
-  submitter           User                @relation("RequestSubmitter", fields: [requestedBy], references: [id])
-  department          Department?         @relation(fields: [preferredDepartment], references: [id])
-  
-  mentorAssignments   MentorAssignment[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
   approvals           Approval[]
-  projectReports      ProjectReport[]
-  letters             Letter[]
   documentAttachments DocumentAttachment[]
-  
+  department          Department?          @relation(fields: [preferredDepartment], references: [id])
+  submitter           User                 @relation("RequestSubmitter", fields: [requestedBy], references: [id])
+  letters             Letter[]
+  mentorAssignments   MentorAssignment[]
+  projectReports      ProjectReport[]
+
   @@map("internship_requests")
 }
 
@@ -140,17 +135,15 @@ model MentorAssignment {
   mentorId            Int
   assignedBy          Int?
   assignmentDate      DateTime          @default(now())
-  assignmentStatus    AssignmentStatus  @default(ACTIVE)
+  assignmentStatus    String            @default("ACTIVE")
   startDate           DateTime?
   endDate             DateTime?
   notes               String?
-  
-  request             InternshipRequest @relation(fields: [internshipRequestId], references: [id])
-  mentor              User              @relation("MentorUser", fields: [mentorId], references: [id])
   assigner            User?             @relation("AssignedBy", fields: [assignedBy], references: [id])
-  
+  mentor              User              @relation("MentorUser", fields: [mentorId], references: [id])
+  request             InternshipRequest @relation(fields: [internshipRequestId], references: [id])
   projectReports      ProjectReport[]
-  
+
   @@unique([internshipRequestId, mentorId])
   @@map("mentor_assignments")
 }
@@ -160,37 +153,35 @@ model Approval {
   internshipRequestId Int
   approverId          Int
   level               Int
-  status              ApprovalStatus    @default(PENDING)
+  status              String            @default("PENDING")
   comments            String?
   approvedAt          DateTime?
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
-  
-  internshipRequest   InternshipRequest @relation(fields: [internshipRequestId], references: [id])
   approver            User              @relation(fields: [approverId], references: [id])
-  
+  internshipRequest   InternshipRequest @relation(fields: [internshipRequestId], references: [id])
+
   @@map("approvals")
 }
 
 model ProjectReport {
-  id                  Int               @id @default(autoincrement())
-  assignmentId        Int
-  submittedBy         Int
-  requestId           Int?
-  reportType          ReportType
-  reportTitle         String?
-  reportContent       String?
-  submissionDate      DateTime          @default(now())
-  performanceRating   Float?
-  behavioralComments  String?
-  technicalSkills     String?
-  areasOfImprovement  String?
-  status              ReportStatus      @default(SUBMITTED)
-
-  assignment          MentorAssignment  @relation(fields: [assignmentId], references: [id])
-  submitter           User              @relation("ReportSubmitter", fields: [submittedBy], references: [id])
-  request             InternshipRequest? @relation(fields: [requestId], references: [id])
-  attachments         DocumentAttachment[]
+  id                 Int                  @id @default(autoincrement())
+  assignmentId       Int
+  submittedBy        Int
+  requestId          Int?
+  reportType         String
+  reportTitle        String?
+  reportContent      String?
+  submissionDate     DateTime             @default(now())
+  performanceRating  Float?
+  behavioralComments String?
+  technicalSkills    String?
+  areasOfImprovement String?
+  status             String               @default("SUBMITTED")
+  attachments        DocumentAttachment[]
+  request            InternshipRequest?   @relation(fields: [requestId], references: [id])
+  submitter          User                 @relation("ReportSubmitter", fields: [submittedBy], references: [id])
+  assignment         MentorAssignment     @relation(fields: [assignmentId], references: [id])
 
   @@map("project_reports")
 }
@@ -198,49 +189,46 @@ model ProjectReport {
 model Letter {
   id                  Int               @id @default(autoincrement())
   internshipRequestId Int
-  letterType          LetterType
+  letterType          String
   content             String
   generatedAt         DateTime          @default(now())
   issuedBy            String?
   letterNumber        String            @unique
-  
   internshipRequest   InternshipRequest @relation(fields: [internshipRequestId], references: [id])
-  
+
   @@map("letters")
 }
 
 model DocumentAttachment {
-  id                  Int               @id @default(autoincrement())
-  requestId           Int?
-  reportId            Int?
-  fileName            String
-  filePath            String
-  fileSize            Int
-  fileType            String
-  uploadDate          DateTime          @default(now())
-  uploadedBy          Int
-  
-  request             InternshipRequest? @relation(fields: [requestId], references: [id])
-  report              ProjectReport?     @relation(fields: [reportId], references: [id])
-  uploader            User               @relation("AttachmentUploader", fields: [uploadedBy], references: [id])
-  
+  id         Int                @id @default(autoincrement())
+  requestId  Int?
+  reportId   Int?
+  fileName   String
+  filePath   String
+  fileSize   Int
+  fileType   String
+  uploadDate DateTime           @default(now())
+  uploadedBy Int
+  uploader   User               @relation("AttachmentUploader", fields: [uploadedBy], references: [id])
+  report     ProjectReport?     @relation(fields: [reportId], references: [id])
+  request    InternshipRequest? @relation(fields: [requestId], references: [id])
+
   @@map("document_attachments")
 }
 
 model AuditTrail {
-  id          Int      @id @default(autoincrement())
-  tableName   String
-  recordId    Int
-  action      String
-  oldValues   Json?
-  newValues   Json?
-  changedBy   Int
-  changedAt   DateTime @default(now())
-  ipAddress   String?
-  userAgent   String?
-  
-  user        User     @relation(fields: [changedBy], references: [id])
-  
+  id        Int      @id @default(autoincrement())
+  tableName String
+  recordId  Int
+  action    String
+  oldValues Json?
+  newValues Json?
+  changedBy Int
+  changedAt DateTime @default(now())
+  ipAddress String?
+  userAgent String?
+  user      User     @relation(fields: [changedBy], references: [id])
+
   @@map("audit_trail")
 }
 
@@ -250,79 +238,79 @@ model SystemConfig {
   value       String
   description String?
   updatedAt   DateTime @updatedAt
-  
+
   @@map("system_config")
 }
 
 model Notification {
-  id          Int              @id @default(autoincrement())
-  userId      Int
-  type        NotificationType
-  title       String
-  message     String
-  isRead      Boolean          @default(false)
-  priority    Priority         @default(MEDIUM)
-  createdAt   DateTime         @default(now())
-  readAt      DateTime?
-  
-  user        User             @relation(fields: [userId], references: [id])
-  
+  id                      Int                       @id @default(autoincrement())
+  userId                  Int
+  type                    String
+  title                   String
+  message                 String
+  isRead                  Boolean                   @default(false)
+  priority                String                    @default("MEDIUM")
+  status                  String?                   @default("UNREAD")
+  actionUrl               String?
+  data                    String?
+  createdAt               DateTime                  @default(now())
+  readAt                  DateTime?
+  forwardedStudentDetails ForwardedStudentDetails[]
+  user                    User                      @relation(fields: [userId], references: [id])
+
   @@map("notifications")
 }
 
-enum Priority {
-  LOW
-  MEDIUM
-  HIGH
+model ForwardedStudentDetails {
+  id                Int          @id @default(autoincrement())
+  notificationId    Int
+  department        String
+  applicationsCount Int
+  applications      String
+  forwardedBy       Int
+  forwardedTo       Int
+  status            String       @default("PENDING_LND_REVIEW")
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  forwardedToUser   User         @relation("ForwardedTo", fields: [forwardedTo], references: [id])
+  forwardedByUser   User         @relation("ForwardedBy", fields: [forwardedBy], references: [id])
+  notification      Notification @relation(fields: [notificationId], references: [id])
+
+  @@map("forwarded_student_details")
 }
 
-enum RequestStatus {
-  SUBMITTED
-  UNDER_REVIEW
-  MENTOR_ASSIGNED
-  APPROVED
-  REJECTED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-}
+model InternshipApplication {
+  id                  Int       @id @default(autoincrement())
+  applicationNumber   String    @unique
+  firstName           String
+  lastName            String
+  email               String    @unique
+  phone               String
+  institutionName     String
+  courseName          String
+  currentYear         Int
+  cgpa                Float?
+  preferredDepartment String
+  internshipDuration  Int
+  startDate           DateTime
+  endDate             DateTime
+  skills              String?
+  projectInterests    String?
+  motivation          String
+  resumePath          String?
+  coverLetterPath     String?
+  status              String    @default("PENDING")
+  reviewNotes         String?
+  reviewedBy          Int?
+  reviewedAt          DateTime?
+  decisionDate        DateTime?
+  mentorAssignedId    Int?
+  traineeUserId       Int?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  traineeUser         User?     @relation("ApplicationTrainee", fields: [traineeUserId], references: [id])
+  assignedMentor      User?     @relation("ApplicationMentor", fields: [mentorAssignedId], references: [id])
+  reviewer            User?     @relation("ApplicationReviewer", fields: [reviewedBy], references: [id])
 
-enum AssignmentStatus {
-  ACTIVE
-  COMPLETED
-  CANCELLED
-}
-
-enum ApprovalStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-enum ReportType {
-  WEEKLY
-  MONTHLY
-  FINAL
-  BEHAVIORAL
-}
-
-enum ReportStatus {
-  SUBMITTED
-  REVIEWED
-  APPROVED
-  NEEDS_REVISION
-}
-
-enum LetterType {
-  OFFER
-  COMPLETION
-  RECOMMENDATION
-  NOC
-}
-
-enum NotificationType {
-  EMAIL
-  SMS
-  IN_APP
-  PUSH
+  @@map("internship_applications")
 }

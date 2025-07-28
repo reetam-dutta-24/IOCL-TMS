@@ -9,6 +9,7 @@ import { AdminDashboard } from "../../components/dashboards/admin-dashboard";
 import { CoordinatorDashboard } from "../../components/dashboards/coordinator-dashboard";
 import { HodDashboard } from "../../components/dashboards/hod-dashboard";
 import { MentorDashboard } from "../../components/dashboards/mentor-dashboard";
+import { TraineeDashboard } from "../../components/dashboards/trainee-dashboard";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -60,6 +61,10 @@ export default function DashboardPage() {
           
         case "Mentor":
           component = React.createElement(MentorDashboard, { user: userData });
+          break;
+          
+        case "Trainee":
+          component = React.createElement(TraineeDashboard, { user: userData });
           break;
           
         default:

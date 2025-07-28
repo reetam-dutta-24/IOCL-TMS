@@ -119,32 +119,19 @@ export function AdminDashboard({ user }: { user: any }) {
         ])
       }
 
-      // Mock metrics data for now (will be replaced with real data later)
-      setMetrics({
-        userGrowth: [
-          { month: "Jan", count: 45 },
-          { month: "Feb", count: 52 },
-          { month: "Mar", count: 48 },
-          { month: "Apr", count: 61 },
-          { month: "May", count: 55 },
-          { month: "Jun", count: 67 }
-        ],
-        requestTrends: [
-          { month: "Jan", submitted: 23, approved: 18 },
-          { month: "Feb", submitted: 31, approved: 24 },
-          { month: "Mar", submitted: 28, approved: 22 },
-          { month: "Apr", submitted: 35, approved: 29 },
-          { month: "May", submitted: 42, approved: 31 },
-          { month: "Jun", submitted: 38, approved: 33 }
-        ],
-        departmentStats: [
-          { department: "L&D", users: 12, requests: 28 },
-          { department: "IT", users: 18, requests: 42 },
-          { department: "Operations", users: 15, requests: 31 },
-          { department: "Engineering", users: 22, requests: 38 },
-          { department: "Finance", users: 8, requests: 16 }
-        ]
-      })
+      // Fetch real metrics data from API
+      const metricsResponse = await fetch('/api/admin/metrics')
+      if (metricsResponse.ok) {
+        const metricsData = await metricsResponse.json()
+        setMetrics(metricsData)
+      } else {
+        // Fallback to empty metrics if API fails
+        setMetrics({
+          userGrowth: [],
+          requestTrends: [],
+          departmentStats: []
+        })
+      }
 
     } catch (error) {
       console.error("💥 Failed to fetch admin dashboard data:", error)

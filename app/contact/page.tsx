@@ -1,29 +1,39 @@
 "use client"
 
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { IndianOilLogo } from "@/components/ui/logo"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { 
-  ArrowLeft, 
-  Phone, 
-  Mail, 
-  MapPin, 
-  Clock,
+  ArrowRight, 
   Send,
-  MessageCircle,
-  Headphones,
+  Users,
   Building,
-  AlertCircle,
-  Users
+  GraduationCap,
+  CheckCircle,
+  AlertCircle
 } from "lucide-react"
+import Link from "next/link"
 
 export default function ContactPage() {
+  const router = useRouter()
+
+  useEffect(() => {
+    // Check if user is logged in and has L&D Coordinator role
+    const userData = localStorage.getItem("user")
+    if (userData) {
+      const user = JSON.parse(userData)
+      if (user.role === 'L&D Coordinator') {
+        // Redirect L&D Coordinators to the Send Request page
+        router.push("/send-request")
+        return
+      }
+    }
+  }, [router])
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -33,21 +43,21 @@ export default function ContactPage() {
             <div className="flex items-center">
               <Link href="/">
                 <Button variant="ghost" className="text-red-600 hover:text-red-700 mr-4">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  <ArrowRight className="h-4 w-4 mr-2 rotate-180" />
                   Back to Home
                 </Button>
               </Link>
               <div className="flex items-center">
                 <IndianOilLogo width={40} height={40} className="mr-3" />
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Contact Support</h1>
-                  <p className="text-sm text-gray-600">Get help with TAMS</p>
+                  <h1 className="text-2xl font-bold text-gray-900">Send Request</h1>
+                  <p className="text-sm text-gray-600">L&D Coordinator Portal</p>
                 </div>
               </div>
             </div>
             <Badge className="bg-green-100 text-green-800">
-              <Headphones className="h-3 w-3 mr-1" />
-              24/7 Support
+              <CheckCircle className="h-3 w-3 mr-1" />
+              Active
             </Badge>
           </div>
         </div>
@@ -55,330 +65,203 @@ export default function ContactPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Contact Information */}
+        
+        {/* Information Alert */}
+        <Alert className="border-blue-200 bg-blue-50 mb-8">
+          <AlertCircle className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-700">
+            <strong>L&D Coordinator Access:</strong> This page has been updated to provide direct access to the trainee request management system. 
+            If you're an L&D Coordinator, you'll be automatically redirected to the Send Request portal.
+          </AlertDescription>
+        </Alert>
+
+        {/* New Send Request Section */}
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Get in Touch
+            L&D Coordinator Portal
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Our support team is ready to help you with any questions or issues regarding IOCL TAMS.
+            Select approved trainees and send their details to LND HOD for review and department assignment.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-          {/* Contact Methods */}
-          <div className="lg:col-span-1 space-y-6">
-            <Card className="border-red-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Phone className="h-5 w-5 text-red-600" />
-                  Phone Support
-                </CardTitle>
-                <CardDescription>Immediate assistance for urgent issues</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          {/* Send Request Card */}
+          <Card className="border-blue-100">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Send className="h-5 w-5 text-blue-600" />
+                Send Trainee Request
+              </CardTitle>
+              <CardDescription>
+                Access the trainee management system to select approved trainees and forward their details to LND HOD
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <Users className="h-5 w-5 text-blue-600" />
                   <div>
-                    <p className="font-medium text-gray-900">Primary Support Line</p>
-                    <p className="text-red-600 font-semibold">+91-11-2338-9999</p>
-                    <p className="text-sm text-gray-500">Mon-Fri: 9:00 AM - 6:00 PM</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">Emergency IT Support</p>
-                    <p className="text-red-600 font-semibold">+91-11-2338-8888</p>
-                    <p className="text-sm text-gray-500">24/7 for critical issues</p>
+                    <p className="font-medium text-gray-900">Select Approved Trainees</p>
+                    <p className="text-sm text-gray-600">Choose from approved trainee applications</p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-red-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Mail className="h-5 w-5 text-red-600" />
-                  Email Support
-                </CardTitle>
-                <CardDescription>Detailed assistance and documentation</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
+                
+                <div className="flex items-center space-x-3">
+                  <Building className="h-5 w-5 text-blue-600" />
                   <div>
-                    <p className="font-medium text-gray-900">General Support</p>
-                    <p className="text-red-600 font-semibold">tams@iocl.co.in</p>
-                    <p className="text-sm text-gray-500">Response within 4 hours</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">Technical Issues</p>
-                    <p className="text-red-600 font-semibold">tams-tech@iocl.co.in</p>
-                    <p className="text-sm text-gray-500">Response within 2 hours</p>
+                    <p className="font-medium text-gray-900">Target Department</p>
+                    <p className="text-sm text-gray-600">Specify the department for assignment</p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-red-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-red-600" />
-                  Office Location
-                </CardTitle>
-                <CardDescription>Visit us for in-person support</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
+                
+                <div className="flex items-center space-x-3">
+                  <GraduationCap className="h-5 w-5 text-blue-600" />
                   <div>
-                    <p className="font-medium text-gray-900">L&D Department</p>
-                    <p className="text-gray-600">IndianOil Bhavan</p>
-                    <p className="text-gray-600">G-9, Ali Yavar Jung Marg</p>
-                    <p className="text-gray-600">Bandra (East), Mumbai - 400051</p>
-                  </div>
-                  <div className="flex items-center text-sm text-gray-500">
-                    <Clock className="h-4 w-4 mr-2" />
-                    Mon-Fri: 9:00 AM - 5:30 PM
+                    <p className="font-medium text-gray-900">Forward to LND HOD</p>
+                    <p className="text-sm text-gray-600">Send complete trainee details for review</p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Contact Form */}
-          <div className="lg:col-span-2">
-            <Card className="border-red-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageCircle className="h-5 w-5 text-red-600" />
-                  Send us a Message
-                </CardTitle>
-                <CardDescription>
-                  Fill out the form below and we will get back to you as soon as possible
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name *</Label>
-                      <Input
-                        id="firstName"
-                        placeholder="Enter your first name"
-                        className="border-red-200 focus:border-red-500 focus:ring-red-500"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name *</Label>
-                      <Input
-                        id="lastName"
-                        placeholder="Enter your last name"
-                        className="border-red-200 focus:border-red-500 focus:ring-red-500"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email Address *</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="your.email@iocl.co.in"
-                        className="border-red-200 focus:border-red-500 focus:ring-red-500"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="+91-XXXXXXXXXX"
-                        className="border-red-200 focus:border-red-500 focus:ring-red-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="employeeId">Employee ID</Label>
-                      <Input
-                        id="employeeId"
-                        placeholder="EMP001"
-                        className="border-red-200 focus:border-red-500 focus:ring-red-500"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="department">Department</Label>
-                      <Select>
-                        <SelectTrigger className="border-red-200 focus:border-red-500 focus:ring-red-500">
-                          <SelectValue placeholder="Select your department" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ld">Learning & Development</SelectItem>
-                          <SelectItem value="it">Information Technology</SelectItem>
-                          <SelectItem value="operations">Operations</SelectItem>
-                          <SelectItem value="engineering">Engineering</SelectItem>
-                          <SelectItem value="finance">Finance</SelectItem>
-                          <SelectItem value="hr">Human Resources</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="category">Issue Category *</Label>
-                    <Select>
-                      <SelectTrigger className="border-red-200 focus:border-red-500 focus:ring-red-500">
-                        <SelectValue placeholder="Select issue category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="account">Account Access Issues</SelectItem>
-                        <SelectItem value="technical">Technical Problems</SelectItem>
-                        <SelectItem value="requests">Internship Requests</SelectItem>
-                        <SelectItem value="mentors">Mentor Assignment</SelectItem>
-                        <SelectItem value="reports">Reports & Analytics</SelectItem>
-                        <SelectItem value="general">General Inquiry</SelectItem>
-                        <SelectItem value="feedback">Feedback & Suggestions</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="priority">Priority Level</Label>
-                    <Select>
-                      <SelectTrigger className="border-red-200 focus:border-red-500 focus:ring-red-500">
-                        <SelectValue placeholder="Select priority level" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Low - General inquiry</SelectItem>
-                        <SelectItem value="medium">Medium - Non-urgent issue</SelectItem>
-                        <SelectItem value="high">High - Affects daily work</SelectItem>
-                        <SelectItem value="urgent">Urgent - System down/blocking</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="subject">Subject *</Label>
-                    <Input
-                      id="subject"
-                      placeholder="Brief description of your issue"
-                      className="border-red-200 focus:border-red-500 focus:ring-red-500"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="message">Message *</Label>
-                    <Textarea
-                      id="message"
-                      placeholder="Provide detailed information about your issue, including any error messages, steps taken, and expected behavior..."
-                      className="border-red-200 focus:border-red-500 focus:ring-red-500 min-h-[120px]"
-                      required
-                    />
-                  </div>
-
-                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                    <div className="flex">
-                      <AlertCircle className="h-5 w-5 text-blue-600 mr-3 mt-0.5" />
-                      <div>
-                        <h4 className="font-medium text-blue-900">For Faster Resolution:</h4>
-                        <ul className="text-sm text-blue-700 mt-1 space-y-1">
-                          <li>• Include specific error messages if any</li>
-                          <li>• Mention your browser type and version</li>
-                          <li>• Provide screenshots if applicable</li>
-                          <li>• Include steps to reproduce the issue</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Button type="submit" className="w-full bg-red-600 hover:bg-red-700" size="lg">
+              </div>
+              
+              <div className="mt-6">
+                <Link href="/send-request">
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700" size="lg">
                     <Send className="h-4 w-4 mr-2" />
-                    Send Message
+                    Access Send Request Portal
                   </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* FAQ and Additional Resources */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <Card className="text-center border-blue-100">
-            <CardContent className="pt-6">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <MessageCircle className="h-6 w-6 text-blue-600" />
+                </Link>
               </div>
-              <h3 className="font-semibold mb-2">FAQ</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Find answers to common questions
-              </p>
-              <Link href="/faq">
-                <Button variant="outline" size="sm" className="border-blue-600 text-blue-600">
-                  View FAQ
-                </Button>
-              </Link>
             </CardContent>
           </Card>
 
-          <Card className="text-center border-green-100">
-            <CardContent className="pt-6">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Users className="h-6 w-6 text-green-600" />
+          {/* Features Card */}
+          <Card className="border-green-100">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                Key Features
+              </CardTitle>
+              <CardDescription>
+                Streamlined workflow for trainee management and department coordination
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <div>
+                    <p className="font-medium text-gray-900">Bulk Selection</p>
+                    <p className="text-sm text-gray-600">Select multiple trainees at once</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <div>
+                    <p className="font-medium text-gray-900">Department Filtering</p>
+                    <p className="text-sm text-gray-600">Filter by preferred departments</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <div>
+                    <p className="font-medium text-gray-900">Detailed View</p>
+                    <p className="text-sm text-gray-600">View complete trainee information</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <div>
+                    <p className="font-medium text-gray-900">Instant Notification</p>
+                    <p className="text-sm text-gray-600">Automatic notification to LND HOD</p>
+                  </div>
+                </div>
               </div>
-              <h3 className="font-semibold mb-2">User Guide</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Step-by-step instructions for using TAMS
-              </p>
-              <Link href="/user-guide">
-                <Button variant="outline" size="sm" className="border-green-600 text-green-600">
-                  View Guide
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          <Card className="text-center border-purple-100">
-            <CardContent className="pt-6">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Building className="h-6 w-6 text-purple-600" />
-              </div>
-              <h3 className="font-semibold mb-2">System Status</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Check current system availability
-              </p>
-              <Button variant="outline" size="sm" className="border-purple-600 text-purple-600">
-                Check Status
-              </Button>
             </CardContent>
           </Card>
         </div>
 
-        {/* Response Time Information */}
-        <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
-          <CardContent className="py-8">
-            <div className="text-center">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
-                Support Response Times
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div>
-                  <div className="text-2xl font-bold text-green-600 mb-1">15min</div>
-                  <div className="text-sm text-gray-600">Urgent Issues</div>
+        {/* Process Flow */}
+        <Card className="border-purple-100">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ArrowRight className="h-5 w-5 text-purple-600" />
+              Process Flow
+            </CardTitle>
+            <CardDescription>
+              How the trainee request system works
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Users className="h-6 w-6 text-blue-600" />
                 </div>
-                <div>
-                  <div className="text-2xl font-bold text-green-600 mb-1">2hrs</div>
-                  <div className="text-sm text-gray-600">High Priority</div>
+                <h3 className="font-semibold text-gray-900 mb-1">1. Select Trainees</h3>
+                <p className="text-sm text-gray-600">Choose approved trainees from the list</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Building className="h-6 w-6 text-green-600" />
                 </div>
-                <div>
-                  <div className="text-2xl font-bold text-green-600 mb-1">4hrs</div>
-                  <div className="text-sm text-gray-600">Medium Priority</div>
+                <h3 className="font-semibold text-gray-900 mb-1">2. Choose Department</h3>
+                <p className="text-sm text-gray-600">Select target department for assignment</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Send className="h-6 w-6 text-purple-600" />
                 </div>
-                <div>
-                  <div className="text-2xl font-bold text-green-600 mb-1">24hrs</div>
-                  <div className="text-sm text-gray-600">General Inquiries</div>
+                <h3 className="font-semibold text-gray-900 mb-1">3. Send Request</h3>
+                <p className="text-sm text-gray-600">Forward details to LND HOD</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="h-6 w-6 text-orange-600" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-1">4. HOD Review</h3>
+                <p className="text-sm text-gray-600">LND HOD reviews and approves</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Contact Information for Non-Coordinators */}
+        <Card className="mt-12 border-gray-200">
+          <CardHeader>
+            <CardTitle>Need Help?</CardTitle>
+            <CardDescription>
+              If you're not an L&D Coordinator or need additional assistance
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3">Contact Support</h3>
+                <div className="space-y-2 text-sm">
+                  <p><strong>Email:</strong> tams@iocl.co.in</p>
+                  <p><strong>Phone:</strong> +91-11-2338-9999</p>
+                  <p><strong>Hours:</strong> Mon-Fri, 9AM-6PM</p>
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3">Quick Links</h3>
+                <div className="space-y-2">
+                  <Link href="/user-guide" className="block text-blue-600 hover:text-blue-700 text-sm">
+                    User Guide
+                  </Link>
+                  <Link href="/faq" className="block text-blue-600 hover:text-blue-700 text-sm">
+                    FAQ
+                  </Link>
+                  <Link href="/dashboard" className="block text-blue-600 hover:text-blue-700 text-sm">
+                    Dashboard
+                  </Link>
                 </div>
               </div>
             </div>

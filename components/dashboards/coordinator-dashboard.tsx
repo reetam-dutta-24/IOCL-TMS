@@ -24,14 +24,17 @@ import {
   Route,
   BarChart3,
   Download,
-  Mail,
   ArrowRight,
   Activity
 } from "lucide-react"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import Link from "next/link"
+import { toast } from "sonner"
+
 
 interface CoordinatorStats {
+  // Access Request Stats
   totalRequests: number
   pendingRequests: number
   activeRequests: number
@@ -40,6 +43,16 @@ interface CoordinatorStats {
   monthlyProcessed: number
   avgProcessingTime: string
   urgentRequests: number
+  
+  // Internship Application Stats
+  totalInternshipApplications: number
+  pendingInternshipApplications: number
+  approvedInternshipApplications: number
+  rejectedInternshipApplications: number
+  
+  // Combined Stats
+  totalApplications: number
+  totalPending: number
 }
 
 interface RequestMetrics {
@@ -67,6 +80,31 @@ export function CoordinatorDashboard({ user }: { user: any }) {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [internshipApplications, setInternshipApplications] = useState<any[]>([])
+  const [notifications, setNotifications] = useState<any[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  
+
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await fetch(`/api/notifications?userId=${user.id}&role=${user.role}`)
+      if (response.ok) {
+        const data = await response.json()
+        setNotifications(data.notifications || [])
+        setUnreadCount(data.unreadCount || 0)
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error)
+    }
+  }
+
+  useEffect(() => {
+    fetchNotifications()
+    // Poll for new notifications every 30 seconds
+    const interval = setInterval(fetchNotifications, 30000)
+    return () => clearInterval(interval)
+  }, [user.id, user.role])
 
   useEffect(() => {
     fetchDashboardData()
@@ -86,6 +124,8 @@ export function CoordinatorDashboard({ user }: { user: any }) {
       })
 
       if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`HTTP error! status: ${response.status}, response: ${errorText}`)
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
@@ -97,9 +137,10 @@ export function CoordinatorDashboard({ user }: { user: any }) {
 
       console.log("📊 Received dashboard data:", data)
       
-      setStats(data.stats)
-      setMetrics(data.metrics)
+      setStats(data.stats || {})
+      setMetrics(data.metrics || {})
       setRecentRequests(data.recentRequests || [])
+      setInternshipApplications(data.internshipApplications || [])
 
     } catch (error) {
       console.error("💥 Failed to fetch coordinator dashboard data:", error)
@@ -114,7 +155,13 @@ export function CoordinatorDashboard({ user }: { user: any }) {
         departmentRequests: 0,
         monthlyProcessed: 0,
         avgProcessingTime: "N/A",
-        urgentRequests: 0
+        urgentRequests: 0,
+        totalInternshipApplications: 0,
+        pendingInternshipApplications: 0,
+        approvedInternshipApplications: 0,
+        rejectedInternshipApplications: 0,
+        totalApplications: 0,
+        totalPending: 0
       })
       setMetrics({
         statusDistribution: [],
@@ -122,6 +169,7 @@ export function CoordinatorDashboard({ user }: { user: any }) {
         departmentBreakdown: []
       })
       setRecentRequests([])
+      setInternshipApplications([])
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -229,6 +277,14 @@ export function CoordinatorDashboard({ user }: { user: any }) {
     )
   }
 
+
+
+
+
+
+
+
+
   return (
     <DashboardLayout user={user}>
       <div className="space-y-6">
@@ -304,9 +360,9 @@ export function CoordinatorDashboard({ user }: { user: any }) {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Requests</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats?.totalRequests || 0}</p>
-                  <p className="text-xs text-blue-600 mt-1">All time managed</p>
+                  <p className="text-sm font-medium text-gray-600">Total Applications</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats?.totalApplications || 0}</p>
+                  <p className="text-xs text-blue-600 mt-1">Access + Internship</p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                   <FileText className="h-6 w-6 text-blue-600" />
@@ -324,7 +380,7 @@ export function CoordinatorDashboard({ user }: { user: any }) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Pending Review</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats?.pendingRequests || 0}</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats?.totalPending || 0}</p>
                   <p className="text-xs text-orange-600 mt-1">Awaiting your action</p>
                 </div>
                 <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -333,8 +389,30 @@ export function CoordinatorDashboard({ user }: { user: any }) {
               </div>
               <div className="mt-4">
                 <Link href="/requests?filter=pending">
-                  <Button size="sm" className="w-full" disabled={!stats?.pendingRequests}>
+                  <Button size="sm" className="w-full" disabled={!stats?.totalPending}>
                     Review Now
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Internship Apps</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats?.totalInternshipApplications || 0}</p>
+                  <p className="text-xs text-purple-600 mt-1">Student applications</p>
+                </div>
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <Users className="h-6 w-6 text-purple-600" />
+                </div>
+              </div>
+              <div className="mt-4">
+                <Link href="/internship-applications">
+                  <Button size="sm" className="w-full" disabled={!stats?.totalInternshipApplications}>
+                    View All
                   </Button>
                 </Link>
               </div>
@@ -347,10 +425,10 @@ export function CoordinatorDashboard({ user }: { user: any }) {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Active Users</p>
                   <p className="text-2xl font-bold text-gray-900">{stats?.activeRequests || 0}</p>
-                  <p className="text-xs text-blue-600 mt-1">Currently active</p>
+                  <p className="text-xs text-green-600 mt-1">Currently active</p>
                 </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Activity className="h-6 w-6 text-blue-600" />
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <Activity className="h-6 w-6 text-green-600" />
                 </div>
               </div>
               <div className="mt-4">
@@ -361,26 +439,76 @@ export function CoordinatorDashboard({ user }: { user: any }) {
               </div>
             </CardContent>
           </Card>
+        </div>
 
+        {/* Real-time Notifications */}
+        {notifications.length > 0 && (
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Avg Processing</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats?.avgProcessingTime || "N/A"}</p>
-                  <p className="text-xs text-green-600 mt-1">Response time</p>
-                </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="h-6 w-6 text-green-600" />
-                </div>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <MessageSquare className="h-5 w-5 mr-2" />
+                Recent Notifications
+                {unreadCount > 0 && (
+                  <Badge className="ml-2 bg-red-500 text-white">
+                    {unreadCount} new
+                  </Badge>
+                )}
+              </CardTitle>
+              <CardDescription>
+                Real-time updates for new applications and requests
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {notifications.slice(0, 5).map((notification) => (
+                  <div
+                    key={notification.id}
+                    className={`p-3 rounded-lg border ${
+                      notification.status === "UNREAD" 
+                        ? "bg-blue-50 border-blue-200" 
+                        : "bg-gray-50 border-gray-200"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium text-sm">
+                            {notification.title}
+                          </h4>
+                          {notification.priority === "HIGH" && (
+                            <Badge className="bg-red-100 text-red-800 text-xs">
+                              High Priority
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {notification.message}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-2">
+                          {new Date(notification.timestamp).toLocaleString()}
+                        </p>
+                      </div>
+                      {notification.actionUrl && (
+                        <Link href={notification.actionUrl}>
+                          <Button size="sm" variant="outline">
+                            View
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="mt-4 flex items-center text-sm">
-                <Calendar className="h-4 w-4 text-green-500 mr-1" />
-                <span className="text-green-600">Real-time data</span>
-              </div>
+              {notifications.length > 5 && (
+                <div className="mt-4 text-center">
+                  <Button variant="outline" size="sm">
+                    View All Notifications ({notifications.length})
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
-        </div>
+        )}
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -417,17 +545,68 @@ export function CoordinatorDashboard({ user }: { user: any }) {
             <Card>
               <CardHeader>
                 <CardTitle>Recent Requests</CardTitle>
-                <CardDescription>Latest access requests requiring attention</CardDescription>
+                <CardDescription>Latest access requests and internship applications requiring attention</CardDescription>
               </CardHeader>
               <CardContent>
-                {recentRequests.length > 0 ? (
+                {(recentRequests.length > 0 || internshipApplications.length > 0) ? (
                   <div className="space-y-4">
-                    {recentRequests.map((request) => (
-                      <div key={request.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    {/* Show internship applications first (pending ones) */}
+                    {internshipApplications.slice(0, 5).map((app) => (
+                      <div key={`app-${app.id}`} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-medium text-gray-900">{app.firstName} {app.lastName}</h4>
+                            <div className="flex items-center space-x-2">
+                              <Badge className="bg-blue-100 text-blue-800 text-xs">External</Badge>
+                              {getStatusBadge(app.status === "PENDING" ? "Pending Review" : app.status === "APPROVED" ? "Approved" : "Rejected")}
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                            <div>
+                              <span className="font-medium">Email:</span> {app.email}
+                            </div>
+                            <div>
+                              <span className="font-medium">Institution:</span> {app.institutionName}
+                            </div>
+                            <div>
+                              <span className="font-medium">Course:</span> {app.courseName}
+                            </div>
+                            <div>
+                              <span className="font-medium">Department:</span> {app.preferredDepartment}
+                            </div>
+                          </div>
+                          <div className="mt-2 flex items-center text-sm">
+                            <ArrowRight className="h-4 w-4 text-blue-500 mr-1" />
+                            <span className="text-blue-600 font-medium">
+                              {app.status === "PENDING" ? "Review Required" : 
+                               app.status === "APPROVED" ? "Approved - Assign Mentor" : 
+                               "Request Completed"}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="ml-4 flex space-x-2">
+                          <Link href={`/internship-applications/${app.id}`}>
+                            <Button variant="outline" size="sm">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          <Link href="/requests">
+                            <Button size="sm">
+                              <Send className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* Show access requests */}
+                    {recentRequests.slice(0, 5).map((request) => (
+                      <div key={`req-${request.id}`} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-2">
                             <h4 className="font-medium text-gray-900">{request.applicantName}</h4>
                             <div className="flex items-center space-x-2">
+                              <Badge className="bg-gray-100 text-gray-800 text-xs">Internal</Badge>
                               {getUrgencyBadge(request.urgency)}
                               {getStatusBadge(request.status)}
                             </div>
@@ -482,153 +661,11 @@ export function CoordinatorDashboard({ user }: { user: any }) {
         </div>
 
         {/* Analytics and Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Request Status Distribution</CardTitle>
-              <CardDescription>Current status breakdown of all requests</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {metrics?.statusDistribution && metrics.statusDistribution.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={metrics.statusDistribution}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {metrics.statusDistribution.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-[300px] flex items-center justify-center text-gray-500">
-                  <div className="text-center">
-                    <BarChart3 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                    <p>No data available</p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Monthly Processing Trends</CardTitle>
-              <CardDescription>Request submission, processing, and routing trends</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {metrics?.monthlyTrends && metrics.monthlyTrends.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={metrics.monthlyTrends}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="submitted" stroke="#3b82f6" strokeWidth={2} name="Submitted" />
-                    <Line type="monotone" dataKey="processed" stroke="#10b981" strokeWidth={2} name="Processed" />
-                    <Line type="monotone" dataKey="routed" stroke="#8b5cf6" strokeWidth={2} name="Routed to HoDs" />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-[300px] flex items-center justify-center text-gray-500">
-                  <div className="text-center">
-                    <TrendingUp className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                    <p>No trends data available</p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Department Breakdown */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Department Request Overview</CardTitle>
-            <CardDescription>Request status breakdown by department</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {metrics?.departmentBreakdown && metrics.departmentBreakdown.length > 0 ? (
-              <div className="space-y-4">
-                {metrics.departmentBreakdown.map((dept, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center">
-                      <Building className="h-5 w-5 text-gray-400 mr-3" />
-                      <span className="font-medium text-gray-900">{dept.department}</span>
-                    </div>
-                    <div className="flex items-center space-x-6">
-                      <div className="text-center">
-                        <p className="text-sm font-medium text-orange-600">{dept.pending}</p>
-                        <p className="text-xs text-gray-500">Pending</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-sm font-medium text-blue-600">{dept.active}</p>
-                        <p className="text-xs text-gray-500">Active</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-sm font-medium text-green-600">{dept.completed}</p>
-                        <p className="text-xs text-gray-500">Completed</p>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        <Mail className="h-4 w-4 mr-1" />
-                        Contact HoD
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <Building className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>No department data available</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* Removed 'Request Status Distribution' and 'Monthly Processing Trends' sections as per user request */}
 
         {/* Performance Summary */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Monthly Performance</CardTitle>
-              <CardDescription>Your coordination efficiency this month</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Requests Processed</span>
-                <span className="text-lg font-semibold">{stats?.monthlyProcessed || 0}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Average Response Time</span>
-                <span className="text-lg font-semibold">{stats?.avgProcessingTime || "N/A"}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Completion Rate</span>
-                <span className="text-lg font-semibold text-green-600">
-                  {stats && stats.totalRequests > 0 
-                    ? `${Math.round((stats.completedRequests / stats.totalRequests) * 100)}%`
-                    : "N/A"
-                  }
-                </span>
-              </div>
-              <div className="pt-4">
-                <Button className="w-full" variant="outline">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export Monthly Report
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
+          {/* Removed 'Monthly Performance' section as per user request */}
           <Card>
             <CardHeader>
               <CardTitle>Key Responsibilities</CardTitle>
@@ -654,7 +691,66 @@ export function CoordinatorDashboard({ user }: { user: any }) {
             </CardContent>
           </Card>
         </div>
+
+        {/* Internship Applications Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Internship Applications</CardTitle>
+            <CardDescription>All trainee applications (pending first, then approved)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {internshipApplications.length > 0 ? (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Application #</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Institution</TableHead>
+                      <TableHead>Course</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Applied</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {internshipApplications.map((app) => (
+                      <TableRow key={app.id} className={app.status === "PENDING" ? "bg-yellow-50" : app.status === "APPROVED" ? "bg-green-50" : ""}>
+                        <TableCell>{app.applicationNumber}</TableCell>
+                        <TableCell>{app.firstName} {app.lastName}</TableCell>
+                        <TableCell>{app.email}</TableCell>
+                        <TableCell>{app.institutionName}</TableCell>
+                        <TableCell>{app.courseName}</TableCell>
+                        <TableCell>{app.preferredDepartment}</TableCell>
+                        <TableCell>
+                          <Badge className={app.status === "PENDING" ? "bg-yellow-100 text-yellow-800" : app.status === "APPROVED" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
+                            {app.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{new Date(app.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <Link href={`/internship-applications/${app.id}`}>
+                            <Button size="sm" variant="outline">View</Button>
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p>No internship applications found</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
+
+
     </DashboardLayout>
   )
 }

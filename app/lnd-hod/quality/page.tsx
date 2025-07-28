@@ -119,7 +119,7 @@ export default function QualityAssurancePage() {
     try {
       setIsRefreshing(true)
       
-      // Simulate API calls with fallback data
+      // Fetch real quality data from APIs
       const [metricsRes, alertsRes, trendsRes, deptRes] = await Promise.all([
         fetch("/api/lnd/quality/metrics").catch(() => ({ ok: false })),
         fetch("/api/lnd/quality/alerts").catch(() => ({ ok: false })),
@@ -127,80 +127,47 @@ export default function QualityAssurancePage() {
         fetch("/api/lnd/quality/departments").catch(() => ({ ok: false }))
       ])
 
-      // Use real data if available, otherwise fallback to demo data
-      setQualityMetrics({
-        overallScore: 87.5,
-        totalPrograms: 156,
-        compliantPrograms: 142,
-        nonCompliantPrograms: 14,
-        averageSatisfaction: 4.7,
-        averageCompletion: 94.2,
-        totalFeedbacks: 1234,
-        mentorPerformance: 91.3
-      })
+      // Use real data if available, otherwise show empty state
+      if (metricsRes.ok) {
+        const metricsData = await metricsRes.json()
+        setQualityMetrics(metricsData)
+      } else {
+        console.error("Failed to load quality metrics:", metricsRes.status)
+        setQualityMetrics({
+          overallScore: 0,
+          totalPrograms: 0,
+          compliantPrograms: 0,
+          nonCompliantPrograms: 0,
+          averageSatisfaction: 0,
+          averageCompletion: 0,
+          totalFeedbacks: 0,
+          mentorPerformance: 0
+        })
+      }
 
-      setComplianceAlerts([
-        {
-          id: 1,
-          type: 'QUALITY_CONCERN',
-          severity: 'HIGH',
-          title: 'Low Satisfaction Score - Summer Internship Program',
-          description: 'Multiple trainees have reported below-average satisfaction (3.2/5.0) for the current summer internship program in the Computer Science department.',
-          programId: 45,
-          createdAt: new Date(Date.now() - 3600000).toISOString(),
-          status: 'OPEN',
-          department: 'Computer Science'
-        },
-        {
-          id: 2,
-          type: 'POLICY_VIOLATION',
-          severity: 'MEDIUM',
-          title: 'Mentor Capacity Exceeded',
-          description: 'Dr. Vikram Gupta has been assigned 5 trainees, exceeding the recommended maximum of 4 per mentor as per L&D policy.',
-          mentorId: 201,
-          createdAt: new Date(Date.now() - 7200000).toISOString(),
-          status: 'IN_PROGRESS',
-          department: 'Mechanical Engineering'
-        },
-        {
-          id: 3,
-          type: 'PERFORMANCE_ISSUE',
-          severity: 'LOW',
-          title: 'Extended Program Duration',
-          description: 'Industrial training program #78 has exceeded planned duration by 15 days. Mentor reports slow progress due to external factors.',
-          programId: 78,
-          createdAt: new Date(Date.now() - 10800000).toISOString(),
-          status: 'RESOLVED',
-          department: 'Chemical Engineering'
-        },
-        {
-          id: 4,
-          type: 'RESOURCE_SHORTAGE',
-          severity: 'HIGH',
-          title: 'Equipment Unavailability - Lab Access',
-          description: 'Critical lab equipment unavailable for 3 ongoing research projects, potentially impacting program quality and timelines.',
-          createdAt: new Date(Date.now() - 14400000).toISOString(),
-          status: 'OPEN',
-          department: 'Electrical Engineering'
-        }
-      ])
+      if (alertsRes.ok) {
+        const alertsData = await alertsRes.json()
+        setComplianceAlerts(alertsData)
+      } else {
+        console.error("Failed to load compliance alerts:", alertsRes.status)
+        setComplianceAlerts([])
+      }
 
-      setQualityTrends([
-        { month: "Jan", satisfaction: 4.2, completion: 89, compliance: 94 },
-        { month: "Feb", satisfaction: 4.4, completion: 91, compliance: 96 },
-        { month: "Mar", satisfaction: 4.3, completion: 88, compliance: 92 },
-        { month: "Apr", satisfaction: 4.6, completion: 94, compliance: 97 },
-        { month: "May", satisfaction: 4.8, completion: 96, compliance: 98 },
-        { month: "Jun", satisfaction: 4.7, completion: 94, compliance: 95 }
-      ])
+      if (trendsRes.ok) {
+        const trendsData = await trendsRes.json()
+        setQualityTrends(trendsData)
+      } else {
+        console.error("Failed to load quality trends:", trendsRes.status)
+        setQualityTrends([])
+      }
 
-      setDepartmentQuality([
-        { department: "Computer Science", programs: 45, satisfaction: 4.2, completion: 91, compliance: 89, alerts: 3 },
-        { department: "Mechanical Engineering", programs: 38, satisfaction: 4.8, completion: 96, compliance: 94, alerts: 1 },
-        { department: "Electrical Engineering", programs: 32, satisfaction: 4.6, completion: 93, compliance: 92, alerts: 2 },
-        { department: "Chemical Engineering", programs: 25, satisfaction: 4.9, completion: 98, compliance: 97, alerts: 0 },
-        { department: "Civil Engineering", programs: 16, satisfaction: 4.4, completion: 89, compliance: 91, alerts: 1 }
-      ])
+      if (deptRes.ok) {
+        const deptData = await deptRes.json()
+        setDepartmentQuality(deptData)
+      } else {
+        console.error("Failed to load department quality:", deptRes.status)
+        setDepartmentQuality([])
+      }
 
     } catch (error) {
       console.error("Failed to load quality data:", error)

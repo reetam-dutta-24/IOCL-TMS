@@ -144,7 +144,63 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    // Fetch all internship applications, sorted: PENDING > APPROVED > others
+    const allApplications = await prisma.internshipApplication.findMany({
+      orderBy: [
+        { status: 'asc' }, // PENDING < APPROVED < ... (enum order)
+        { createdAt: 'desc' }
+      ]
+    })
+
+    // Custom sort: PENDING first, then APPROVED, then others
+    const statusOrder: Record<string, number> = { PENDING: 0, APPROVED: 1 }
+    const sortedApplications = allApplications.sort((a, b) => {
+      const aOrder = statusOrder[String(a.status)] ?? 2
+      const bOrder = statusOrder[String(b.status)] ?? 2
+      if (aOrder !== bOrder) return aOrder - bOrder
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    })
+
+    // Map to relevant details for dashboard
+    const internshipApplications = sortedApplications.map(app => ({
+      id: app.id,
+      applicationNumber: app.applicationNumber,
+      firstName: app.firstName,
+      lastName: app.lastName,
+      email: app.email,
+      phone: app.phone,
+      institutionName: app.institutionName,
+      courseName: app.courseName,
+      currentYear: app.currentYear,
+      cgpa: app.cgpa,
+      preferredDepartment: app.preferredDepartment,
+      internshipDuration: app.internshipDuration,
+      startDate: app.startDate,
+      endDate: app.endDate,
+      skills: app.skills,
+      projectInterests: app.projectInterests,
+      motivation: app.motivation,
+      resumePath: app.resumePath,
+      coverLetterPath: app.coverLetterPath,
+      status: app.status,
+      reviewNotes: app.reviewNotes,
+      reviewedBy: app.reviewedBy,
+      reviewedAt: app.reviewedAt,
+      decisionDate: app.decisionDate,
+      mentorAssignedId: app.mentorAssignedId,
+      traineeUserId: app.traineeUserId,
+      createdAt: app.createdAt,
+      updatedAt: app.updatedAt
+    }))
+
+    // Calculate internship application statistics
+    const totalInternshipApplications = allApplications.length
+    const pendingInternshipApplications = allApplications.filter(app => app.status === 'PENDING').length
+    const approvedInternshipApplications = allApplications.filter(app => app.status === 'APPROVED').length
+    const rejectedInternshipApplications = allApplications.filter(app => app.status === 'REJECTED').length
+
     const stats = {
+      // Access Request Stats
       totalRequests,
       pendingRequests,
       activeRequests,
@@ -152,7 +208,17 @@ export async function GET(request: NextRequest) {
       departmentRequests: allRequests.filter(req => req.departmentId).length,
       monthlyProcessed,
       avgProcessingTime: avgProcessingDays > 0 ? `${avgProcessingDays} days` : 'N/A',
-      urgentRequests
+      urgentRequests,
+      
+      // Internship Application Stats
+      totalInternshipApplications,
+      pendingInternshipApplications,
+      approvedInternshipApplications,
+      rejectedInternshipApplications,
+      
+      // Combined Stats for Dashboard
+      totalApplications: totalRequests + totalInternshipApplications,
+      totalPending: pendingRequests + pendingInternshipApplications
     }
 
     const metrics = {
@@ -172,7 +238,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       stats,
       metrics,
-      recentRequests
+      recentRequests,
+      internshipApplications // <-- new field
     })
 
   } catch (error) {

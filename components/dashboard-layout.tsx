@@ -33,6 +33,9 @@ import {
   Target,
   Home,
   User,
+  Building,
+  Send,
+  Upload,
 } from "lucide-react"
 
 interface DashboardLayoutProps {
@@ -88,6 +91,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
         return [
           ...baseNavigation,
           { name: "Access Requests", href: "/admin", icon: Shield },
+          { name: "Internship Applications", href: "/internship-applications", icon: FileText },
           { name: "All Requests", href: "/requests", icon: FileText },
           { name: "All Mentors", href: "/mentors", icon: Users },
           { name: "System Reports", href: "/reports", icon: TrendingUp },
@@ -98,19 +102,20 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
         return [
           ...baseNavigation,
           { name: "L&D Overview", href: "/lnd-hod", icon: Shield },
-          { name: "Quality Assurance", href: "/lnd-hod/quality", icon: Award },
-          { name: "Resource Allocation", href: "/lnd-hod/resources", icon: Target },
+          { name: "Internship Applications", href: "/internship-applications", icon: FileText },
           { name: "All Requests", href: "/requests", icon: FileText },
-          { name: "All Mentors", href: "/mentors", icon: Users },
-          { name: "Executive Reports", href: "/reports", icon: TrendingUp },
-          { name: "L&D Configuration", href: "/lnd-hod/settings", icon: Settings }
+          { name: "Department HOD", href: "/department-hod", icon: Building },
+          { name: "Department Mentors", href: "/department-mentors", icon: Users },
+          { name: "Executive Reports", href: "/reports", icon: TrendingUp }
         ]
 
       case "L&D Coordinator":
         return [
           ...baseNavigation,
+          { name: "Internship Applications", href: "/internship-applications", icon: FileText },
           { name: "All Requests", href: "/requests", icon: FileText },
-          { name: "All Mentors", href: "/mentors", icon: Users },
+          { name: "LND HOD", href: "/lnd-hod-list", icon: Shield },
+          { name: "Department Mentors", href: "/department-mentors", icon: Users },
           { name: "Coordination Reports", href: "/reports", icon: TrendingUp },
           { name: "Settings", href: "/settings", icon: Settings }
         ]
@@ -119,7 +124,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
         return [
           ...baseNavigation,
           { name: "Department Requests", href: "/requests", icon: FileText },
-          { name: "Department Mentors", href: "/mentors", icon: Users },
+          { name: "All Department Mentors", href: "/department-mentors", icon: Users },
           { name: "Department Reports", href: "/reports", icon: TrendingUp },
           { name: "Settings", href: "/settings", icon: Settings }
         ]
@@ -133,6 +138,12 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
           { name: "Settings", href: "/settings", icon: Settings }
         ]
 
+      case "Trainee":
+        return [
+          ...baseNavigation,
+          { name: "Upload Progress", href: "/upload-progress", icon: Upload },
+          { name: "Settings", href: "/settings", icon: Settings }
+        ]
       default:
         return [
           ...baseNavigation,

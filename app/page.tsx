@@ -6,9 +6,16 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
 import { IndianOilLogo } from "@/components/ui/logo"
 import { PageLoading } from "@/components/ui/page-loading"
 import { SectionLoading } from "@/components/ui/loading"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { 
   Users, 
   FileText, 
@@ -51,8 +58,36 @@ import {
   GraduationCap,
   ClipboardList,
   Activity,
-  Loader2
+  Loader2,
+  Send,
+  XCircle
 } from "lucide-react"
+import { toast } from "sonner"
+
+interface ApprovedTrainee {
+  id: number
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  institutionName: string
+  courseName: string
+  currentYear: number
+  cgpa: number
+  preferredDepartment: string
+  internshipDuration: number
+  skills?: string
+  projectInterests?: string
+  status: string
+  createdAt: string
+  approvedAt: string
+}
+
+interface Department {
+  id: number
+  name: string
+  code: string
+}
 
 export default function LandingPage() {
   const router = useRouter()
@@ -71,6 +106,17 @@ export default function LandingPage() {
     completedPrograms: 0,
     departments: 0
   })
+
+  // Send Request Dialog State
+  const [isSendRequestOpen, setIsSendRequestOpen] = useState(false)
+  const [approvedTrainees, setApprovedTrainees] = useState<ApprovedTrainee[]>([])
+  const [departments, setDepartments] = useState<Department[]>([])
+  const [selectedTrainees, setSelectedTrainees] = useState<number[]>([])
+  const [selectedDepartment, setSelectedDepartment] = useState<string>("")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filterDepartment, setFilterDepartment] = useState("all")
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [isLoadingData, setIsLoadingData] = useState(false)
 
   useEffect(() => {
     // Simulate page loading
@@ -117,6 +163,125 @@ export default function LandingPage() {
 
     return () => clearTimeout(pageLoadTimer)
   }, [])
+
+  // Send Request Functions
+  const loadSendRequestData = async () => {
+    setIsLoadingData(true)
+    try {
+      const [traineesRes, departmentsRes] = await Promise.all([
+        fetch("/api/internships?status=approved"),
+        fetch("/api/department")
+      ])
+
+      if (traineesRes.ok) {
+        const traineesData = await traineesRes.json()
+        setApprovedTrainees(traineesData)
+      }
+
+      if (departmentsRes.ok) {
+        const departmentsData = await departmentsRes.json()
+        setDepartments(departmentsData)
+      }
+    } catch (error) {
+      console.error("Failed to load send request data:", error)
+      toast.error("Failed to load data")
+    } finally {
+      setIsLoadingData(false)
+    }
+  }
+
+  const handleTraineeSelection = (traineeId: number) => {
+    setSelectedTrainees(prev =>
+      prev.includes(traineeId)
+        ? prev.filter(id => id !== traineeId)
+        : [...prev, traineeId]
+    )
+  }
+
+  const handleSelectAllTrainees = () => {
+    const filteredTrainees = getFilteredTrainees()
+    setSelectedTrainees(filteredTrainees.map(t => t.id))
+  }
+
+  const handleDeselectAllTrainees = () => {
+    setSelectedTrainees([])
+  }
+
+  const getFilteredTrainees = () => {
+    return approvedTrainees.filter(trainee => {
+      const matchesSearch = searchTerm === "" ||
+        trainee.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        trainee.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        trainee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        trainee.institutionName.toLowerCase().includes(searchTerm.toLowerCase())
+
+      const matchesDepartment = filterDepartment === "all" ||
+        trainee.preferredDepartment === filterDepartment
+
+      return matchesSearch && matchesDepartment
+    })
+  }
+
+  const handleSendRequest = async () => {
+    if (selectedTrainees.length === 0) {
+      toast.error("Please select at least one trainee to send")
+      return
+    }
+
+    if (!selectedDepartment) {
+      toast.error("Please select a department")
+      return
+    }
+
+    setIsProcessing(true)
+    try {
+      const selectedTraineeData = approvedTrainees.filter(t => selectedTrainees.includes(t.id))
+
+      const response = await fetch("/api/notifications/forward-to-lnd-hod", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          department: selectedDepartment,
+          applications: selectedTraineeData
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to send request")
+      }
+
+      const result = await response.json()
+      toast.success(`✅ Successfully sent ${selectedTrainees.length} trainee details to LND HOD`)
+
+      // Reset selections
+      setSelectedTrainees([])
+      setSelectedDepartment("")
+      setIsSendRequestOpen(false)
+
+    } catch (error) {
+      console.error("Error sending request:", error)
+      toast.error("Failed to send request. Please try again.")
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'APPROVED':
+        return <Badge className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Approved</Badge>
+      case 'PENDING':
+        return <Badge className="bg-yellow-100 text-yellow-800"><Clock className="h-3 w-3 mr-1" />Pending</Badge>
+      case 'REJECTED':
+        return <Badge className="bg-red-100 text-red-800"><XCircle className="h-3 w-3 mr-1" />Rejected</Badge>
+      default:
+        return <Badge variant="secondary">{status}</Badge>
+    }
+  }
+
+  const filteredTrainees = getFilteredTrainees()
 
   const navLinks = [
     { name: "Home", href: "/" },
@@ -331,6 +496,12 @@ export default function LandingPage() {
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
+                <Link href="/internship-apply">
+                  <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white font-semibold btn-animate hover-lift hover-scale">
+                    <GraduationCap className="mr-2 h-4 w-4" />
+                    Apply for Internship
+                  </Button>
+                </Link>
                 <Link href="/user-guide">
                   <Button size="lg" variant="outline" className="border-red-600 text-red-600 hover:bg-red-50 btn-animate hover-lift">
                     Learn More
@@ -444,6 +615,12 @@ export default function LandingPage() {
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
+                <Link href="/internship-apply">
+                  <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white font-semibold btn-animate hover-lift hover-scale">
+                    <GraduationCap className="mr-2 h-4 w-4" />
+                    Apply for Internship
+                  </Button>
+                </Link>
                 <Link href="/login">
                   <Button size="lg" variant="outline" className="border-white text-red-600 bg-red-600 hover:bg-red-700 hover:border-red-100 hover:text-white btn-animate hover-lift">
                     Access Dashboard
@@ -537,10 +714,219 @@ export default function LandingPage() {
                       </Link>
                     </li>
                     <li>
-                      <Link href="/contact" className="hover:text-white transition-colors flex items-center hover-lift">
-                        <MessageCircle className="h-4 w-4 mr-2" />
-                        Contact Us
-                      </Link>
+                      <Dialog open={isSendRequestOpen} onOpenChange={setIsSendRequestOpen}>
+                        <DialogTrigger asChild>
+                          <button 
+                            onClick={() => {
+                              setIsSendRequestOpen(true)
+                              loadSendRequestData()
+                            }}
+                            className="hover:text-white transition-colors flex items-center hover-lift text-gray-400"
+                          >
+                            <Send className="h-4 w-4 mr-2" />
+                            Send Request
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle className="flex items-center">
+                              <Send className="h-5 w-5 mr-2" />
+                              Send Trainee Request to LND HOD
+                            </DialogTitle>
+                            <DialogDescription>
+                              Select approved trainees and send their details to LND HOD for review and department assignment
+                            </DialogDescription>
+                          </DialogHeader>
+
+                          {isLoadingData ? (
+                            <div className="flex items-center justify-center py-8">
+                              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                              <span>Loading approved trainees...</span>
+                            </div>
+                          ) : (
+                            <div className="space-y-6">
+                              {/* Filters */}
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="space-y-2">
+                                  <Label>Search Trainees</Label>
+                                  <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                    <Input
+                                      type="text"
+                                      placeholder="Search by name, email, or institution..."
+                                      value={searchTerm}
+                                      onChange={(e) => setSearchTerm(e.target.value)}
+                                      className="pl-10"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label>Filter by Department</Label>
+                                  <Select value={filterDepartment} onValueChange={setFilterDepartment}>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="All departments" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="all">All Departments</SelectItem>
+                                      {departments.map((dept) => (
+                                        <SelectItem key={dept.id} value={dept.name}>
+                                          {dept.name}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label>Target Department</Label>
+                                  <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select department to send to" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {departments.map((dept) => (
+                                        <SelectItem key={dept.id} value={dept.name}>
+                                          {dept.name}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+
+                              {/* Trainees Table */}
+                              <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                  <h3 className="font-semibold">Approved Trainees ({filteredTrainees.length})</h3>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={handleSelectAllTrainees}
+                                    >
+                                      Select All
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={handleDeselectAllTrainees}
+                                    >
+                                      Deselect All
+                                    </Button>
+                                  </div>
+                                </div>
+
+                                <div className="border rounded-lg overflow-hidden">
+                                  <Table>
+                                    <TableHeader>
+                                      <TableRow>
+                                        <TableHead className="w-12">
+                                          <input
+                                            type="checkbox"
+                                            checked={selectedTrainees.length === filteredTrainees.length && filteredTrainees.length > 0}
+                                            onChange={() =>
+                                              selectedTrainees.length === filteredTrainees.length
+                                                ? handleDeselectAllTrainees()
+                                                : handleSelectAllTrainees()
+                                            }
+                                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                          />
+                                        </TableHead>
+                                        <TableHead>Name</TableHead>
+                                        <TableHead>Email</TableHead>
+                                        <TableHead>Institution</TableHead>
+                                        <TableHead>Course</TableHead>
+                                        <TableHead>Department</TableHead>
+                                        <TableHead>Status</TableHead>
+                                      </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                      {filteredTrainees.map((trainee) => (
+                                        <TableRow key={trainee.id}>
+                                          <TableCell>
+                                            <input
+                                              type="checkbox"
+                                              checked={selectedTrainees.includes(trainee.id)}
+                                              onChange={() => handleTraineeSelection(trainee.id)}
+                                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                            />
+                                          </TableCell>
+                                          <TableCell>
+                                            <div>
+                                              <div className="font-medium">{trainee.firstName} {trainee.lastName}</div>
+                                              <div className="text-sm text-gray-500">{trainee.phone}</div>
+                                            </div>
+                                          </TableCell>
+                                          <TableCell>{trainee.email}</TableCell>
+                                          <TableCell>
+                                            <div>
+                                              <div className="font-medium">{trainee.institutionName}</div>
+                                              <div className="text-sm text-gray-500">Year {trainee.currentYear}</div>
+                                            </div>
+                                          </TableCell>
+                                          <TableCell>
+                                            <div>
+                                              <div className="font-medium">{trainee.courseName}</div>
+                                              <div className="text-sm text-gray-500">CGPA: {trainee.cgpa}</div>
+                                            </div>
+                                          </TableCell>
+                                          <TableCell>
+                                            <Badge variant="outline">
+                                              {departments.find(d => d.id.toString() === trainee.preferredDepartment)?.name || 'Unknown'}
+                                            </Badge>
+                                          </TableCell>
+                                          <TableCell>
+                                            {getStatusBadge(trainee.status)}
+                                          </TableCell>
+                                        </TableRow>
+                                      ))}
+                                    </TableBody>
+                                  </Table>
+                                </div>
+                              </div>
+
+                              {/* Send Request Section */}
+                              {selectedTrainees.length > 0 && (
+                                <Alert className="border-blue-200 bg-blue-50">
+                                  <Send className="h-4 w-4 text-blue-600" />
+                                  <AlertDescription className="text-blue-700">
+                                    You have selected {selectedTrainees.length} trainee(s) to send to {selectedDepartment || "selected department"}
+                                  </AlertDescription>
+                                </Alert>
+                              )}
+
+                              {/* Action Buttons */}
+                              <div className="flex justify-end space-x-2">
+                                <Button
+                                  variant="outline"
+                                  onClick={() => setIsSendRequestOpen(false)}
+                                  disabled={isProcessing}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  onClick={handleSendRequest}
+                                  disabled={!selectedDepartment || selectedTrainees.length === 0 || isProcessing}
+                                  className="bg-blue-600 hover:bg-blue-700"
+                                >
+                                  {isProcessing ? (
+                                    <>
+                                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                      Sending...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Send className="h-4 w-4 mr-2" />
+                                      Send to LND HOD
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </DialogContent>
+                      </Dialog>
                     </li>
                   </ul>
                 </div>

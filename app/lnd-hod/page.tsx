@@ -32,9 +32,9 @@ import {
   BookOpen,
   Calendar,
   BarChart3,
-  Settings,
   UserCheck
 } from "lucide-react"
+import { ForwardedStudentDetailsSection } from "@/components/dashboards/forwarded-student-details-section"
 
 interface User {
   id: number
@@ -82,8 +82,9 @@ interface LnDStats {
   pendingApproval: number
   activeInternships: number
   completedInternships: number
-  totalMentors: number
-  activeMentors: number
+  totalTrainees: number
+  activeTrainees: number
+  pendingRequests: number
   departmentDistribution: { department: string; count: number; percentage: number }[]
   programTypeStats: { type: string; count: number; successRate: number }[]
   monthlyTrends: { month: string; started: number; completed: number }[]
@@ -141,90 +142,16 @@ export default function LnDHoDPage() {
         const requestsData = await requestsRes.json()
         setInternshipRequests(requestsData)
       } else {
-        // Fallback data for demonstration
-        setInternshipRequests([
-          {
-            id: 1,
-            traineeId: 101,
-            trainee: {
-              firstName: "Arjun",
-              lastName: "Sharma",
-              email: "arjun.sharma@example.com",
-              employeeId: "TRN001",
-              department: { name: "Computer Science" }
-            },
-            programType: "Summer Internship",
-            startDate: "2024-02-01",
-            endDate: "2024-04-01",
-            status: "PENDING_MENTOR",
-            createdAt: new Date().toISOString(),
-            description: "Research and development in AI/ML technologies",
-            objectives: "Gain hands-on experience in machine learning algorithms"
-          },
-          {
-            id: 2,
-            traineeId: 102,
-            trainee: {
-              firstName: "Priya",
-              lastName: "Patel",
-              email: "priya.patel@example.com",
-              employeeId: "TRN002",
-              department: { name: "Mechanical Engineering" }
-            },
-            programType: "Industrial Training",
-            startDate: "2024-02-15",
-            endDate: "2024-05-15",
-            status: "MENTOR_ASSIGNED",
-            mentorId: 201,
-            mentor: {
-              firstName: "Dr. Vikram",
-              lastName: "Gupta",
-              department: { name: "Mechanical Engineering" }
-            },
-            createdAt: new Date(Date.now() - 86400000).toISOString(),
-            approvedAt: new Date().toISOString(),
-            description: "Process optimization and quality control",
-            objectives: "Learn industrial processes and quality standards"
-          }
-        ])
+        console.error("Failed to load internship requests:", requestsRes.status)
+        setInternshipRequests([])
       }
 
       if (statsRes.ok) {
         const statsData = await statsRes.json()
         setLnDStats(statsData)
       } else {
-        // Fallback stats for demonstration
-        setLnDStats({
-          totalInternships: 156,
-          pendingApproval: 12,
-          activeInternships: 34,
-          completedInternships: 110,
-          totalMentors: 28,
-          activeMentors: 24,
-          departmentDistribution: [
-            { department: "Computer Science", count: 45, percentage: 28.8 },
-            { department: "Mechanical Engineering", count: 38, percentage: 24.4 },
-            { department: "Electrical Engineering", count: 32, percentage: 20.5 },
-            { department: "Chemical Engineering", count: 25, percentage: 16.0 },
-            { department: "Civil Engineering", count: 16, percentage: 10.3 }
-          ],
-          programTypeStats: [
-            { type: "Summer Internship", count: 68, successRate: 94.1 },
-            { type: "Industrial Training", count: 52, successRate: 96.2 },
-            { type: "Research Project", count: 24, successRate: 91.7 },
-            { type: "Winter Training", count: 12, successRate: 100.0 }
-          ],
-          monthlyTrends: [
-            { month: "Jan", started: 18, completed: 15 },
-            { month: "Feb", started: 22, completed: 19 },
-            { month: "Mar", started: 28, completed: 24 },
-            { month: "Apr", started: 35, completed: 31 },
-            { month: "May", started: 31, completed: 28 },
-            { month: "Jun", started: 22, completed: 20 }
-          ],
-          averageCompletion: 87.5,
-          satisfactionScore: 4.7
-        })
+        console.error("Failed to load LND statistics:", statsRes.status)
+        setLnDStats(null)
       }
 
     } catch (error) {
@@ -312,14 +239,6 @@ export default function LnDHoDPage() {
       href: "#pending-approvals"
     },
     {
-      title: "Mentor Management",
-      description: "Oversee mentor assignments and performance",
-      icon: Users,
-      color: "bg-blue-500",
-      count: lndStats?.totalMentors || 0,
-      href: "/mentors"
-    },
-    {
       title: "Program Analytics",
       description: "View detailed program performance metrics",
       icon: BarChart3,
@@ -332,20 +251,6 @@ export default function LnDHoDPage() {
       icon: Award,
       color: "bg-orange-500",
       href: "/lnd-hod/quality"
-    },
-    {
-      title: "Resource Allocation",
-      description: "Manage department resources and capacity",
-      icon: Target,
-      color: "bg-indigo-500",
-      href: "/lnd-hod/resources"
-    },
-    {
-      title: "Policy Configuration",
-      description: "Configure L&D policies and parameters",
-      icon: Settings,
-      color: "bg-gray-500",
-      href: "/lnd-hod/settings"
     }
   ]
 
@@ -386,6 +291,62 @@ export default function LnDHoDPage() {
               <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <BookOpen className="h-4 w-4" />
+                  Send Request
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Send New L&D Program Request</DialogTitle>
+                  <DialogDescription>
+                    Submit a new L&D program request for review and approval.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="programType">Program Type</Label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a program type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Summer Internship">Summer Internship</SelectItem>
+                        <SelectItem value="Industrial Training">Industrial Training</SelectItem>
+                        <SelectItem value="Research Project">Research Project</SelectItem>
+                        <SelectItem value="Technical Training">Technical Training</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="startDate">Start Date</Label>
+                    <Input type="date" id="startDate" />
+                  </div>
+                  <div>
+                    <Label htmlFor="endDate">End Date</Label>
+                    <Input type="date" id="endDate" />
+                  </div>
+                  <div>
+                    <Label htmlFor="description">Program Description</Label>
+                    <Textarea id="description" placeholder="Briefly describe the L&D program..." />
+                  </div>
+                  <div>
+                    <Label htmlFor="objectives">Learning Objectives</Label>
+                    <Textarea id="objectives" placeholder="List key learning objectives..." />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline">Cancel</Button>
+                  <Button>Submit Request</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
@@ -501,6 +462,22 @@ export default function LnDHoDPage() {
           </CardContent>
         </Card>
 
+        {/* Forwarded Student Details Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Users className="h-5 w-5 mr-2" />
+              Forwarded Trainee Requests
+            </CardTitle>
+            <CardDescription>
+              Review trainee details forwarded by L&D Coordinators for department assignment
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ForwardedStudentDetailsSection user={user} />
+          </CardContent>
+        </Card>
+
         {/* Filters */}
         <Card>
           <CardHeader>
@@ -532,7 +509,7 @@ export default function LnDHoDPage() {
                   <SelectItem value="Summer Internship">Summer Internship</SelectItem>
                   <SelectItem value="Industrial Training">Industrial Training</SelectItem>
                   <SelectItem value="Research Project">Research Project</SelectItem>
-                  <SelectItem value="Winter Training">Winter Training</SelectItem>
+                  <SelectItem value="Technical Training">Technical Training</SelectItem>
                 </SelectContent>
               </Select>
             </div>

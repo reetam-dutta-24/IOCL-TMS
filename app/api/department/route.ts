@@ -5,18 +5,20 @@ const prisma = new PrismaClient()
 
 export async function GET(request: NextRequest) {
   try {
+    console.log("🔍 Fetching departments...")
+
     const departments = await prisma.department.findMany({
-      where: {
-        isActive: true
-      },
       orderBy: {
         name: 'asc'
       }
     })
 
+    console.log(`✅ Found ${departments.length} departments`)
+
     return NextResponse.json(departments)
+
   } catch (error) {
-    console.error("Error fetching departments:", error)
+    console.error("💥 Failed to fetch departments:", error)
     return NextResponse.json(
       { error: "Failed to fetch departments" },
       { status: 500 }

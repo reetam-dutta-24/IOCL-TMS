@@ -1,6 +1,8 @@
 import bcryptjs from "bcryptjs"
 import jwt from "jsonwebtoken"
 import { prisma } from "./prisma"
+import { NextAuthOptions } from "next-auth"
+import CredentialsProvider from "next-auth/providers/credentials"
 
 const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-key"
 
@@ -127,4 +129,51 @@ export async function createUser(userData: {
     console.error("User creation error:", error)
     return null
   }
+}
+
+export const authOptions: NextAuthOptions = {
+  providers: [
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        employeeId: { label: "Employee ID", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.employeeId || !credentials?.password) {
+          return null
+        }
+
+        const user = await authenticateUser(credentials.employeeId, credentials.password)
+        return user
+      },
+    }),
+  ],
+  session: {
+    strategy: "jwt",
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id
+        token.employeeId = user.employeeId
+        token.role = user.role
+        token.department = user.department
+      }
+      return token
+    },
+    async session({ session, token }) {
+      if (token) {
+        session.user.id = token.id as number
+        session.user.employeeId = token.employeeId as string
+        session.user.role = token.role as string
+        session.user.department = token.department as string
+      }
+      return session
+    },
+  },
+  pages: {
+    signIn: "/login",
+  },
+  secret: process.env.NEXTAUTH_SECRET || JWT_SECRET,
 }

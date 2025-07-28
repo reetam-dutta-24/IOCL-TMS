@@ -81,7 +81,6 @@ export async function PATCH(
             roleId: accessRequest.requestedRoleId,
             departmentId: accessRequest.departmentId,
             isActive: true,
-            profileColor: `#${Math.floor(Math.random()*16777215).toString(16)}`,
             profileInitials: `${accessRequest.firstName[0]}${accessRequest.lastName[0]}`.toUpperCase()
           }
         })

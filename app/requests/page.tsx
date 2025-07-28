@@ -29,9 +29,12 @@ import {
   Users,
   Award,
   RefreshCw,
-  User
+  User,
+  ExternalLink,
+  GraduationCap
 } from "lucide-react"
 import { PageLoading } from "@/components/ui/page-loading"
+import { toast } from "sonner"
 
 interface Request {
   id: string
@@ -47,6 +50,17 @@ interface Request {
   description?: string
   duration?: string
   requirements?: string[]
+  type?: "INTERNAL_REQUEST" | "EXTERNAL_APPLICATION"
+  email?: string
+  phone?: string
+  currentYear?: number
+  cgpa?: number
+  skills?: string
+  projectInterests?: string
+  startDate?: string
+  endDate?: string
+  resumePath?: string
+  coverLetterPath?: string
 }
 
 export default function RequestsPage() {
@@ -60,6 +74,7 @@ export default function RequestsPage() {
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null)
   const [actionComment, setActionComment] = useState("")
   const [isProcessing, setIsProcessing] = useState(false)
+  const [processingRequestId, setProcessingRequestId] = useState<string | null>(null)
 
   useEffect(() => {
     const userData = localStorage.getItem("user")
@@ -72,112 +87,28 @@ export default function RequestsPage() {
     setLoading(false)
   }, [router])
 
-  const loadRequests = (currentUser: any) => {
-    // Mock data - in real implementation, this would be role-filtered API calls
-    const allRequests: Request[] = [
-      {
-        id: "REQ001",
-        traineeName: "Arjun Reddy",
-        institution: "IIT Delhi",
-        program: "Summer Internship 2024",
-        department: "Information Technology",
-        status: "PENDING_PROCESSING",
-        submittedDate: "2024-01-15",
-        coordinator: "Priya Sharma",
-        priority: "HIGH",
-        description: "Software development internship focusing on API development",
-        duration: "3 months",
-        requirements: ["Programming", "Database knowledge", "API development"]
-      },
-      {
-        id: "REQ002",
-        traineeName: "Sneha Patel",
-        institution: "NIT Surathkal",
-        program: "Research Project",
-        department: "Operations",
-        status: "PENDING_MENTOR_ASSIGNMENT",
-        submittedDate: "2024-01-12",
-        coordinator: "Rajesh Kumar",
-        priority: "MEDIUM",
-        description: "Process optimization and automation study",
-        duration: "6 months"
-      },
-      {
-        id: "REQ003", 
-        traineeName: "Vikram Singh",
-        institution: "BITS Pilani",
-        program: "Technical Training",
-        department: "Engineering",
-        status: "APPROVED",
-        submittedDate: "2024-01-10",
-        coordinator: "Amit Gupta",
-        assignedMentor: "Dr. K Sharma",
-        priority: "LOW",
-        description: "Mechanical engineering project on equipment optimization"
-      },
-      {
-        id: "REQ004",
-        traineeName: "Ananya Iyer",
-        institution: "Anna University", 
-        program: "Industrial Training",
-        department: "Information Technology",
-        status: "IN_PROGRESS",
-        submittedDate: "2024-01-08",
-        coordinator: "Priya Sharma",
-        assignedMentor: "Vikram Gupta",
-        priority: "MEDIUM"
-      },
-      {
-        id: "REQ005",
-        traineeName: "Rohit Mehta",
-        institution: "DTU Delhi",
-        program: "Project Work",
-        department: "Operations",
-        status: "PENDING_HOD_APPROVAL",
-        submittedDate: "2024-01-14",
-        coordinator: "Rajesh Kumar",
-        priority: "HIGH"
+  const loadRequests = async (currentUser: any) => {
+    try {
+      setLoading(true)
+      
+      // Fetch real data from API based on user role
+      const response = await fetch(`/api/requests?role=${currentUser.role}&department=${currentUser.department || ''}&employeeId=${currentUser.employeeId || ''}`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch requests')
       }
-    ]
-
-    // Filter based on user role and permissions
-    let roleFilteredRequests = allRequests
-
-    switch (currentUser.role) {
-      case "L&D Coordinator":
-        // Can view all requests for processing and monitoring
-        roleFilteredRequests = allRequests
-        break
-        
-      case "L&D HoD":
-        // Can view all L&D related data
-        roleFilteredRequests = allRequests
-        break
-        
-      case "Department HoD":
-        // Can only view requests assigned to their department
-        roleFilteredRequests = allRequests.filter(req => 
-          req.department === currentUser.department
-        )
-        break
-        
-      case "Mentor":
-        // Can only view requests assigned to them
-        roleFilteredRequests = allRequests.filter(req => 
-          req.assignedMentor === `${currentUser.firstName} ${currentUser.lastName}` ||
-          req.status === "PENDING_MENTOR_ASSIGNMENT"
-        )
-        break
-        
-      default:
-        // Limited view for other roles
-        roleFilteredRequests = allRequests.filter(req => 
-          req.coordinator === `${currentUser.firstName} ${currentUser.lastName}`
-        )
+      
+      const data = await response.json()
+      setRequests(data.requests || [])
+      setFilteredRequests(data.requests || [])
+      
+    } catch (error) {
+      console.error('Error loading requests:', error)
+      setRequests([])
+      setFilteredRequests([])
+    } finally {
+      setLoading(false)
     }
-
-    setRequests(roleFilteredRequests)
-    setFilteredRequests(roleFilteredRequests)
   }
 
   // Filter requests based on search and status
@@ -202,6 +133,8 @@ export default function RequestsPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case "PENDING":
+        return <Badge className="bg-red-100 text-red-800"><AlertTriangle className="h-3 w-3 mr-1" />Pending</Badge>
       case "PENDING_PROCESSING":
         return <Badge className="bg-red-100 text-red-800"><AlertTriangle className="h-3 w-3 mr-1" />Pending Processing</Badge>
       case "PENDING_MENTOR_ASSIGNMENT":
@@ -210,6 +143,8 @@ export default function RequestsPage() {
         return <Badge className="bg-purple-100 text-purple-800"><Clock className="h-3 w-3 mr-1" />HoD Approval</Badge>
       case "APPROVED":
         return <Badge className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Approved</Badge>
+      case "FINAL_APPROVED":
+        return <Badge className="bg-emerald-100 text-emerald-800"><Award className="h-3 w-3 mr-1" />Final Approved</Badge>
       case "IN_PROGRESS":
         return <Badge className="bg-blue-100 text-blue-800"><FileText className="h-3 w-3 mr-1" />In Progress</Badge>
       case "COMPLETED":
@@ -235,9 +170,14 @@ export default function RequestsPage() {
   }
 
   const canTakeAction = (request: Request) => {
+    // If already final approved or rejected, no further actions
+    if (["FINAL_APPROVED", "REJECTED"].includes(request.status)) {
+      return false
+    }
+
     switch (user?.role) {
       case "L&D Coordinator":
-        return ["PENDING_PROCESSING"].includes(request.status)
+        return ["PENDING", "PENDING_PROCESSING"].includes(request.status)
       case "L&D HoD":
         return ["PENDING_HOD_APPROVAL", "APPROVED"].includes(request.status)
       case "Department HoD":
@@ -251,46 +191,94 @@ export default function RequestsPage() {
   }
 
   const getActionButtons = (request: Request) => {
-    if (!canTakeAction(request)) return null
+    if (!canTakeAction(request)) {
+      return (
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" disabled>
+            {request.status === "APPROVED" ? "Approved" : 
+             request.status === "FINAL_APPROVED" ? "Final Approved" :
+             request.status === "REJECTED" ? "Rejected" : "No Action"}
+          </Button>
+        </div>
+      )
+    }
+
+    const isProcessingThis = processingRequestId === request.id
 
     switch (user?.role) {
       case "L&D Coordinator":
         return (
           <div className="flex gap-2">
-            <Button size="sm" onClick={() => handleAction(request, "PROCESS")}>
+            <Button 
+              size="sm" 
+              onClick={() => handleAction(request, "PROCESS")}
+              disabled={isProcessingThis}
+            >
               <Route className="h-3 w-3 mr-1" />
-              Process
+              {isProcessingThis ? "Processing..." : "Process"}
             </Button>
           </div>
         )
       case "L&D HoD":
         return (
           <div className="flex gap-2">
-            <Button size="sm" onClick={() => handleAction(request, "APPROVE")}>
-              <CheckCircle className="h-3 w-3 mr-1" />
-              Approve
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => handleAction(request, "REJECT")}>
-              <XCircle className="h-3 w-3 mr-1" />
-              Reject
-            </Button>
+            {request.status === "APPROVED" ? (
+              <Button 
+                size="sm" 
+                variant="default"
+                className="bg-green-600 hover:bg-green-700"
+                onClick={() => handleAction(request, "FINAL_APPROVE")}
+                disabled={isProcessingThis}
+              >
+                <Award className="h-3 w-3 mr-1" />
+                {isProcessingThis ? "Processing..." : "Final Approve"}
+              </Button>
+            ) : (
+              <>
+                <Button 
+                  size="sm" 
+                  onClick={() => handleAction(request, "APPROVE")}
+                  disabled={isProcessingThis}
+                >
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  {isProcessingThis ? "Processing..." : "Approve"}
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => handleAction(request, "REJECT")}
+                  disabled={isProcessingThis}
+                >
+                  <XCircle className="h-3 w-3 mr-1" />
+                  {isProcessingThis ? "Processing..." : "Reject"}
+                </Button>
+              </>
+            )}
           </div>
         )
       case "Department HoD":
         return (
           <div className="flex gap-2">
-            <Button size="sm" onClick={() => handleAction(request, "ASSIGN_MENTOR")}>
+            <Button 
+              size="sm" 
+              onClick={() => handleAction(request, "ASSIGN_MENTOR")}
+              disabled={isProcessingThis}
+            >
               <Users className="h-3 w-3 mr-1" />
-              Assign Mentor
+              {isProcessingThis ? "Processing..." : "Assign Mentor"}
             </Button>
           </div>
         )
       case "Mentor":
         return (
           <div className="flex gap-2">
-            <Button size="sm" onClick={() => handleAction(request, "UPDATE_PROGRESS")}>
+            <Button 
+              size="sm" 
+              onClick={() => handleAction(request, "UPDATE_PROGRESS")}
+              disabled={isProcessingThis}
+            >
               <FileText className="h-3 w-3 mr-1" />
-              Update Progress
+              {isProcessingThis ? "Processing..." : "Update Progress"}
             </Button>
           </div>
         )
@@ -299,10 +287,59 @@ export default function RequestsPage() {
     }
   }
 
-  const handleAction = (request: Request, action: string) => {
-    setSelectedRequest(request)
-    // Handle different actions based on role and action type
-    console.log(`${user.role} performing ${action} on request ${request.id}`)
+  const handleAction = async (request: Request, action: string) => {
+    setProcessingRequestId(request.id)
+    setIsProcessing(true)
+    setActionComment("")
+
+    try {
+      let response
+      
+      if (action === "FINAL_APPROVE") {
+        // Use the final approve endpoint
+        response = await fetch(`/api/requests/${request.id}/final-approve`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            reviewerId: user.id,
+            comment: actionComment
+          })
+        })
+      } else {
+        // Use the regular approve endpoint
+        response = await fetch(`/api/requests/${request.id}/approve`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action,
+            comment: actionComment,
+            reviewerId: user.id
+          })
+        })
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to process action')
+      }
+
+      const result = await response.json()
+      
+      toast.success(result.message || `Request ${action.toLowerCase()}d successfully`)
+      
+      // Reload requests to get updated data
+      await loadRequests(user)
+      
+    } catch (error) {
+      console.error('Error processing action:', error)
+      toast.error('Failed to process action. Please try again.')
+    } finally {
+      setIsProcessing(false)
+      setProcessingRequestId(null)
+    }
   }
 
   const getPageTitle = () => {
@@ -362,7 +399,7 @@ export default function RequestsPage() {
                 Process New Request
               </Button>
             )}
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={() => loadRequests(user)}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
@@ -427,6 +464,7 @@ export default function RequestsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="PENDING">Pending</SelectItem>
                   <SelectItem value="PENDING_PROCESSING">Pending Processing</SelectItem>
                   <SelectItem value="PENDING_MENTOR_ASSIGNMENT">Awaiting Mentor</SelectItem>
                   <SelectItem value="PENDING_HOD_APPROVAL">HoD Approval</SelectItem>
@@ -459,6 +497,7 @@ export default function RequestsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Request ID</TableHead>
+                    <TableHead>Type</TableHead>
                     <TableHead>Trainee</TableHead>
                     <TableHead>Institution</TableHead>
                     <TableHead>Program</TableHead>
@@ -475,6 +514,19 @@ export default function RequestsPage() {
                   {filteredRequests.map((request) => (
                     <TableRow key={request.id}>
                       <TableCell className="font-medium">{request.id}</TableCell>
+                      <TableCell>
+                        {request.type === "EXTERNAL_APPLICATION" ? (
+                          <Badge className="bg-blue-100 text-blue-800">
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                            External
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-gray-100 text-gray-800">
+                            <GraduationCap className="h-3 w-3 mr-1" />
+                            Internal
+                          </Badge>
+                        )}
+                      </TableCell>
                       <TableCell>{request.traineeName}</TableCell>
                       <TableCell>{request.institution}</TableCell>
                       <TableCell>{request.program}</TableCell>
@@ -528,11 +580,35 @@ export default function RequestsPage() {
                                     <Label className="text-sm font-medium">Priority</Label>
                                     <div className="mt-1">{getPriorityBadge(request.priority)}</div>
                                   </div>
+                                  {request.email && (
+                                    <div>
+                                      <Label className="text-sm font-medium">Email</Label>
+                                      <p className="text-sm text-gray-600">{request.email}</p>
+                                    </div>
+                                  )}
+                                  {request.phone && (
+                                    <div>
+                                      <Label className="text-sm font-medium">Phone</Label>
+                                      <p className="text-sm text-gray-600">{request.phone}</p>
+                                    </div>
+                                  )}
                                 </div>
                                 {request.description && (
                                   <div>
                                     <Label className="text-sm font-medium">Description</Label>
                                     <p className="text-sm text-gray-600 mt-1">{request.description}</p>
+                                  </div>
+                                )}
+                                {request.skills && (
+                                  <div>
+                                    <Label className="text-sm font-medium">Skills</Label>
+                                    <p className="text-sm text-gray-600 mt-1">{request.skills}</p>
+                                  </div>
+                                )}
+                                {request.projectInterests && (
+                                  <div>
+                                    <Label className="text-sm font-medium">Project Interests</Label>
+                                    <p className="text-sm text-gray-600 mt-1">{request.projectInterests}</p>
                                   </div>
                                 )}
                                 {request.requirements && (
