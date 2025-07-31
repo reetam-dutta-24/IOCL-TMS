@@ -162,7 +162,7 @@ export default function LNDHODListPage() {
       console.log("🔍 Loading send request data...")
       
       const [traineesRes, departmentsRes] = await Promise.all([
-        fetch("/api/internships?status=approved"), // Use the original API route
+        fetch("/api/department-hod/approved-trainees"),
         fetch("/api/department")
       ])
 
@@ -173,8 +173,11 @@ export default function LNDHODListPage() {
         const traineesData = await traineesRes.json()
         console.log("✅ Trainees data loaded:", traineesData)
         
+        // Get the approvedTrainees array from the response
+        const approvedTraineesArray = traineesData.approvedTrainees || []
+        
         // Filter out trainees that have already been sent
-        const availableTrainees = traineesData.filter((trainee: ApprovedTrainee) => 
+        const availableTrainees = approvedTraineesArray.filter((trainee: ApprovedTrainee) => 
           !sentTrainees.includes(trainee.id)
         )
         console.log("✅ Available trainees (excluding sent):", availableTrainees.length)

@@ -169,13 +169,13 @@ export default function LandingPage() {
     setIsLoadingData(true)
     try {
       const [traineesRes, departmentsRes] = await Promise.all([
-        fetch("/api/internships?status=approved"),
+        fetch("/api/department-hod/approved-trainees"),
         fetch("/api/department")
       ])
 
       if (traineesRes.ok) {
         const traineesData = await traineesRes.json()
-        setApprovedTrainees(traineesData)
+        setApprovedTrainees(traineesData.approvedTrainees || [])
       }
 
       if (departmentsRes.ok) {

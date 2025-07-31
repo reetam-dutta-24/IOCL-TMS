@@ -118,13 +118,13 @@ export default function SendRequestPage() {
       
       // Load approved trainees and departments
       const [traineesRes, departmentsRes] = await Promise.all([
-        fetch("/api/internships?status=approved"),
+        fetch("/api/department-hod/approved-trainees"),
         fetch("/api/department")
       ])
 
       if (traineesRes.ok) {
         const traineesData = await traineesRes.json()
-        setApprovedTrainees(traineesData)
+        setApprovedTrainees(traineesData.approvedTrainees || [])
       } else {
         console.error("Failed to load approved trainees:", traineesRes.status)
         setApprovedTrainees([])

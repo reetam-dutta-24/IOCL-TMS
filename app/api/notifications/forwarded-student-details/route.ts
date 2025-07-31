@@ -17,13 +17,22 @@ export async function GET(request: NextRequest) {
 
     console.log(`🔍 Fetching forwarded student details for user: ${userId}`)
 
-    // Fetch real forwarded student details from database
+    // Test database connection first
+    try {
+      const testCount = await prisma.forwardedStudentDetails.count()
+      console.log(`✅ Database connection successful. Total records: ${testCount}`)
+    } catch (dbError) {
+      console.error("❌ Database connection failed:", dbError)
+      return NextResponse.json(
+        { error: "Database connection failed" },
+        { status: 500 }
+      )
+    }
+
+    // Fetch forwarded student details
     const forwardedDetails = await prisma.forwardedStudentDetails.findMany({
       where: {
-        forwardedTo: parseInt(userId),
-        status: {
-          in: ["PENDING_LND_REVIEW", "APPROVED_BY_LND", "REJECTED_BY_LND"]
-        }
+        forwardedTo: parseInt(userId)
       },
       include: {
         notification: true,
@@ -43,7 +52,7 @@ export async function GET(request: NextRequest) {
     console.log(`✅ Found ${forwardedDetails.length} forwarded details for user ${userId}`)
 
     // Format the response to match the expected interface
-    const formattedDetails = forwardedDetails.map(detail => {
+    const formattedDetails = forwardedDetails.map((detail: any) => {
       let applications = []
       try {
         applications = JSON.parse(detail.applications)
@@ -67,7 +76,17 @@ export async function GET(request: NextRequest) {
         forwardedBy: `${detail.forwardedByUser.firstName} ${detail.forwardedByUser.lastName}`,
         forwardedByEmail: detail.forwardedByUser.email,
         receivedAt: detail.createdAt.toISOString(),
-        status: frontendStatus
+        status: frontendStatus,
+        notification: {
+          title: detail.notification.title,
+          message: detail.notification.message,
+          priority: detail.notification.priority
+        },
+        forwardedByUser: {
+          firstName: detail.forwardedByUser.firstName,
+          lastName: detail.forwardedByUser.lastName,
+          email: detail.forwardedByUser.email
+        }
       }
     })
 

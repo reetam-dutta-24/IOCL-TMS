@@ -43,6 +43,7 @@ interface Application {
 }
 
 export default function InternshipApplicationsPage() {
+  const [user, setUser] = useState<any>(null)
   const [applications, setApplications] = useState<Application[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
@@ -63,6 +64,11 @@ export default function InternshipApplicationsPage() {
   })
 
   useEffect(() => {
+    // Get user from localStorage
+    const userData = localStorage.getItem("user")
+    if (userData) {
+      setUser(JSON.parse(userData))
+    }
     loadApplications()
   }, [])
 
@@ -218,8 +224,50 @@ export default function InternshipApplicationsPage() {
     setForwardDialogOpen(true)
   }
 
+  const handleDownload = async (applicationId: number, fileType: "resume" | "coverLetter") => {
+    try {
+      const response = await fetch(`/api/internship-applications/${applicationId}/download?type=${fileType}`)
+      
+      if (!response.ok) {
+        throw new Error(`Failed to download ${fileType}`)
+      }
+
+      // Get the filename from the response headers
+      const contentDisposition = response.headers.get("content-disposition")
+      const filenameMatch = contentDisposition?.match(/filename="(.+)"/)
+      const filename = filenameMatch ? filenameMatch[1] : `${fileType}.pdf`
+
+      // Create a blob from the response
+      const blob = await response.blob()
+      
+      // Create a download link
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error(`Error downloading ${fileType}:`, error)
+      alert(`Failed to download ${fileType}. Please try again.`)
+    }
+  }
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <DashboardLayout>
+    <DashboardLayout user={user}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -517,13 +565,21 @@ export default function InternshipApplicationsPage() {
                                   <h3 className="text-lg font-semibold mb-3">Documents</h3>
                                   <div className="flex space-x-4">
                                     {app.resumePath && (
-                                      <Button variant="outline" size="sm">
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handleDownload(app.id, "resume")}
+                                      >
                                         <Download className="h-4 w-4 mr-1" />
                                         Download Resume
                                       </Button>
                                     )}
                                     {app.coverLetterPath && (
-                                      <Button variant="outline" size="sm">
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handleDownload(app.id, "coverLetter")}
+                                      >
                                         <Download className="h-4 w-4 mr-1" />
                                         Download Cover Letter
                                       </Button>

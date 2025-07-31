@@ -40,9 +40,54 @@ export async function POST(request: NextRequest) {
     
     console.log(`✅ Found LND HoD: ${lndHodUser.firstName} ${lndHodUser.lastName}`)
     
+    // Create notification for the LND HoD
+    const notification = await prisma.notification.create({
+      data: {
+        type: "STUDENT_DETAILS_FORWARDED",
+        title: "Approved Student Details for Review",
+        message: `${applications.length} approved student(s) details forwarded for ${department} department - awaiting LND HoD review`,
+        userId: lndHodUser.id,
+        priority: "HIGH"
+      }
+    })
+
+    // Get the L&D Coordinator user ID
+    const coordinatorUser = await prisma.user.findFirst({
+      where: {
+        role: {
+          name: "L&D Coordinator"
+        },
+        isActive: true
+      }
+    });
+
+    if (!coordinatorUser) {
+      return NextResponse.json(
+        { error: "L&D Coordinator not found" },
+        { status: 404 }
+      )
+    }
+
+    // Store the forwarded student details for LND HoD review
+    const forwardedDetails = await prisma.forwardedStudentDetails.create({
+      data: {
+        notificationId: notification.id,
+        department,
+        applicationsCount: applications.length,
+        applications: JSON.stringify(applications),
+        forwardedBy: coordinatorUser.id,
+        forwardedTo: lndHodUser.id,
+        status: "PENDING_LND_REVIEW"
+      }
+    })
+
+    console.log(`✅ Successfully stored forwarded details with ID: ${forwardedDetails.id}`)
+    
     return NextResponse.json({
       success: true,
-      message: `Successfully processed request for ${lndHodUser.firstName} ${lndHodUser.lastName}`,
+      message: `Successfully forwarded ${applications.length} student details to LND HoD ${lndHodUser.firstName} ${lndHodUser.lastName}`,
+      notificationId: notification.id,
+      forwardedDetailsId: forwardedDetails.id,
       hodUser: {
         id: lndHodUser.id,
         name: `${lndHodUser.firstName} ${lndHodUser.lastName}`,

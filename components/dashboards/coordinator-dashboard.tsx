@@ -585,7 +585,7 @@ export function CoordinatorDashboard({ user }: { user: any }) {
                           </div>
                         </div>
                         <div className="ml-4 flex space-x-2">
-                          <Link href={`/internship-applications/${app.id}`}>
+                          <Link href="/internship-applications">
                             <Button variant="outline" size="sm">
                               <Eye className="h-4 w-4" />
                             </Button>
@@ -731,7 +731,7 @@ export function CoordinatorDashboard({ user }: { user: any }) {
                         </TableCell>
                         <TableCell>{new Date(app.createdAt).toLocaleDateString()}</TableCell>
                         <TableCell>
-                          <Link href={`/internship-applications/${app.id}`}>
+                          <Link href="/internship-applications">
                             <Button size="sm" variant="outline">View</Button>
                           </Link>
                         </TableCell>

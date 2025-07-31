@@ -211,35 +211,18 @@ export function HodDashboard({ user, roleType = "DEPT_HOD" }: { user: any, roleT
     fetchReceivedStudentDetails()
   }, [user.id])
   
-  // Fallback data in case of error
+  // Use actual data only - no fallback demo data
   const departmentStats = data?.stats?.departmentStats || {
-            totalTrainees: isLDHod ? 45 : 12,
-        activeTrainees: isLDHod ? 32 : 8,
-        pendingRequests: isLDHod ? 18 : 5,
-    completionRate: isLDHod ? 94.2 : 96.5,
-    departmentRequests: isLDHod ? 156 : 23
+    totalTrainees: 0,
+    activeTrainees: 0,
+    pendingRequests: 0,
+    completionRate: 0,
+    departmentRequests: 0
   }
 
-  const mentorPerformance = data?.mentorPerformance || [
-    { id: 1, name: "Vikram Gupta", department: "IT", capacity: 85, rating: 4.8, trainees: 3, maxCapacity: 4, completedTrainees: 12, totalAssigned: 15 },
-    { id: 2, name: "Suresh Reddy", department: "IT", capacity: 60, rating: 4.5, trainees: 2, maxCapacity: 3, completedTrainees: 8, totalAssigned: 10 },
-    { id: 3, name: "Kavita Nair", department: "HR", capacity: 100, rating: 4.9, trainees: 3, maxCapacity: 3, completedTrainees: 15, totalAssigned: 18 },
-    { id: 4, name: "Rajesh Patel", department: "Finance", capacity: 40, rating: 4.6, trainees: 1, maxCapacity: 2, completedTrainees: 5, totalAssigned: 6 }
-  ]
-
-  const pendingAssignments = data?.pendingAssignments || [
-    { id: "REQ015", trainee: "Arjun Sharma", program: "Summer Internship", priority: "HIGH", submittedDate: "2024-01-15", department: "IT" },
-    { id: "REQ016", trainee: "Priya Patel", program: "Technical Training", priority: "MEDIUM", submittedDate: "2024-01-14", department: "HR" },
-    { id: "REQ017", trainee: "Vikram Singh", program: "Research Project", priority: "HIGH", submittedDate: "2024-01-13", department: "Finance" },
-    { id: "REQ018", trainee: "Sneha Reddy", program: "Industrial Training", priority: "MEDIUM", submittedDate: "2024-01-12", department: "IT" }
-  ]
-
-  const recentActivities = data?.recentActivities || [
-    { action: "Mentor Assigned", details: "Vikram Gupta assigned to REQ014", time: "30 mins ago" },
-    { action: "Capacity Updated", details: "Suresh Reddy availability updated", time: "1 hour ago" },
-    { action: "Assignment Complete", details: "REQ012 marked as completed", time: "2 hours ago" },
-    { action: "New Request", details: "REQ015 received for processing", time: "3 hours ago" }
-  ]
+  const mentorPerformance = data?.mentorPerformance || []
+  const pendingAssignments = data?.pendingAssignments || []
+  const recentActivities = data?.recentActivities || []
 
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
