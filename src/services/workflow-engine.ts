@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import { sendNotification } from "@/lib/notifications"
+import { sendNotification } from "@/src/lib/notifications"
 
 export class WorkflowEngine {
   static async processInternshipRequest(requestId: number) {

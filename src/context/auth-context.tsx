@@ -1,68 +1,68 @@
 "use client"
 
-import type React from "react"
-import { createContext, useContext, useState, useEffect } from "react"
-import { useSession, signIn, signOut } from "next-auth/react"
+import { createContext, useContext, useState, useEffect, ReactNode } from "react"
+import { useRouter } from "next/navigation"
 
 interface User {
-  id: string
+  id: number
   employeeId: string
   name: string
+  firstName: string
+  lastName: string
   email: string
   role: string
-  department: string | null
+  department: string
+  phone?: string
 }
 
 interface AuthContextType {
   user: User | null
-  login: (employeeId: string, password: string) => Promise<boolean>
-  logout: () => Promise<void>
+  login: (userData: User, token: string) => void
+  logout: () => void
   loading: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { data: session, status } = useSession()
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const loading = status === "loading"
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
-    if (session?.user) {
-      setUser({
-        id: session.user.id,
-        employeeId: session.user.employeeId,
-        name: session.user.name || "",
-        email: session.user.email || "",
-        role: session.user.role,
-        department: session.user.department,
-      })
-    } else {
-      setUser(null)
-    }
-  }, [session])
+    // Check for existing session on mount
+    const userData = localStorage.getItem("user")
+    const token = localStorage.getItem("auth-token")
 
-  const login = async (employeeId: string, password: string): Promise<boolean> => {
-    try {
-      const result = await signIn("credentials", {
-        employeeId,
-        password,
-        redirect: false,
-      })
-
-      return result?.ok || false
-    } catch (error) {
-      console.error("Login error:", error)
-      return false
+    if (userData && token) {
+      try {
+        setUser(JSON.parse(userData))
+      } catch (error) {
+        console.error("Error parsing user data:", error)
+        logout()
+      }
     }
+    setLoading(false)
+  }, [])
+
+  const login = (userData: User, token: string) => {
+    localStorage.setItem("user", JSON.stringify(userData))
+    localStorage.setItem("auth-token", token)
+    setUser(userData)
   }
 
-  const logout = async (): Promise<void> => {
-    await signOut({ redirect: false })
+  const logout = () => {
+    localStorage.removeItem("user")
+    localStorage.removeItem("auth-token")
     setUser(null)
+    router.push("/login")
   }
 
-  return <AuthContext.Provider value={{ user, login, logout, loading }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {
@@ -71,4 +71,4 @@ export function useAuth() {
     throw new Error("useAuth must be used within an AuthProvider")
   }
   return context
-}
+};

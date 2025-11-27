@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma"
-import { sendEmail, generateEmailTemplate } from "@/lib/email"
-import { sendSMS, generateSMSMessage } from "@/lib/sms"
+import { sendEmail, generateEmailTemplate } from "@/src/lib/email"
+import { sendSMS, generateSMSMessage } from "@/src/lib/sms"
 
 interface NotificationOptions {
   userId: number

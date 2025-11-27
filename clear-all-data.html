@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear All Trainee Data</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        button { padding: 15px 30px; font-size: 18px; background: #dc2626; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        button:hover { background: #b91c1c; }
+        .result { margin-top: 20px; padding: 15px; background: #f3f4f6; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <h1>🚨 Clear All Trainee Data</h1>
+    <p><strong>Warning:</strong> This will delete ALL trainee data including:</p>
+    <ul>
+        <li>All internship applications</li>
+        <li>All internship requests</li>
+        <li>All forwarded student details</li>
+        <li>All related notifications</li>
+    </ul>
+    <p><strong>You will start from zero!</strong></p>
+    
+    <button onclick="clearAllData()">🗑️ Clear ALL Trainee Data</button>
+    <div id="result"></div>
+
+    <script>
+        async function clearAllData() {
+            if (!confirm('Are you sure you want to delete ALL trainee data? This cannot be undone!')) {
+                return;
+            }
+            
+            try {
+                document.getElementById('result').innerHTML = '<div class="result">🔄 Clearing data...</div>';
+                
+                const response = await fetch('/api/clear-all-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                document.getElementById('result').innerHTML = `
+                    <div class="result">
+                        <h3>✅ Success!</h3>
+                        <p><strong>Message:</strong> ${result.message}</p>
+                        <ul>
+                            <li>Forwarded Details: ${result.deletedForwardedDetails}</li>
+                            <li>Applications: ${result.deletedApplications}</li>
+                            <li>Requests: ${result.deletedRequests}</li>
+                            <li>Notifications: ${result.deletedNotifications}</li>
+                        </ul>
+                        <p><strong>Next:</strong> Refresh your dashboard and start fresh!</p>
+                    </div>
+                `;
+                
+                alert('✅ All trainee data cleared successfully! You can now start fresh from zero.');
+                
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <div class="result" style="background: #fee2e2; color: #dc2626;">
+                        <h3>❌ Error:</h3>
+                        <pre>${error.message}</pre>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html> 

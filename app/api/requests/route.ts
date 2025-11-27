@@ -1,92 +1,154 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
+import { PrismaClient } from "@prisma/client"
 
-// Mock data - in production, this would come from your database
-const requests = [
-  {
-    id: "REQ001",
-    requestNumber: "REQ001",
-    traineeName: "Arjun Reddy",
-    traineeEmail: "arjun.reddy@student.edu",
-    traineePhone: "+91-8765432109",
-    institutionName: "IIT Delhi",
-    courseDetails: "Computer Science Engineering",
-    internshipDuration: 60,
-    preferredDepartment: "Information Technology",
-    requestDescription: "Summer internship in software development",
-    status: "SUBMITTED",
-    priority: "HIGH",
-    submittedDate: "2024-01-15",
-    requestedBy: "EMP002",
-  },
-  {
-    id: "REQ002",
-    requestNumber: "REQ002",
-    traineeName: "Sneha Agarwal",
-    traineeEmail: "sneha.agarwal@student.edu",
-    traineePhone: "+91-8765432108",
-    institutionName: "NIT Trichy",
-    courseDetails: "Information Technology",
-    internshipDuration: 90,
-    preferredDepartment: "Information Technology",
-    requestDescription: "Internship in data analytics and AI",
-    status: "UNDER_REVIEW",
-    priority: "MEDIUM",
-    submittedDate: "2024-01-14",
-    requestedBy: "EMP002",
-  },
-]
+const prisma = new PrismaClient()
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const status = searchParams.get("status")
+    const role = searchParams.get("role")
     const department = searchParams.get("department")
 
-    let filteredRequests = requests
+    console.log(`🔍 Fetching requests for role: ${role}, department: ${department}`)
 
-    if (status) {
-      filteredRequests = filteredRequests.filter((req) => req.status === status)
-    }
+    // Fetch both InternshipRequest and InternshipApplication data
+    const [internshipRequests, internshipApplications] = await Promise.all([
+      // Fetch InternshipRequest data
+      prisma.internshipRequest.findMany({
+        where: {
+          // Apply role-based filtering for internship requests
+          ...(role === "Department HoD" && department ? {
+            department: { name: department }
+          } : {}),
+          ...(role === "Mentor" ? {
+            OR: [
+              { mentorAssignments: { some: { mentor: { employeeId: searchParams.get("employeeId") } } } },
+              { status: "PENDING_MENTOR_ASSIGNMENT" }
+            ]
+          } : {})
+        },
+        include: {
+          submitter: {
+            select: {
+              firstName: true,
+              lastName: true,
+              employeeId: true
+            }
+          },
+          department: {
+            select: {
+              name: true
+            }
+          },
+          mentorAssignments: {
+            include: {
+              mentor: {
+                select: {
+                  firstName: true,
+                  lastName: true
+                }
+              }
+            }
+          }
+        },
+        orderBy: {
+          createdAt: "desc"
+        }
+      }),
+      
+      // Fetch InternshipApplication data (external student applications)
+      prisma.internshipApplication.findMany({
+        where: {
+          // Apply role-based filtering for internship applications
+          ...(role === "Department HoD" && department ? {
+            preferredDepartment: department
+          } : {})
+        },
+        orderBy: {
+          createdAt: "desc"
+        }
+      })
+    ])
 
-    if (department) {
-      filteredRequests = filteredRequests.filter((req) => req.preferredDepartment === department)
+    // Transform InternshipRequest data
+    const transformedRequests = internshipRequests.map(req => ({
+      id: req.requestNumber,
+      traineeName: req.traineeName,
+      institution: req.institutionName,
+      program: req.courseDetails || "Internship Program",
+      department: req.department?.name || "Unassigned",
+      status: req.status,
+      submittedDate: req.createdAt.toISOString().split('T')[0],
+      coordinator: `${req.submitter.firstName} ${req.submitter.lastName}`,
+      assignedMentor: req.mentorAssignments[0]?.mentor ? 
+        `${req.mentorAssignments[0].mentor.firstName} ${req.mentorAssignments[0].mentor.lastName}` : 
+        undefined,
+      priority: req.priority,
+      description: req.requestDescription,
+      duration: `${req.internshipDuration} weeks`,
+      type: "INTERNAL_REQUEST"
+    }))
+
+    // Transform InternshipApplication data
+    const transformedApplications = internshipApplications.map(app => ({
+      id: app.applicationNumber,
+      traineeName: `${app.firstName} ${app.lastName}`,
+      institution: app.institutionName,
+      program: app.courseName,
+      department: app.preferredDepartment,
+      status: app.status,
+      submittedDate: app.createdAt.toISOString().split('T')[0],
+      coordinator: "External Applicant",
+      assignedMentor: undefined,
+      priority: "MEDIUM", // Default priority for external applications
+      description: app.motivation,
+      duration: `${app.internshipDuration} weeks`,
+      type: "EXTERNAL_APPLICATION",
+      email: app.email,
+      phone: app.phone,
+      currentYear: app.currentYear,
+      cgpa: app.cgpa,
+      skills: app.skills,
+      projectInterests: app.projectInterests,
+      startDate: app.startDate,
+      endDate: app.endDate,
+      resumePath: app.resumePath,
+      coverLetterPath: app.coverLetterPath
+    }))
+
+    // Combine and sort all requests (pending first, then by date)
+    const allRequests = [...transformedRequests, ...transformedApplications]
+    
+    // Sort: PENDING first, then by creation date (newest first)
+    const statusOrder: Record<string, number> = { 
+      PENDING: 0, 
+      PENDING_PROCESSING: 0,
+      PENDING_MENTOR_ASSIGNMENT: 1,
+      PENDING_HOD_APPROVAL: 2,
+      APPROVED: 3,
+      IN_PROGRESS: 4,
+      COMPLETED: 5,
+      REJECTED: 6
     }
+    
+    allRequests.sort((a, b) => {
+      const aOrder = statusOrder[a.status] ?? 7
+      const bOrder = statusOrder[b.status] ?? 7
+      if (aOrder !== bOrder) return aOrder - bOrder
+      return new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime()
+    })
+
+    console.log(`✅ Found ${allRequests.length} total requests (${transformedRequests.length} internal, ${transformedApplications.length} external)`)
 
     return NextResponse.json({
-      success: true,
-      data: filteredRequests,
-      total: filteredRequests.length,
+      requests: allRequests
     })
+
   } catch (error) {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    const requestData = await request.json()
-
-    // Generate new request ID
-    const newId = `REQ${String(requests.length + 1).padStart(3, "0")}`
-
-    const newRequest = {
-      id: newId,
-      requestNumber: newId,
-      ...requestData,
-      status: "SUBMITTED",
-      submittedDate: new Date().toISOString().split("T")[0],
-    }
-
-    requests.push(newRequest)
-
+    console.error("Error fetching requests:", error)
     return NextResponse.json(
-      {
-        success: true,
-        data: newRequest,
-      },
-      { status: 201 },
+      { error: "Failed to fetch requests" },
+      { status: 500 }
     )
-  } catch (error) {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

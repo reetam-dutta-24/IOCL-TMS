@@ -49,34 +49,49 @@ export function RecentActivity() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      new: { variant: "default" as const, label: "New" },
-      assigned: { variant: "secondary" as const, label: "Assigned" },
-      approved: { variant: "default" as const, label: "Approved" },
-      completed: { variant: "secondary" as const, label: "Completed" },
-      rejected: { variant: "destructive" as const, label: "Rejected" },
+      new: { 
+        className: "bg-red-100 text-red-800 hover:bg-red-200", 
+        label: "New" 
+      },
+      assigned: { 
+        className: "bg-blue-100 text-blue-800 hover:bg-blue-200", 
+        label: "Assigned" 
+      },
+      approved: { 
+        className: "bg-green-100 text-green-800 hover:bg-green-200", 
+        label: "Approved" 
+      },
+      completed: { 
+        className: "bg-gray-100 text-gray-800 hover:bg-gray-200", 
+        label: "Completed" 
+      },
+      rejected: { 
+        className: "bg-red-100 text-red-800 hover:bg-red-200", 
+        label: "Rejected" 
+      },
     }
 
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig["new"]
     return (
-      <Badge variant={config.variant} className="text-xs">
+      <Badge className={`text-xs ${config.className}`}>
         {config.label}
       </Badge>
     )
   }
 
   return (
-    <Card>
+    <Card className="border-red-100">
       <CardHeader>
-        <CardTitle>Recent Activity</CardTitle>
+        <CardTitle className="text-red-900">Recent Activity</CardTitle>
         <CardDescription>Latest system activities and updates</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           {activities.map((activity) => (
-            <div key={activity.id} className="flex items-start space-x-3">
+            <div key={activity.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-red-50 transition-colors">
               <Avatar className="h-8 w-8">
                 <AvatarImage src={`/placeholder.svg?height=32&width=32&query=${activity.user}`} />
-                <AvatarFallback className="text-xs">
+                <AvatarFallback className="text-xs bg-red-100 text-red-600">
                   {activity.user
                     .split(" ")
                     .map((n) => n[0])
@@ -86,13 +101,13 @@ export function RecentActivity() {
               <div className="flex-1 space-y-1">
                 <div className="flex items-center justify-between">
                   <p className="text-sm">
-                    <span className="font-medium">{activity.user}</span>{" "}
+                    <span className="font-medium text-gray-900">{activity.user}</span>{" "}
                     <span className="text-gray-600">{activity.action}</span>
                   </p>
                   {getStatusBadge(activity.status)}
                 </div>
                 <div className="flex items-center text-xs text-gray-500">
-                  <Clock className="h-3 w-3 mr-1" />
+                  <Clock className="h-3 w-3 mr-1 text-red-400" />
                   {activity.time}
                 </div>
               </div>
@@ -102,4 +117,4 @@ export function RecentActivity() {
       </CardContent>
     </Card>
   )
-}
+};

@@ -11,13 +11,26 @@ const s3Client = new S3Client({
 
 const BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME || "iocl-tms-documents"
 
-export async function uploadFile(file: Buffer, key: string, contentType: string) {
+export async function uploadFile(file: File | Buffer, key: string, contentType?: string) {
   try {
+    let body: Buffer
+    let contentTypeToUse: string
+
+    if (file instanceof File) {
+      // Convert File to Buffer
+      const arrayBuffer = await file.arrayBuffer()
+      body = Buffer.from(arrayBuffer)
+      contentTypeToUse = contentType || file.type
+    } else {
+      body = file
+      contentTypeToUse = contentType || "application/octet-stream"
+    }
+
     const command = new PutObjectCommand({
       Bucket: BUCKET_NAME,
       Key: key,
-      Body: file,
-      ContentType: contentType,
+      Body: body,
+      ContentType: contentTypeToUse,
     })
 
     await s3Client.send(command)

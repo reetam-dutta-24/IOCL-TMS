@@ -1,6 +1,6 @@
 import { Queue, Worker } from "bullmq"
 import Redis from "ioredis"
-import { sendNotification } from "@/lib/notifications"
+import { sendNotification } from "@/src/lib/notifications"
 import { prisma } from "@/lib/prisma"
 
 const redis = new Redis(process.env.REDIS_URL!)

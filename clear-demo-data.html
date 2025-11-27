@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Demo Data</title>
+</head>
+<body>
+    <h1>Clear Demo Data</h1>
+    <button onclick="clearData()">Clear All Demo Data</button>
+    <div id="result"></div>
+
+    <script>
+        async function clearData() {
+            try {
+                const response = await fetch('/api/clear-demo-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                document.getElementById('result').innerHTML = `
+                    <h3>Result:</h3>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+                
+                if (result.success) {
+                    alert('Database cleared successfully! Now refresh the L&D HoD dashboard.');
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <h3>Error:</h3>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        }
+    </script>
+</body>
+</html> 
